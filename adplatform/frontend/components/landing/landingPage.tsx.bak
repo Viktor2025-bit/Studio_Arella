@@ -1,0 +1,716 @@
+'use client';
+
+import { useEffect, useRef, useState, useCallback } from 'react';
+import Link from 'next/link';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import {
+  FaLocationDot, FaChartLine, FaCreditCard, FaDisplay,
+  FaBolt, FaArrowsRotate, FaBullhorn, FaArrowRight,
+  FaMapPin, FaStar, FaChevronDown, FaXTwitter,
+  FaLinkedinIn, FaInstagram, FaPhone, FaEnvelope,
+  FaPlay, FaCheck, FaFilm, FaPaintbrush, FaCirclePlay,
+} from 'react-icons/fa6';
+
+const F = "'Quicksand', sans-serif";
+
+// ── Typewriter ────────────────────────────────────────────────────────────────
+function useTypewriter(phrases: string[], speed = 110, pause = 2400) {
+  const [displayed, setDisplayed] = useState('');
+  const [phraseIdx, setPhraseIdx] = useState(0);
+  const [charIdx, setCharIdx] = useState(0);
+  const [deleting, setDeleting] = useState(false);
+  useEffect(() => {
+    const current = phrases[phraseIdx];
+    let t: ReturnType<typeof setTimeout>;
+    if (!deleting && charIdx <= current.length) {
+      t = setTimeout(() => { setDisplayed(current.slice(0, charIdx)); setCharIdx(i => i + 1); }, speed);
+    } else if (!deleting && charIdx > current.length) {
+      t = setTimeout(() => setDeleting(true), pause);
+    } else if (deleting && charIdx > 0) {
+      t = setTimeout(() => { setDisplayed(current.slice(0, charIdx - 1)); setCharIdx(i => i - 1); }, speed / 2.5);
+    } else {
+      setDeleting(false); setPhraseIdx(i => (i + 1) % phrases.length);
+    }
+    return () => clearTimeout(t);
+  }, [charIdx, deleting, phraseIdx, phrases, speed, pause]);
+  return displayed;
+}
+
+// ── Counter animation ─────────────────────────────────────────────────────────
+function useCountUp(target: number, duration = 2000, start = false) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!start) return;
+    let startTime: number;
+    const step = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      setCount(Math.floor(progress * target));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [target, duration, start]);
+  return count;
+}
+
+// ── Intersection observer ─────────────────────────────────────────────────────
+function useReveal(threshold = 0.1) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } }, { threshold });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [threshold]);
+  return { ref, visible };
+}
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+const TICKER = [
+  { advertiser: 'GreenLeaf Supermart', cost: '₦4,000', time: '2s ago' },
+  { advertiser: 'Abia Motors Ltd', cost: '₦8,000', time: '7s ago' },
+  { advertiser: 'PalmTree Suites', cost: '₦1,000', time: '13s ago' },
+  { advertiser: 'Swift Pharmacy', cost: '₦4,500', time: '19s ago' },
+  { advertiser: 'Apex Schools', cost: '₦20,000', time: '26s ago' },
+  { advertiser: 'Firstline Bureau', cost: '₦8,000', time: '34s ago' },
+];
+
+const PLANS = [
+  { name: 'Starter', minutes: 1, price: 1000, perMin: 1000, popular: false },
+  { name: 'Standard', minutes: 5, price: 4500, perMin: 900, popular: false },
+  { name: 'Popular', minutes: 10, price: 8000, perMin: 800, popular: true },
+  { name: 'Business', minutes: 30, price: 20000, perMin: 667, popular: false },
+  { name: 'Premium', minutes: 60, price: 35000, perMin: 583, popular: false },
+  { name: 'Full Day', minutes: 480, price: 80000, perMin: 167, popular: false },
+];
+
+const SERVICES = [
+  {
+    Icon: FaDisplay, color: '#F97316', bg: '#FFF7ED', border: '#FED7AA',
+    title: 'Digital Screen Advertising',
+    desc: 'Your ad displayed on our 10ft × 6ft LED screen at Bems Junction — one of Umuahia\'s highest-traffic locations.',
+  },
+  {
+    Icon: FaPaintbrush, color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE',
+    title: 'Professional Graphic Design',
+    desc: 'Our creative team designs eye-catching adverts and promotional flyers that effectively communicate your brand\'s message.',
+  },
+  {
+    Icon: FaFilm, color: '#0891B2', bg: '#ECFEFF', border: '#A5F3FC',
+    title: 'Video Production',
+    desc: 'We visit your business location, office, store, or event to create high-quality promotional videos at budget-friendly rates.',
+  },
+  {
+    Icon: FaBolt, color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0',
+    title: 'Instant Ad Delivery',
+    desc: 'Upload your creative from anywhere in the world. Book your slot, pay online, and your ad goes live — no delays.',
+  },
+];
+
+const HOW = [
+  { n: '01', title: 'Create your account', body: 'Sign up free in seconds — no credit card required. You\'re instantly ready to start booking ad slots on Studio Arella.' },
+  { n: '02', title: 'Pick your slot on the calendar', body: 'Browse the live booking calendar. Select your preferred date and time. Choose from plans starting at ₦1,000.' },
+  { n: '03', title: 'Upload or request your ad', body: 'Upload your own creative, or let our team create a professional design for you — graphics or video.' },
+  { n: '04', title: 'Pay and go live', body: 'Pay securely via Paystack. Your ad is pushed directly to the Studio Arella screen. Track impressions in real time.' },
+];
+
+const FAQS = [
+  { q: 'Where exactly is the Studio Arella screen located?', a: 'The screen is at Bems Junction, Finbars, Bende Road, Umuahia, Abia State — a high-traffic location with thousands of daily road users. It is a 10ft × 6ft digital LED display.' },
+  { q: 'How much does it cost to advertise?', a: 'Plans start from ₦1,000 for a 1-minute slot. We offer packages up to 8-hour full-day bookings. All plans are billed once at time of booking with no hidden fees.' },
+  { q: 'I don\'t have an ad — can your team create one?', a: 'Yes. Our professional creative team offers graphic design services and promotional video production. Contact us via the Request Creative page or call 08164523926 to discuss your needs.' },
+  { q: 'How do I make payment?', a: 'All payments are processed securely via Paystack. We accept debit cards, bank transfers, and USSD. Credits are confirmed instantly and your booking goes live immediately.' },
+  { q: 'Can I book a slot from outside Umuahia?', a: 'Absolutely. That\'s exactly why we built this platform. Upload your ad, book your slot, make payment — and your ad plays on the Studio Arella screen from anywhere in the world.' },
+  { q: 'How do I know my ad actually played?', a: 'Your dashboard shows real-time impression tracking — exactly when your ad played, how many times, and estimated audience reach. You always know what you\'re getting.' },
+];
+
+function FAQItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div style={{ borderBottom: '1px solid #F3F4F6' }}>
+      <button onClick={() => setOpen(o => !o)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 0', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', gap: 16 }}>
+        <span style={{ fontSize: 15, fontWeight: 700, color: '#0A0A0A', lineHeight: 1.4, fontFamily: F }}>{q}</span>
+        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}
+          style={{ width: 28, height: 28, borderRadius: 8, background: open ? '#F97316' : '#F9F7F5', border: `1px solid ${open ? '#F97316' : '#E5E7EB'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <FaChevronDown size={11} color={open ? '#fff' : '#9CA3AF'} />
+        </motion.div>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.22 }} style={{ overflow: 'hidden' }}>
+            <p style={{ fontSize: 14, color: '#6B7280', lineHeight: 1.75, margin: '0 0 18px', paddingRight: 44, fontFamily: F }}>{a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Stat counter ──────────────────────────────────────────────────────────────
+function StatCard({ value, suffix = '', label, start }: { value: number; suffix?: string; label: string; start: boolean }) {
+  const count = useCountUp(value, 1800, start);
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <p style={{ fontSize: 'clamp(36px,5vw,56px)', fontWeight: 900, color: '#F97316', margin: '0 0 6px', letterSpacing: '-1px', lineHeight: 1, fontFamily: F }}>
+        {count.toLocaleString()}{suffix}
+      </p>
+      <p style={{ fontSize: 13, color: '#9CA3AF', margin: 0, fontWeight: 500 }}>{label}</p>
+    </div>
+  );
+}
+
+export default function LandingPage() {
+  const typed = useTypewriter([
+    'book a 1-minute slot for ₦1,000.',
+    'reach thousands daily at Bems Junction.',
+    'push your ad live from anywhere.',
+    'grow your business across Umuahia.',
+    'advertise without the agency fees.',
+  ], 100, 2200);
+
+  const [tickerPaused, setTickerPaused] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const statsReveal = useReveal();
+  const servicesReveal = useReveal();
+  const howReveal = useReveal();
+  const plansReveal = useReveal();
+  const faqReveal = useReveal();
+
+  const { scrollY } = useScroll();
+  const navBg = useTransform(scrollY, [0, 80], ['rgba(10,10,10,0)', 'rgba(10,10,10,0.97)']);
+  const navBorder = useTransform(scrollY, [0, 80], ['rgba(255,255,255,0)', 'rgba(255,255,255,0.07)']);
+
+  return (
+    <div style={{ fontFamily: F, background: '#0A0A0A', color: '#fff', overflowX: 'hidden' }}>
+
+      <style>{`
+        @keyframes tickerScroll { 0%{transform:translateY(0)} 100%{transform:translateY(-50%)} }
+        .ticker-scroll { animation: tickerScroll 22s linear infinite; }
+        .ticker-scroll.paused { animation-play-state: paused; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        .cursor { animation: blink 1s step-end infinite; }
+        @keyframes floatA { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        @keyframes floatB { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+        .float-a { animation: floatA 4s ease-in-out infinite; }
+        .float-b { animation: floatB 4s ease-in-out 1.5s infinite; }
+        .plan-card { transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; }
+        .plan-card:hover { transform: translateY(-4px); box-shadow: 0 20px 48px rgba(249,115,22,0.15); border-color: #F97316 !important; }
+        .service-card { transition: transform 0.2s, box-shadow 0.2s; }
+        .service-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.15); }
+        .nav-link-item { position: relative; color: rgba(255,255,255,0.65); text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.15s; }
+        .nav-link-item:hover { color: #F97316; }
+        .cta-btn { transition: transform 0.15s, filter 0.15s, box-shadow 0.15s; }
+        .cta-btn:hover { transform: translateY(-1px); filter: brightness(1.08); box-shadow: 0 8px 24px rgba(249,115,22,0.35); }
+        .cta-btn:active { transform: translateY(0); }
+        .ghost-btn { transition: background 0.15s, color 0.15s; }
+        .ghost-btn:hover { background: rgba(255,255,255,0.1) !important; }
+        @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+        .shimmer { background: linear-gradient(90deg, rgba(249,115,22,0) 0%, rgba(249,115,22,0.15) 50%, rgba(249,115,22,0) 100%); background-size: 200% 100%; animation: shimmer 3s ease-in-out infinite; }
+        @media (max-width: 768px) {
+          .desktop-nav { display: none !important; }
+          .mobile-ctas { display: flex !important; }
+          .hero-grid { grid-template-columns: 1fr !important; }
+          .hero-ticker { display: none !important; }
+          .services-grid { grid-template-columns: 1fr !important; }
+          .plans-grid { grid-template-columns: repeat(2,1fr) !important; }
+          .how-grid { grid-template-columns: 1fr !important; }
+          .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
+          .footer-grid { grid-template-columns: 1fr !important; }
+          .dual-cta-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 480px) {
+          .plans-grid { grid-template-columns: 1fr !important; }
+          .stats-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+
+      {/* ═══ NAV ═══ */}
+      <motion.nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: navBg, borderBottom: `1px solid`, borderBottomColor: navBorder, padding: '0 24px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          <div style={{ width: 36, height: 36, background: '#F97316', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 17, color: '#fff' }}>B</div>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 800, color: '#fff', margin: 0, letterSpacing: '-0.2px' }}>Bems Screens</p>
+            <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Studio Arella</p>
+          </div>
+        </Link>
+
+        <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
+          {[['#services','Services'],['#how','How it works'],['#pricing','Pricing'],['#faq','FAQ']].map(([h,l]) => (
+            <a key={h} href={h} className="nav-link-item">{l}</a>
+          ))}
+        </div>
+
+        <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Link href="/auth/login" style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontWeight: 500, padding: '8px 14px' }}>Sign in</Link>
+          <Link href="/auth/register" className="cta-btn" style={{ fontSize: 13, fontWeight: 700, textDecoration: 'none', background: '#F97316', color: '#fff', padding: '9px 20px', borderRadius: 9 }}>Get started free</Link>
+        </div>
+
+        <button className="mobile-ctas" onClick={() => setMobileMenuOpen(o => !o)} style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', color: '#fff', padding: 8, fontSize: 20 }}>☰</button>
+      </motion.nav>
+
+      {/* Mobile menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+            style={{ position: 'fixed', top: 64, left: 0, right: 0, zIndex: 99, background: '#0A0A0A', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {[['#services','Services'],['#how','How it works'],['#pricing','Pricing'],['#faq','FAQ']].map(([h,l]) => (
+              <a key={h} href={h} onClick={() => setMobileMenuOpen(false)} style={{ color: 'rgba(255,255,255,0.7)', textDecoration: 'none', fontSize: 15, fontWeight: 500, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{l}</a>
+            ))}
+            <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+              <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)} style={{ flex: 1, textAlign: 'center', padding: '11px', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 9, color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>Sign in</Link>
+              <Link href="/auth/register" onClick={() => setMobileMenuOpen(false)} style={{ flex: 1, textAlign: 'center', padding: '11px', background: '#F97316', borderRadius: 9, color: '#fff', textDecoration: 'none', fontSize: 14, fontWeight: 700 }}>Get started</Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ═══ HERO ═══ */}
+      <section style={{ minHeight: '100vh', paddingTop: 64, display: 'flex', alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
+        {/* Real photo bg */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+          <img src="https://images.unsplash.com/photo-1533069027836-fa937181a8ce?w=1800&q=80&auto=format&fit=crop" alt="" aria-hidden style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', filter: 'brightness(0.22) saturate(0.5)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(249,115,22,0.08) 0%, transparent 50%)' }} />
+          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '35%', background: 'linear-gradient(to bottom, transparent, #0A0A0A)' }} />
+        </div>
+
+        {/* Grid overlay */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1, backgroundImage: 'linear-gradient(rgba(249,115,22,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(249,115,22,0.04) 1px,transparent 1px)', backgroundSize: '56px 56px', pointerEvents: 'none' }} />
+
+        <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: 1200, margin: '0 auto', padding: '80px 24px' }}>
+          <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 56, alignItems: 'center' }}>
+
+            {/* Left */}
+            <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.25,0.46,0.45,0.94] }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 100, padding: '5px 14px', marginBottom: 24 }}>
+                <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e' }} />
+                <span style={{ fontSize: 12, color: '#F97316', fontWeight: 700, letterSpacing: '0.04em' }}>Screen LIVE at Bems Junction, Umuahia</span>
+              </div>
+
+              <h1 style={{ fontSize: 'clamp(38px,6vw,72px)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-2px', color: '#fff', margin: '0 0 12px' }}>
+                Studio Arella<br />
+                <span style={{ color: '#F97316' }}>Digital Screen</span>
+              </h1>
+
+              <div style={{ fontSize: 'clamp(20px,3vw,32px)', fontWeight: 800, letterSpacing: '-0.8px', color: 'rgba(255,255,255,0.85)', margin: '0 0 24px', minHeight: '1.3em', lineHeight: 1.2 }}>
+                Now anyone can {typed}<span className="cursor" style={{ color: '#F97316' }}>|</span>
+              </div>
+
+              <p style={{ fontSize: 16, lineHeight: 1.75, color: 'rgba(255,255,255,0.55)', maxWidth: 520, margin: '0 0 40px' }}>
+                Advertise your business, brand, event or campaign on Umuahia's premier digital screen — reaching thousands of daily road users at Bems Junction, Finbars, Bende Road.
+              </p>
+
+              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', marginBottom: 48 }}>
+                <Link href="/auth/register" className="cta-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#F97316', color: '#fff', padding: '15px 32px', borderRadius: 11, fontSize: 15, fontWeight: 800, textDecoration: 'none', boxShadow: '0 4px 24px rgba(249,115,22,0.4)' }}>
+                  Book Your Ad Slot <FaArrowRight size={14} />
+                </Link>
+                <a href="#services" className="ghost-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '15px 24px', borderRadius: 11, fontSize: 15, fontWeight: 500, textDecoration: 'none', background: 'rgba(255,255,255,0.04)' }}>
+                  <FaPlay size={12} /> See our services
+                </a>
+              </div>
+
+              {/* Trust bar */}
+              <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
+                {[['₦1,000', 'per minute'], ['Bems Junction', 'high-traffic location'], ['Instant', 'ad delivery']].map(([v,l]) => (
+                  <div key={l}>
+                    <p style={{ fontSize: 20, fontWeight: 900, color: '#fff', margin: 0, letterSpacing: '-0.5px' }}>{v}</p>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '2px 0 0' }}>{l}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Right — ticker widget */}
+            <motion.div className="hero-ticker" initial={{ opacity: 0, x: 32 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.2, ease: [0.25,0.46,0.45,0.94] }}>
+              <div onMouseEnter={() => setTickerPaused(true)} onMouseLeave={() => setTickerPaused(false)}>
+                <div style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 20, overflow: 'hidden', height: 360, position: 'relative' }}>
+                  {/* Header */}
+                  <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(10,10,10,0.6)', backdropFilter: 'blur(8px)', position: 'absolute', top: 0, left: 0, right: 0, zIndex: 2 }}>
+                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e' }} />
+                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>Live bookings</span>
+                    <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 5px #22c55e' }} />
+                      <span style={{ fontSize: 10, color: '#22c55e', fontWeight: 800, letterSpacing: '0.06em' }}>LIVE</span>
+                    </div>
+                  </div>
+                  <div style={{ position: 'absolute', top: 42, left: 0, right: 0, height: 24, zIndex: 2, background: 'linear-gradient(to bottom, rgba(10,10,10,0.9), transparent)' }} />
+                  <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 48, zIndex: 2, background: 'linear-gradient(to top, rgba(10,10,10,0.95), transparent)' }} />
+                  <div style={{ paddingTop: 48, overflow: 'hidden', height: '100%' }}>
+                    <div className={`ticker-scroll${tickerPaused ? ' paused' : ''}`}>
+                      {[...TICKER, ...TICKER].map((item, i) => (
+                        <div key={i} style={{ margin: '8px 14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: '12px 14px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: '#fff' }}>{item.advertiser}</span>
+                            <span style={{ fontSize: 11, color: '#22c55e', fontWeight: 800 }}>{item.cost}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <FaMapPin size={9} color="#F97316" /> Studio Arella — Bems Junction
+                            </span>
+                            <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)' }}>{item.time}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating cards below */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 12 }}>
+                  <Link href="/auth/register" className="float-a" style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(249,115,22,0.1)', border: '1px solid rgba(249,115,22,0.25)', borderRadius: 12, padding: '11px 14px', textDecoration: 'none', backdropFilter: 'blur(8px)' }}>
+                    <div style={{ width: 34, height: 34, background: 'rgba(249,115,22,0.2)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <FaBullhorn size={15} color="#F97316" />
+                    </div>
+                    <div>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: '#fff', margin: 0 }}>Start advertising</p>
+                      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', margin: '1px 0 0' }}>From ₦1,000/minute →</p>
+                    </div>
+                  </Link>
+                  <Link href="/creative" className="float-b" style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(124,58,237,0.1)', border: '1px solid rgba(124,58,237,0.25)', borderRadius: 12, padding: '11px 14px', textDecoration: 'none', backdropFilter: 'blur(8px)' }}>
+                    <div style={{ width: 34, height: 34, background: 'rgba(124,58,237,0.2)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <FaPaintbrush size={15} color="#A78BFA" />
+                    </div>
+                    <div>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: '#fff', margin: 0 }}>Need a creative team?</p>
+                      <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', margin: '1px 0 0' }}>We design & film for you →</p>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ PROBLEM / SOLUTION STRIP ═══ */}
+      <section style={{ background: 'rgba(249,115,22,0.05)', borderTop: '1px solid rgba(249,115,22,0.12)', borderBottom: '1px solid rgba(249,115,22,0.12)', padding: '28px 24px' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', gap: 40, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+          {[
+            ['WITHOUT US', 'Cold-call billboard companies. Wait weeks. No proof your ad ran. Opaque pricing. Middlemen.', '#4B5563'],
+            ['WITH STUDIO ARELLA', 'Book online in minutes. Pay securely. Ad goes live instantly. Track every impression in real time.', '#F97316'],
+          ].map(([l,t,c]) => (
+            <div key={l as string} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', maxWidth: 420 }}>
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', color: c as string, background: `${c}18`, border: `1px solid ${c}30`, padding: '3px 10px', borderRadius: 100, flexShrink: 0, marginTop: 2, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{l as string}</span>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.65, margin: 0 }}>{t as string}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══ SERVICES ═══ */}
+      <section id="services" style={{ padding: '96px 24px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }} ref={servicesReveal.ref}>
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={servicesReveal.visible ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5 }} style={{ textAlign: 'center', marginBottom: 56 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#F97316', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>What we offer</p>
+            <h2 style={{ fontSize: 'clamp(28px,4vw,46px)', fontWeight: 900, letterSpacing: '-1px', color: '#fff', margin: '0 0 16px', lineHeight: 1.1 }}>
+              Everything your brand needs<br />to get seen in Umuahia
+            </h2>
+            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', maxWidth: 520, margin: '0 auto', lineHeight: 1.7 }}>
+              From digital screen bookings to professional creative production — we handle every part of your advertising journey.
+            </p>
+          </motion.div>
+
+          <div className="services-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 20 }}>
+            {SERVICES.map((s, i) => (
+              <motion.div key={s.title} className="service-card"
+                initial={{ opacity: 0, y: 24 }} animate={servicesReveal.visible ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: i * 0.1 }}
+                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '32px 28px' }}>
+                <div style={{ width: 52, height: 52, borderRadius: 14, background: s.bg, border: `1px solid ${s.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+                  <s.Icon size={22} color={s.color} />
+                </div>
+                <h3 style={{ fontSize: 19, fontWeight: 800, color: '#fff', margin: '0 0 10px', letterSpacing: '-0.3px' }}>{s.title}</h3>
+                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, margin: '0 0 20px' }}>{s.desc}</p>
+                <Link href="/auth/register" style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 13, fontWeight: 700, color: s.color, textDecoration: 'none' }}>
+                  Get started <FaArrowRight size={11} />
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ HOW IT WORKS ═══ */}
+      <section id="how" style={{ padding: '96px 24px', background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }} ref={howReveal.ref}>
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={howReveal.visible ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5 }} style={{ textAlign: 'center', marginBottom: 64 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#F97316', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>The process</p>
+            <h2 style={{ fontSize: 'clamp(28px,4vw,46px)', fontWeight: 900, letterSpacing: '-1px', color: '#fff', margin: 0, lineHeight: 1.1 }}>
+              From sign-up to screen<br />in four simple steps
+            </h2>
+          </motion.div>
+
+          <div className="how-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 0, position: 'relative' }}>
+            {/* Connector */}
+            <div style={{ position: 'absolute', top: 26, left: '12.5%', right: '12.5%', height: 1, background: 'linear-gradient(to right, transparent, rgba(249,115,22,0.3), rgba(249,115,22,0.3), transparent)', zIndex: 0 }} />
+            {HOW.map((s, i) => (
+              <motion.div key={s.n} initial={{ opacity: 0, y: 24 }} animate={howReveal.visible ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: i * 0.12 }}
+                style={{ padding: '0 20px 0', position: 'relative', zIndex: 1 }}>
+                <div style={{ width: 52, height: 52, borderRadius: 15, background: i === 0 ? '#F97316' : 'rgba(249,115,22,0.1)', border: `2px solid ${i === 0 ? '#F97316' : 'rgba(249,115,22,0.2)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+                  <span style={{ fontSize: 14, fontWeight: 900, color: i === 0 ? '#fff' : '#F97316' }}>{s.n}</span>
+                </div>
+                <h3 style={{ fontSize: 16, fontWeight: 800, color: '#fff', margin: '0 0 10px', letterSpacing: '-0.2px', lineHeight: 1.3 }}>{s.title}</h3>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', lineHeight: 1.7, margin: 0 }}>{s.body}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={howReveal.visible ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: 0.5 }}
+            style={{ textAlign: 'center', marginTop: 56 }}>
+            <Link href="/auth/register" className="cta-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#F97316', color: '#fff', padding: '14px 32px', borderRadius: 11, fontSize: 14, fontWeight: 800, textDecoration: 'none', boxShadow: '0 4px 20px rgba(249,115,22,0.35)' }}>
+              Start now — it only takes a minute <FaArrowRight size={13} />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ═══ PRICING ═══ */}
+      <section id="pricing" style={{ padding: '96px 24px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }} ref={plansReveal.ref}>
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={plansReveal.visible ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5 }} style={{ textAlign: 'center', marginBottom: 56 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#F97316', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>Pricing</p>
+            <h2 style={{ fontSize: 'clamp(28px,4vw,46px)', fontWeight: 900, letterSpacing: '-1px', color: '#fff', margin: '0 0 14px', lineHeight: 1.1 }}>
+              Simple, affordable, transparent
+            </h2>
+            <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.45)', maxWidth: 480, margin: '0 auto', lineHeight: 1.7 }}>
+              As part of Bems Group's commitment to affordability, advertising starts from as low as ₦1,000 per minute. No hidden fees.
+            </p>
+          </motion.div>
+
+          <div className="plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
+            {PLANS.map((p, i) => (
+              <motion.div key={p.name} className="plan-card"
+                initial={{ opacity: 0, y: 24 }} animate={plansReveal.visible ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: i * 0.08 }}
+                style={{ background: p.popular ? 'rgba(249,115,22,0.08)' : 'rgba(255,255,255,0.03)', border: `1.5px solid ${p.popular ? '#F97316' : 'rgba(255,255,255,0.08)'}`, borderRadius: 18, padding: '28px 24px', position: 'relative' }}>
+                {p.popular && (
+                  <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: '#F97316', color: '#fff', fontSize: 10, fontWeight: 800, padding: '4px 14px', borderRadius: 100, whiteSpace: 'nowrap', letterSpacing: '0.08em' }}>
+                    BEST VALUE
+                  </div>
+                )}
+                <div className={p.popular ? 'shimmer' : ''} style={{ borderRadius: 10, padding: p.popular ? '2px' : '0', marginBottom: 2 }}>
+                  <p style={{ fontSize: 15, fontWeight: 800, color: '#fff', margin: '0 0 3px' }}>{p.name}</p>
+                </div>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', margin: '0 0 18px' }}>
+                  {p.minutes < 60 ? `${p.minutes} minute${p.minutes > 1 ? 's' : ''}` : `${p.minutes / 60} hour${p.minutes > 60 ? 's' : ''}`}
+                </p>
+                <p style={{ fontSize: 34, fontWeight: 900, color: p.popular ? '#F97316' : '#fff', margin: '0 0 4px', letterSpacing: '-1px' }}>
+                  ₦{p.price.toLocaleString()}
+                </p>
+                <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', margin: '0 0 22px' }}>₦{p.perMin.toLocaleString()}/min</p>
+                <Link href="/auth/register" style={{ display: 'block', textAlign: 'center', background: p.popular ? '#F97316' : 'rgba(255,255,255,0.07)', color: '#fff', border: p.popular ? 'none' : '1px solid rgba(255,255,255,0.12)', padding: '11px', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none', transition: 'opacity 0.15s' }}
+                  onMouseOver={e => (e.currentTarget.style.opacity = '0.85')} onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
+                  Book {p.name} slot
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+
+          <p style={{ textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 24 }}>
+            All plans billed once at booking. Secure payment via Paystack.
+            <Link href="/auth/register" style={{ color: '#F97316', marginLeft: 6, textDecoration: 'none', fontWeight: 700 }}>Get started free →</Link>
+          </p>
+        </div>
+      </section>
+
+      {/* ═══ STATS ═══ */}
+      <section style={{ padding: '80px 24px', background: 'rgba(249,115,22,0.04)', borderTop: '1px solid rgba(249,115,22,0.1)', borderBottom: '1px solid rgba(249,115,22,0.1)' }}>
+        <div style={{ maxWidth: 1000, margin: '0 auto' }} ref={statsReveal.ref}>
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 32 }}>
+            <StatCard value={15000} suffix="+" label="Daily road users at Bems Junction" start={statsReveal.visible} />
+            <StatCard value={1000} suffix="" label="₦ to get started today" start={statsReveal.visible} />
+            <StatCard value={24} suffix="/7" label="Screen visibility hours" start={statsReveal.visible} />
+            <StatCard value={100} suffix="%" label="Nigerian-owned & operated" start={statsReveal.visible} />
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ ABOUT / LOCATION ═══ */}
+      <section style={{ padding: '96px 24px' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
+          <div>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#F97316', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14 }}>About Studio Arella</p>
+            <h2 style={{ fontSize: 'clamp(26px,3.5vw,40px)', fontWeight: 900, letterSpacing: '-0.8px', color: '#fff', margin: '0 0 18px', lineHeight: 1.15 }}>
+              Umuahia's premier digital advertising screen
+            </h2>
+            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8, margin: '0 0 20px' }}>
+              Studio Arella is an initiative of <strong style={{ color: 'rgba(255,255,255,0.8)' }}>Bems Group</strong> — dedicated to helping businesses, brands, organisations, events, and campaigns gain greater visibility within and beyond Abia State.
+            </p>
+            <p style={{ fontSize: 15, color: 'rgba(255,255,255,0.5)', lineHeight: 1.8, margin: '0 0 32px' }}>
+              Our digital screen is strategically located at <strong style={{ color: '#F97316' }}>Bems Junction, Finbars, Bende Road</strong> — one of Umuahia's highest-traffic points with thousands of daily road users. We are committed to making advertising accessible to every business, at any budget.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {[
+                { Icon: FaLocationDot, color: '#F97316', text: 'Bems Junction, Finbars, Bende Road, Umuahia, Abia State' },
+                { Icon: FaPhone,       color: '#22c55e', text: '08164523926 — Diekolayomi Samuel Babatunde (Manager)' },
+                { Icon: FaEnvelope,    color: '#60A5FA', text: 'Reach us through the support page for bookings enquiries' },
+              ].map(({ Icon, color, text }) => (
+                <div key={text} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 9, background: `${color}15`, border: `1px solid ${color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon size={14} color={color} />
+                  </div>
+                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.55)', lineHeight: 1.6, marginTop: 8 }}>{text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ position: 'relative' }}>
+            <div style={{ borderRadius: 20, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <img src="https://images.unsplash.com/photo-1511268559489-34b624fbfcf5?w=700&q=85&auto=format&fit=crop" alt="Digital billboard screen" style={{ width: '100%', height: 420, objectFit: 'cover', display: 'block', filter: 'brightness(0.8)' }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(10,10,10,0.7) 0%, transparent 50%)' }} />
+              <div style={{ position: 'absolute', bottom: 20, left: 20, right: 20 }}>
+                <div style={{ background: 'rgba(10,10,10,0.8)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '14px 18px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e' }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#22c55e', letterSpacing: '0.06em' }}>SCREEN ONLINE</span>
+                  </div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: '#fff', margin: '0 0 2px' }}>Studio Arella — Bems Junction</p>
+                  <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: 0 }}>10ft × 6ft Digital LED Display · Umuahia, Abia State</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ TESTIMONIALS ═══ */}
+      <section style={{ padding: '80px 24px', background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#F97316', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>What people say</p>
+            <h2 style={{ fontSize: 'clamp(24px,3.5vw,38px)', fontWeight: 900, letterSpacing: '-0.8px', color: '#fff', margin: 0 }}>Trusted by Umuahia businesses</h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 18 }}>
+            {[
+              { name: 'Chukwuemeka Agu', role: 'Owner, Agu Supermarket — Umuahia', text: 'I listed my shop-front screen and had my first booking within the week. No phone calls, no negotiation — the ad was running. That\'s exactly what we needed.', color: '#F97316', initials: 'CA', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&q=80&auto=format&fit=crop&crop=face' },
+              { name: 'Ngozi Obi', role: 'Marketing Officer, Abia SME', text: 'We booked two slots near Umuahia market for a product launch, uploaded our graphic, and it went live the same day. The real-time data was a bonus we didn\'t expect.', color: '#22c55e', initials: 'NO', avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=80&h=80&q=80&auto=format&fit=crop&crop=face' },
+              { name: 'Ifeanyi Nwosu', role: 'Brand Manager, Nwosu & Sons', text: 'No minimum spend, no agency fees. We spent ₦15,000 on a one-week booking and got proper impression reports. Will definitely scale this up.', color: '#60A5FA', initials: 'IN', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&q=80&auto=format&fit=crop&crop=face' },
+            ].map(t => (
+              <motion.div key={t.name} whileHover={{ y: -4 }} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, padding: '26px 24px' }}>
+                <div style={{ display: 'flex', gap: 2, marginBottom: 14 }}>
+                  {[...Array(5)].map((_, i) => <FaStar key={i} size={13} color="#F97316" />)}
+                </div>
+                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 1.75, margin: '0 0 22px', fontStyle: 'italic' }}>&ldquo;{t.text}&rdquo;</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                  <img src={t.avatar} alt={t.name} style={{ width: 42, height: 42, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${t.color}40`, flexShrink: 0 }} onError={e => (e.currentTarget.style.display = 'none')} />
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 800, color: '#fff', margin: 0 }}>{t.name}</p>
+                    <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', margin: '2px 0 0' }}>{t.role}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ DUAL CTA ═══ */}
+      <section style={{ padding: '96px 24px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div className="dual-cta-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+            <div style={{ background: 'linear-gradient(135deg, rgba(249,115,22,0.14) 0%, rgba(249,115,22,0.04) 100%)', border: '1.5px solid rgba(249,115,22,0.25)', borderRadius: 22, padding: '44px 36px' }}>
+              <div style={{ width: 54, height: 54, background: 'rgba(249,115,22,0.15)', border: '1px solid rgba(249,115,22,0.3)', borderRadius: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 22 }}>
+                <FaBullhorn size={23} color="#F97316" />
+              </div>
+              <h3 style={{ fontSize: 24, fontWeight: 900, color: '#fff', margin: '0 0 12px', letterSpacing: '-0.4px' }}>I want to advertise</h3>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, margin: '0 0 28px' }}>
+                Stop paying agency markups. Book your slot on Studio Arella directly — starting at ₦1,000. Upload your ad, pay online, and reach thousands at Bems Junction.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <Link href="/auth/register" className="cta-btn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: '#F97316', color: '#fff', padding: '13px 24px', borderRadius: 11, fontSize: 14, fontWeight: 800, textDecoration: 'none' }}>
+                  Start advertising <FaArrowRight size={13} />
+                </Link>
+                <Link href="/auth/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: 'rgba(255,255,255,0.4)', fontSize: 12, textDecoration: 'none', padding: '4px 0' }}>
+                  Already have an account? Sign in →
+                </Link>
+              </div>
+            </div>
+
+            <div style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(124,58,237,0.03) 100%)', border: '1.5px solid rgba(124,58,237,0.2)', borderRadius: 22, padding: '44px 36px' }}>
+              <div style={{ width: 54, height: 54, background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)', borderRadius: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 22 }}>
+                <FaPaintbrush size={23} color="#A78BFA" />
+              </div>
+              <h3 style={{ fontSize: 24, fontWeight: 900, color: '#fff', margin: '0 0 12px', letterSpacing: '-0.4px' }}>I need an ad created</h3>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.7, margin: '0 0 28px' }}>
+                Our professional creative team designs graphics, flyers, and promotional videos for your business — visiting your location if needed. Affordable rates, outstanding results.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <Link href="/creative" className="cta-btn" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: 'rgba(124,58,237,0.2)', border: '1px solid rgba(124,58,237,0.4)', color: '#A78BFA', padding: '13px 24px', borderRadius: 11, fontSize: 14, fontWeight: 800, textDecoration: 'none' }}>
+                  Request creative team <FaArrowRight size={13} />
+                </Link>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', margin: '4px 0 0' }}>Call us: 08164523926</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ FAQ ═══ */}
+      <section id="faq" style={{ padding: '80px 24px', background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ maxWidth: 740, margin: '0 auto' }} ref={faqReveal.ref}>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={faqReveal.visible ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.4 }} style={{ textAlign: 'center', marginBottom: 48 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#F97316', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>Got questions?</p>
+            <h2 style={{ fontSize: 'clamp(26px,4vw,40px)', fontWeight: 900, letterSpacing: '-0.8px', color: '#fff', margin: '0 0 12px' }}>Frequently asked questions</h2>
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+              Still unsure?{' '}
+              <Link href="/support" style={{ color: '#F97316', fontWeight: 700, textDecoration: 'none' }}>Visit our support page</Link>
+              {' '}or call <a href="tel:08164523926" style={{ color: '#F97316', fontWeight: 700, textDecoration: 'none' }}>08164523926</a>
+            </p>
+          </motion.div>
+          <motion.div initial={{ opacity: 0 }} animate={faqReveal.visible ? { opacity: 1 } : {}} transition={{ duration: 0.4, delay: 0.15 }}
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 18, padding: '0 28px' }}>
+            {FAQS.map(f => <FAQItem key={f.q} q={f.q} a={f.a} />)}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ═══ FOOTER ═══ */}
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '56px 24px 32px', background: '#050505' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div className="footer-grid" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: 48, marginBottom: 48 }}>
+            <div>
+              <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none', marginBottom: 18 }}>
+                <div style={{ width: 34, height: 34, background: '#F97316', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 15, color: '#fff' }}>B</div>
+                <div>
+                  <p style={{ fontSize: 14, fontWeight: 800, color: '#fff', margin: 0 }}>Bems Screens</p>
+                  <p style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)', margin: 0, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Studio Arella</p>
+                </div>
+              </Link>
+              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', lineHeight: 1.7, margin: '0 0 20px', maxWidth: 260 }}>
+                Umuahia's premier digital advertising screen — helping businesses get the visibility they deserve. An initiative of Bems Group.
+              </p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[{ Icon: FaXTwitter, href: 'https://twitter.com' }, { Icon: FaLinkedinIn, href: 'https://linkedin.com' }, { Icon: FaInstagram, href: 'https://instagram.com' }].map(({ Icon, href }) => (
+                  <a key={href} href={href} target="_blank" rel="noopener noreferrer" style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'background 0.15s' }}
+                    onMouseOver={e => (e.currentTarget.style.background = 'rgba(249,115,22,0.15)')} onMouseOut={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}>
+                    <Icon size={13} color="rgba(255,255,255,0.5)" />
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {[
+              { title: 'Platform', links: [['Book Ad Slot','/book'],['Browse Plans','#pricing'],['Request Creative','/creative'],['My Calendar','/calendar'],['Dashboard','/dashboard']] },
+              { title: 'Company', links: [['Services','#services'],['How it works','#how'],['FAQ','#faq'],['Support','/support'],['Sign in','/auth/login']] },
+              { title: 'Contact', links: [['08164523926','tel:08164523926'],['Bems Junction, Umuahia','#'],['Register free','/auth/register'],['Privacy Policy','/support'],['Terms','/support']] },
+            ].map(({ title, links }) => (
+              <div key={title}>
+                <p style={{ fontSize: 11, fontWeight: 800, color: '#fff', letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 16px' }}>{title}</p>
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {links.map(([l, h]) => (
+                    <li key={l}><Link href={h} style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', textDecoration: 'none', transition: 'color 0.15s' }}
+                      onMouseOver={e => (e.currentTarget.style.color = '#F97316')} onMouseOut={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}>{l}</Link></li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 22, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', margin: 0 }}>© {new Date().getFullYear()} Studio Arella · Bems Group · Proudly from Umuahia, Nigeria.</p>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)', margin: 0 }}>Managed by Diekolayomi Samuel Babatunde · 08164523926</p>
+          </div>
+        </div>
+      </footer>
+
+    </div>
+  );
+}
