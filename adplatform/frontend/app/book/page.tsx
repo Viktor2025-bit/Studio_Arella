@@ -115,8 +115,9 @@ function BookPageContent() {
 
   useEffect(() => {
     if (selectedCreative && selectedCreative.duration_seconds) {
-      setDurationMins(Math.floor(selectedCreative.duration_seconds / 60).toString());
-      setDurationSecs((selectedCreative.duration_seconds % 60).toString());
+      const initialSecs = Math.max(60, selectedCreative.duration_seconds);
+      setDurationMins(Math.floor(initialSecs / 60).toString());
+      setDurationSecs((initialSecs % 60).toString());
       setRecurrence('none');
     }
   }, [selectedCreative]);
@@ -144,8 +145,8 @@ function BookPageContent() {
     const dSecs = parseInt(durationSecs || '0');
     let totalSecs = dMins * 60 + dSecs;
 
-    if (totalSecs <= 0) {
-      toast('Duration must be greater than 0', 'error');
+    if (totalSecs < 60) {
+      toast('Minimum booking duration is 1 minute', 'error');
       return;
     }
 
