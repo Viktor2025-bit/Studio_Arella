@@ -5,23 +5,23 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { PageTransition, FadeCard, Skeleton } from '@/components/ui/Animations';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { useToast } from '@/components/ui/ToastProvider';
+import Input from '@/components/ui/Input';
+import Button from '@/components/ui/Button';
 import api from '@/lib/api';
 import { Screen } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPlus, FaTrash, FaDisplay, FaLocationDot, FaArrowRight } from 'react-icons/fa6';
 import { Monitor } from 'lucide-react';
+import { theme } from '@/lib/theme';
 
-const F = "'Quicksand', sans-serif";
-const card: React.CSSProperties = { background: '#fff', border: '1px solid #E2E8F0', borderRadius: 16 };
-const inputStyle: React.CSSProperties = { width: '100%', padding: '11px 14px', background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 10, fontSize: 13, outline: 'none', fontFamily: F, color: '#1A1A1A', boxSizing: 'border-box', transition: 'border-color 0.2s, box-shadow 0.2s' };
-const onFocus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => { e.target.style.borderColor = '#D4AF37'; e.target.style.boxShadow = '0 0 0 3px rgba(212,175,55,0.12)'; };
-const onBlur  = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => { e.target.style.borderColor = '#E5E7EB'; e.target.style.boxShadow = 'none'; };
+const F = theme.font.body;
+const card: React.CSSProperties = { background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: theme.radius.lg };
 
 const typeColors: Record<string, { bg: string; text: string; border: string }> = {
   digital:   { bg: '#EFF6FF', text: '#1D4ED8', border: '#BFDBFE' },
   billboard: { bg: '#F5F3FF', text: '#6D28D9', border: '#DDD6FE' },
-  indoor:    { bg: '#F0FDF4', text: '#15803D', border: '#BBF7D0' },
-  outdoor:   { bg: '#F9F6EA', text: '#8F7212', border: '#E3C762' },
+  indoor:    { bg: theme.color.successLight, text: '#2F6A3B', border: '#C7E0BE' },
+  outdoor:   { bg: theme.color.goldLight, text: theme.color.goldDark, border: theme.color.goldMid },
 };
 
 export default function ListingsPage() {
@@ -66,16 +66,14 @@ export default function ListingsPage() {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 4 }}>
-                <Monitor size={17} color="#D4AF37" />
-                <h1 style={{ fontSize: 20, fontWeight: 800, color: '#1A1A1A', margin: 0 }}>My Listings</h1>
+                <Monitor size={17} color={theme.color.gold} />
+                <h1 style={{ fontFamily: theme.font.display, fontSize: 24, fontWeight: 600, color: theme.color.text1, margin: 0 }}>My Listings</h1>
               </div>
-              <p style={{ fontSize: 13, color: '#94A3B8', margin: 0 }}>{screens.length} screen{screens.length !== 1 ? 's' : ''} listed</p>
+              <p style={{ fontSize: 13, color: theme.color.text3, margin: 0 }}>{screens.length} screen{screens.length !== 1 ? 's' : ''} listed</p>
             </div>
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              onClick={() => setShowModal(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#D4AF37', color: '#111111', border: 'none', borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: F }}>
+            <Button onClick={() => setShowModal(true)} variant="primary">
               <FaPlus size={13} /> Add Listing
-            </motion.button>
+            </Button>
           </div>
 
           {/* Grid */}
@@ -85,16 +83,16 @@ export default function ListingsPage() {
             </div>
           ) : screens.length === 0 ? (
             <FadeCard style={{ ...card, padding: '48px 20px', textAlign: 'center' }}>
-              <div style={{ width: 56, height: 56, borderRadius: 16, background: '#F9F6EA', border: '1px solid #E3C762', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-                <FaDisplay size={24} color="#D4AF37" />
+              <div style={{ width: 56, height: 56, borderRadius: 16, background: theme.color.goldLight, border: `1px solid ${theme.color.goldMid}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                <FaDisplay size={24} color={theme.color.gold} />
               </div>
-              <p style={{ fontSize: 15, fontWeight: 700, color: '#475569', margin: '0 0 6px' }}>No screens listed yet</p>
-              <p style={{ fontSize: 13, color: '#94A3B8', margin: '0 0 18px', lineHeight: 1.5 }}>List your display and start earning when advertisers book your slots</p>
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                onClick={() => setShowModal(true)}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#D4AF37', color: '#111111', border: 'none', borderRadius: 9, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: F }}>
-                <FaPlus size={12} /> Add first screen
-              </motion.button>
+              <p style={{ fontSize: 15, fontWeight: 700, color: theme.color.text2, margin: '0 0 6px' }}>No screens listed yet</p>
+              <p style={{ fontSize: 13, color: theme.color.text3, margin: '0 0 18px', lineHeight: 1.5 }}>List your display and start earning when advertisers book your slots</p>
+              <div style={{ display: 'inline-block' }}>
+                <Button onClick={() => setShowModal(true)} variant="primary">
+                  <FaPlus size={12} /> Add first screen
+                </Button>
+              </div>
             </FadeCard>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 14 }}>
@@ -108,24 +106,24 @@ export default function ListingsPage() {
                       </div>
                       <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                         onClick={() => handleDelete(s.id)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#CBD5E1', display: 'flex', padding: 4 }}
-                        onMouseOver={e => (e.currentTarget.style.color = '#EF4444')} onMouseOut={e => (e.currentTarget.style.color = '#CBD5E1')}>
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.color.border, display: 'flex', padding: 4 }}
+                        onMouseOver={e => (e.currentTarget.style.color = theme.color.error)} onMouseOut={e => (e.currentTarget.style.color = theme.color.border)}>
                         <FaTrash size={13} />
                       </motion.button>
                     </div>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A', margin: '0 0 4px' }}>{s.name}</p>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: theme.color.text1, margin: '0 0 4px' }}>{s.name}</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 12 }}>
-                      <FaLocationDot size={11} color="#94A3B8" />
-                      <p style={{ fontSize: 12, color: '#94A3B8', margin: 0 }}>{s.location}</p>
+                      <FaLocationDot size={11} color={theme.color.text3} />
+                      <p style={{ fontSize: 12, color: theme.color.text3, margin: 0 }}>{s.location}</p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 11, fontWeight: 700, color: tm.text, background: tm.bg, border: `1px solid ${tm.border}`, padding: '2px 9px', borderRadius: 100, textTransform: 'capitalize' }}>{s.type}</span>
-                      {s.size && <span style={{ fontSize: 11, color: '#94A3B8' }}>{s.size}</span>}
+                      {s.size && <span style={{ fontSize: 11, color: theme.color.text3 }}>{s.size}</span>}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12, borderTop: '1px solid #F3F4F6' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 12, borderTop: `1px solid ${theme.color.border2}` }}>
                       <div>
-                        <p style={{ fontSize: 14, fontWeight: 800, color: '#D4AF37', margin: 0 }}>₦{s.price_per_sec}/sec</p>
-                        <p style={{ fontSize: 11, color: '#94A3B8', margin: '1px 0 0' }}>{Number(s.impressions_per_day).toLocaleString()} impressions/day</p>
+                        <p style={{ fontSize: 14, fontWeight: 800, color: theme.color.gold, margin: 0 }}>₦{s.price_per_sec}/sec</p>
+                        <p style={{ fontSize: 11, color: theme.color.text3, margin: '1px 0 0' }}>{Number(s.impressions_per_day).toLocaleString()} impressions/day</p>
                       </div>
                       <StatusBadge status={s.status} />
                     </div>
@@ -142,66 +140,45 @@ export default function ListingsPage() {
             <>
               <motion.div key="bd" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={() => setShowModal(false)}
-                style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 200, backdropFilter: 'blur(3px)' }} />
+                style={{ position: 'fixed', inset: 0, background: 'rgba(26,26,26,0.4)', zIndex: 200, backdropFilter: 'blur(3px)' }} />
               <div style={{ position: 'fixed', inset: 0, zIndex: 201, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', padding: 16 }}>
                 <motion.div key="modal"
                   initial={{ opacity: 0, scale: 0.93, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: 12 }} transition={{ duration: 0.22, ease: [0.25,0.46,0.45,0.94] }}
+                  exit={{ opacity: 0, scale: 0.95, y: 12 }} transition={{ duration: 0.22, ease: theme.motion.easing }}
                   style={{ width: '100%', maxWidth: 500, pointerEvents: 'auto' }}>
-                <div style={{ background: '#fff', borderRadius: 18, padding: 28, boxShadow: '0 20px 60px rgba(0,0,0,0.14)', fontFamily: F }}>
-                  <h2 style={{ fontSize: 18, fontWeight: 800, color: '#1A1A1A', margin: '0 0 20px', letterSpacing: '-0.3px' }}>Add New Listing</h2>
+                <div style={{ background: theme.color.surface, borderRadius: theme.radius.xl, padding: 28, boxShadow: theme.shadow.lg, fontFamily: F }}>
+                  <h2 style={{ fontFamily: theme.font.display, fontSize: 20, fontWeight: 600, color: theme.color.text1, margin: '0 0 20px', letterSpacing: '-0.2px' }}>Add New Listing</h2>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    <div>
-                      <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Screen name *</label>
-                      <input type="text" placeholder="e.g. Library Avenue LED" value={form.name}
-                        onChange={e => setForm({ ...form, name: e.target.value })} style={inputStyle} onFocus={onFocus} onBlur={onBlur} autoFocus />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Location *</label>
-                      <input type="text" placeholder="e.g. Orieagu Market, Umuahia" value={form.location}
-                        onChange={e => setForm({ ...form, location: e.target.value })} style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
-                    </div>
+                    <Input label="Screen name *" type="text" placeholder="e.g. Library Avenue LED" value={form.name}
+                      onChange={e => setForm({ ...form, name: e.target.value })} autoFocus />
+                    <Input label="Location *" type="text" placeholder="e.g. Orieagu Market, Umuahia" value={form.location}
+                      onChange={e => setForm({ ...form, location: e.target.value })} />
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                       <div>
-                        <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Type</label>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: theme.color.text2, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Type</label>
                         <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
-                          style={{ ...inputStyle, cursor: 'pointer' }} onFocus={onFocus} onBlur={onBlur}>
+                          style={{ width: '100%', padding: '11px 14px', background: theme.color.surface, border: `1.5px solid ${theme.color.border}`, borderRadius: theme.radius.sm, fontSize: 13, outline: 'none', fontFamily: F, color: theme.color.text1, boxSizing: 'border-box', cursor: 'pointer' }}>
                           <option value="digital">Digital LED</option>
                           <option value="billboard">Billboard</option>
                           <option value="indoor">Indoor</option>
                           <option value="outdoor">Outdoor</option>
                         </select>
                       </div>
-                      <div>
-                        <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Size</label>
-                        <input type="text" placeholder="e.g. 10ft × 6ft" value={form.size}
-                          onChange={e => setForm({ ...form, size: e.target.value })} style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
-                      </div>
+                      <Input label="Size" type="text" placeholder="e.g. 10ft × 6ft" value={form.size}
+                        onChange={e => setForm({ ...form, size: e.target.value })} />
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                      <div>
-                        <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Price per second (₦)</label>
-                        <input type="number" placeholder="e.g. 16.67" value={form.price_per_sec}
-                          onChange={e => setForm({ ...form, price_per_sec: e.target.value })} style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Impressions / day</label>
-                        <input type="number" placeholder="e.g. 15000" value={form.impressions_per_day}
-                          onChange={e => setForm({ ...form, impressions_per_day: e.target.value })} style={inputStyle} onFocus={onFocus} onBlur={onBlur} />
-                      </div>
+                      <Input label="Price per second (₦)" type="number" placeholder="e.g. 16.67" value={form.price_per_sec}
+                        onChange={e => setForm({ ...form, price_per_sec: e.target.value })} />
+                      <Input label="Impressions / day" type="number" placeholder="e.g. 15000" value={form.impressions_per_day}
+                        onChange={e => setForm({ ...form, impressions_per_day: e.target.value })} />
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
-                    <button onClick={() => setShowModal(false)}
-                      style={{ flex: 1, padding: '12px', background: '#F8FAFC', color: '#64748B', border: '1.5px solid #E5E7EB', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: F }}
-                      onMouseOver={e => (e.currentTarget.style.borderColor = '#CBD5E1')} onMouseOut={e => (e.currentTarget.style.borderColor = '#E5E7EB')}>
-                      Cancel
-                    </button>
-                    <motion.button whileHover={!saving ? { scale: 1.02 } : {}} whileTap={!saving ? { scale: 0.98 } : {}}
-                      onClick={handleCreate} disabled={saving}
-                      style={{ flex: 1, padding: '12px', background: saving ? '#E3C762' : '#D4AF37', color: '#111111', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: F, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, opacity: saving ? 0.75 : 1 }}>
-                      {saving ? 'Saving...' : <><FaArrowRight size={12} /> Add Listing</>}
-                    </motion.button>
+                    <Button onClick={() => setShowModal(false)} variant="secondary" style={{ flex: 1 }}>Cancel</Button>
+                    <Button onClick={handleCreate} loading={saving} loadingText="Saving..." variant="primary" style={{ flex: 1 }}>
+                      <FaArrowRight size={12} /> Add Listing
+                    </Button>
                   </div>
                   </div>
                 </motion.div>

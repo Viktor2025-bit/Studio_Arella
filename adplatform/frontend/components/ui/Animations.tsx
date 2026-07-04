@@ -1,8 +1,9 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { theme } from '@/lib/theme';
 
-const F = "'Quicksand', sans-serif";
+const F = theme.font.body;
 
 export function PageTransition({ children }: { children: React.ReactNode }) {
   return (
@@ -14,15 +15,22 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
 
 export function FadeCard({ children, style, delay = 0 }: { children: React.ReactNode; style?: React.CSSProperties; delay?: number }) {
   return (
-    <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay, ease: [0.25, 0.46, 0.45, 0.94] }} style={style}>
+    <motion.div 
+      initial={{ opacity: 0, y: 14 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      whileHover={{ y: -4, boxShadow: theme.shadow.md }}
+      transition={{ duration: 0.3, delay, ease: [0.25, 0.46, 0.45, 0.94] }} 
+      style={style}
+    >
       {children}
     </motion.div>
   );
 }
 
+/** @deprecated use `Card` with `hoverable` instead — kept during the design revamp migration. */
 export function HoverCard({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <motion.div whileHover={{ y: -3, boxShadow: '0 16px 40px rgba(0,0,0,0.07)' }} transition={{ duration: 0.18 }} style={style}>
+    <motion.div whileHover={{ y: -3, boxShadow: theme.shadow.lg }} transition={{ duration: 0.18 }} style={style}>
       {children}
     </motion.div>
   );
@@ -64,6 +72,7 @@ interface AnimatedButtonProps {
   type?: 'button' | 'submit' | 'reset';
 }
 
+/** @deprecated use `Button` instead — kept during the design revamp migration. */
 export function AnimatedButton({
   children, onClick, disabled, loading, loadingText,
   dotsColor = 'rgba(255,255,255,0.9)', style, type = 'button',
@@ -123,7 +132,7 @@ export function AnimatedButton({
 export function Skeleton({ height = 16, width, radius = 8, style }: { height?: number; width?: number | string; radius?: number; style?: React.CSSProperties }) {
   return (
     <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-      style={{ height, width: width || '100%', borderRadius: radius, background: '#F1F5F9', ...style }} />
+      style={{ height, width: width || '100%', borderRadius: radius, background: theme.color.surface2, ...style }} />
   );
 }
 
@@ -133,11 +142,11 @@ export function Modal({ open, onClose, children, title }: { open: boolean; onClo
     <>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={onClose}
-        style={{ position: 'fixed', inset: 0, background: 'rgba(30,41,59,0.4)', zIndex: 200, backdropFilter: 'blur(4px)' }} />
+        style={{ position: 'fixed', inset: 0, background: 'rgba(26,26,26,0.45)', zIndex: 200, backdropFilter: 'blur(4px)' }} />
       <motion.div initial={{ opacity: 0, scale: 0.93, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.22 }}
         style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 201, padding: 16, pointerEvents: 'none' }}>
-        <div style={{ background: '#fff', borderRadius: 20, padding: 28, width: '100%', maxWidth: 520, maxHeight: 'calc(100vh - 32px)', overflowY: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.14)', pointerEvents: 'all', fontFamily: F }}>
-          {title && <h2 style={{ fontSize: 18, fontWeight: 900, color: '#1A1A1A', margin: '0 0 20px', letterSpacing: '-0.3px' }}>{title}</h2>}
+        <div style={{ background: theme.color.surface, borderRadius: theme.radius.xl, padding: 28, width: '100%', maxWidth: 520, maxHeight: 'calc(100vh - 32px)', overflowY: 'auto', boxShadow: theme.shadow.lg, pointerEvents: 'all', fontFamily: F }}>
+          {title && <h2 style={{ fontSize: 18, fontWeight: 900, color: theme.color.text1, margin: '0 0 20px', letterSpacing: '-0.3px' }}>{title}</h2>}
           {children}
         </div>
       </motion.div>
@@ -146,10 +155,10 @@ export function Modal({ open, onClose, children, title }: { open: boolean; onClo
 }
 
 const TOAST_STYLES = {
-  success: { bg: '#F0FDF4', border: '#BBF7D0', text: '#15803D', dot: '#22C55E' },
-  error:   { bg: '#FEF2F2', border: '#FECACA', text: '#B91C1C', dot: '#EF4444' },
-  info:    { bg: '#F9F6EA', border: '#E3C762', text: '#8F7212', dot: '#D4AF37' },
-  warning: { bg: '#FEF9C3', border: '#FDE047', text: '#854D0E', dot: '#EAB308' },
+  success: { bg: theme.color.successLight, border: '#C7E0BE', text: '#2F6A3B', dot: theme.color.success },
+  error:   { bg: theme.color.errorLight,   border: '#EACAC3', text: '#8F3226', dot: theme.color.error },
+  info:    { bg: theme.color.goldLight,    border: theme.color.goldMid, text: theme.color.goldDark, dot: theme.color.gold },
+  warning: { bg: theme.color.warningLight, border: '#F0D19E', text: '#96631D', dot: theme.color.warning },
 };
 
 export function ToastContainer({ toasts, removeToast }: { toasts: any[]; removeToast: (id: string) => void }) {

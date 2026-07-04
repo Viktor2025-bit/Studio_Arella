@@ -1,6 +1,8 @@
 'use client';
 
-const F = "'Quicksand', sans-serif";
+import { theme } from '@/lib/theme';
+
+const F = theme.font.body;
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 interface GoogleButtonProps { label?: string; }
@@ -8,9 +10,9 @@ interface GoogleButtonProps { label?: string; }
 export default function GoogleButton({ label = 'Continue with Google' }: GoogleButtonProps) {
   const handleClick = () => { window.location.href = `${API}/auth/google`; };
   return (
-    <button onClick={handleClick} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 11, padding: '12px 16px', background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 11, color: '#475569', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: F, transition: 'border-color 0.15s, box-shadow 0.15s' }}
-      onMouseOver={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#CBD5E1'; (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 2px 8px rgba(0,0,0,0.07)'; }}
-      onMouseOut={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#E5E7EB'; (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none'; }}>
+    <button onClick={handleClick} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 11, padding: '12px 16px', background: theme.color.surface, border: `1.5px solid ${theme.color.border}`, borderRadius: theme.radius.sm, color: theme.color.text2, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: F, transition: 'border-color 0.15s, box-shadow 0.15s' }}
+      onMouseOver={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = theme.color.text4; (e.currentTarget as HTMLButtonElement).style.boxShadow = theme.shadow.sm; }}
+      onMouseOut={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = theme.color.border; (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none'; }}>
       <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
         <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
         <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>

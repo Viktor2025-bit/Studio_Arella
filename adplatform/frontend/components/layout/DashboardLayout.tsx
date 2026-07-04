@@ -5,8 +5,9 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
+import { theme } from '@/lib/theme';
 
-const F = "'Quicksand', sans-serif";
+const F = theme.font.body;
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loadFromStorage } = useAuthStore();
@@ -31,7 +32,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!mounted) return null;
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#F4F5F9', fontFamily: F, overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100vh', background: theme.color.bg, fontFamily: F, overflow: 'hidden' }}>
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, marginLeft: 240 }}>
         <Navbar onMenuClick={() => setMobileOpen(o => !o)} />

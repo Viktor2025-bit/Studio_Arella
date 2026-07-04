@@ -22,7 +22,7 @@ import { getAds, createAd, updateAd, deleteAd, getAdminReviewQueue, reviewAd } f
 import { getScreens, createScreen, updateScreen, deleteScreen } from '../controllers/screenController';
 import { getBalance, getTransactions, addCredits, getTotalRevenue } from '../controllers/financeController';
 import { getDashboardStats, getHourlyAnalytics, getAdvertiserProofOfPlay } from '../controllers/analyticsController';
-import { getPlatformStats, getAllUsers, getAllBookings, getAllCampaigns, getAllScreens, updateUserRole } from '../controllers/adminController';
+import { getPlatformStats, getAllUsers, getAllBookings, getAllCampaigns, getAllScreens, updateUserRole, getAllTransactions } from '../controllers/adminController';
 import { getPlans } from '../controllers/pricingController';
 import { initializePayment, initializeCreditPayment, verifyPayment, monnifyWebhook, devBypassPayment, payFromWallet } from '../controllers/paymentController';
 import { getNotifications, markRead, markAllRead, deleteNotification, getUnreadCount } from '../controllers/notificationController';
@@ -125,5 +125,6 @@ router.put('/admin/users/:id/role', authenticate, updateUserRole);
 router.get('/admin/bookings', authenticate, getAllBookings);
 router.get('/admin/campaigns', authenticate, getAllCampaigns);
 router.get('/admin/screens', authenticate, getAllScreens);
+router.get('/admin/transactions', authenticate, getAllTransactions);
 
 export default router;

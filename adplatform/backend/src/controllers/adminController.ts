@@ -137,3 +137,23 @@ export const updateUserRole : RequestHandler = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const getAllTransactions : RequestHandler = async (req, res) => {
+    const authReq = req as AuthRequest;
+  if (!adminOnly(req, res)) return;
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+    const result = await pool.query(
+      `SELECT t.*, u.name as user_name, u.email as user_email
+       FROM transactions t
+       LEFT JOIN users u ON t.user_id = u.id
+       ORDER BY t.created_at DESC LIMIT $1 OFFSET $2`,
+      [Number(limit), offset]
+    );
+    const count = await pool.query('SELECT COUNT(*) FROM transactions');
+    res.json({ transactions: result.rows, total: parseInt(count.rows[0].count) });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};

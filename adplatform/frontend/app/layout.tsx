@@ -1,6 +1,22 @@
 import type { Metadata } from 'next';
+import { Quicksand, Fraunces } from 'next/font/google';
 import './globals.css';
 import { ToastProvider } from '@/components/ui/ToastProvider';
+
+const quicksand = Quicksand({
+  subsets: ['latin'],
+  weight: 'variable',
+  variable: '--font-quicksand',
+  display: 'swap',
+});
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '900'],
+  style: ['normal', 'italic'],
+  variable: '--font-fraunces',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Studio Arella — Bems Screens | Advertise in Umuahia',
@@ -10,16 +26,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body style={{ fontFamily: "'Quicksand', sans-serif" }}>
+    <html lang="en" className={`${quicksand.variable} ${fraunces.variable}`}>
+      <body>
         <ToastProvider>
           {children}
         </ToastProvider>

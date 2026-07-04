@@ -4,9 +4,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LayoutDashboard, CalendarCheck, Megaphone, Film, DollarSign, Settings, HelpCircle, X, Shield, Calendar, Paintbrush, Monitor, BarChart2 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
-import { motion } from 'framer-motion';
+import { theme } from '@/lib/theme';
 
-const F = "'Quicksand', sans-serif";
+const F = theme.font.body;
 
 const advertiserNav = [
   { href: '/dashboard',  label: 'Dashboard',        icon: LayoutDashboard },
@@ -43,10 +43,10 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean;
   return (
     <>
       {mobileOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(30,41,59,0.4)', zIndex: 20, backdropFilter: 'blur(2px)' }}
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(26,26,26,0.45)', zIndex: 20, backdropFilter: 'blur(2px)' }}
           onClick={onClose} />
       )}
-      <aside style={{ width: 240, background: '#1A1A1A', height: '100%', borderRight: 'none', display: 'flex', flexDirection: 'column', fontFamily: F, position: 'fixed', top: 0, left: 0, zIndex: 30 }}>
+      <aside style={{ width: 240, background: theme.color.charcoal900, height: '100%', borderRight: 'none', display: 'flex', flexDirection: 'column', fontFamily: F, position: 'fixed', top: 0, left: 0, zIndex: 30 }}>
 
         {/* Logo */}
         <div style={{ padding: '20px 18px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
@@ -61,9 +61,9 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean;
             )}
           </div>
           {/* Role badge */}
-          <div style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(212,175,55,0.15)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 100, padding: '3px 10px' }}>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#D4AF37', display: 'inline-block' }} />
-            <span style={{ fontSize: 10, fontWeight: 800, color: '#E8CE5E', letterSpacing: '0.04em' }}>
+          <div style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(224,165,38,0.15)', border: '1px solid rgba(224,165,38,0.28)', borderRadius: theme.radius.pill, padding: '3px 10px' }}>
+            <span style={{ width: 5, height: 5, borderRadius: '50%', background: theme.color.gold, display: 'inline-block' }} />
+            <span style={{ fontSize: 10, fontWeight: 800, color: theme.color.goldMid, letterSpacing: '0.04em' }}>
               {user?.role === 'admin' ? 'Admin — Bems Group' : 'Advertiser'}
             </span>
           </div>
@@ -77,19 +77,19 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean;
               return (
                 <li key={href}>
                   <Link href={href} onClick={onClose} style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10,
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: theme.radius.sm,
                     textDecoration: 'none', fontSize: 13, fontWeight: active ? 800 : 600,
-                    color: active  ? '#111111' : highlight ? '#E3C762' : 'rgba(255,255,255,0.5)',
-                    background: active ? '#D4AF37' : 'transparent',
-                    boxShadow: active ? '0 4px 12px rgba(212,175,55,0.35)' : 'none',
+                    color: active  ? theme.color.charcoal900 : highlight ? theme.color.goldMid : 'rgba(255,255,255,0.5)',
+                    background: active ? theme.color.gold : 'transparent',
+                    boxShadow: active ? theme.shadow.gold : 'none',
                     transition: 'all 0.15s',
                   }}
-                    onMouseOver={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(212,175,55,0.12)'; }}
+                    onMouseOver={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(224,165,38,0.12)'; }}
                     onMouseOut={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                     <Icon size={15} strokeWidth={active ? 2.5 : 1.8} />
                     {label}
                     {highlight && !active && (
-                      <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 900, background: '#EAB308', color: '#fff', padding: '2px 7px', borderRadius: 100, letterSpacing: '0.05em' }}>BOOK</span>
+                      <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 900, background: theme.color.warning, color: '#fff', padding: '2px 7px', borderRadius: theme.radius.pill, letterSpacing: '0.05em' }}>BOOK</span>
                     )}
                   </Link>
                 </li>
@@ -104,8 +104,8 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean;
                 const active = pathname === href;
                 return (
                   <li key={href}>
-                    <Link href={href} onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, textDecoration: 'none', fontSize: 13, fontWeight: active ? 800 : 600, color: active  ? '#111111' : 'rgba(255,255,255,0.4)', background: active ? '#D4AF37' : 'transparent', transition: 'all 0.15s' }}
-                      onMouseOver={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(212,175,55,0.12)'; }}
+                    <Link href={href} onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: theme.radius.sm, textDecoration: 'none', fontSize: 13, fontWeight: active ? 800 : 600, color: active  ? theme.color.charcoal900 : 'rgba(255,255,255,0.4)', background: active ? theme.color.gold : 'transparent', transition: 'all 0.15s' }}
+                      onMouseOver={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(224,165,38,0.12)'; }}
                       onMouseOut={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                       <Icon size={15} strokeWidth={1.8} />{label}
                     </Link>
@@ -119,7 +119,7 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean;
         {/* User footer */}
         <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg,#D4AF37,#6D28D9)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: '#fff', flexShrink: 0 }}>
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: `linear-gradient(135deg,${theme.color.gold},${theme.color.charcoal700})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: '#fff', flexShrink: 0 }}>
               {user?.name?.[0]?.toUpperCase() || 'U'}
             </div>
             <div style={{ overflow: 'hidden', flex: 1 }}>

@@ -54,8 +54,8 @@ export const getBookingSlots: RequestHandler = async (req, res) => {
       FROM booking_slots 
       WHERE screen_id = $1 
         AND status IN ('active', 'locked')
-        AND start_time >= $2::timestamp 
-        AND end_time <= $3::timestamp
+        AND start_time >= $2::timestamptz 
+        AND end_time <= $3::timestamptz
     `;
     const result = await pool.query(query, [screen_id, start_date, end_date]);
     res.json({ slots: result.rows });
@@ -85,6 +85,16 @@ export const reserveSlots: RequestHandler = async (req, res) => {
     for (const block of slots) {
       const startDt = new Date(block.start);
       const endDt = new Date(block.end);
+      
+      const startHour = startDt.getHours();
+      const endHour = endDt.getHours();
+      const endMins = endDt.getMinutes();
+      
+      // Operating hours are exactly 6:00 AM to 7:00 PM (19:00)
+      if (startHour < 6 || startHour >= 19 || (endHour > 19 || (endHour === 19 && endMins > 0))) {
+         res.status(400).json({ message: 'Bookings must strictly be between 6:00 AM and 7:00 PM' }); return;
+      }
+      
       totalSeconds += (endDt.getTime() - startDt.getTime()) / 1000;
     }
     const totalCost = Math.round(totalSeconds * (1000 / 60));
@@ -99,7 +109,7 @@ export const reserveSlots: RequestHandler = async (req, res) => {
         SELECT id FROM booking_slots
         WHERE screen_id = $1
         AND status IN ('active', 'locked')
-        AND tsrange(start_time::timestamp, end_time::timestamp) && tsrange($2::timestamp, $3::timestamp)
+        AND tstzrange(start_time, end_time) && tstzrange($2::timestamptz, $3::timestamptz)
       `, [screen_id, startDt.toISOString(), endDt.toISOString()]);
       
       if (conflict.rows.length > 0) {
@@ -169,8 +179,8 @@ export const createBooking: RequestHandler = async (req, res) => {
       `SELECT id FROM bookings
        WHERE screen_id = $1
          AND status NOT IN ('cancelled', 'failed')
-         AND tsrange(start_time::timestamp, end_time::timestamp) &&
-             tsrange($2::timestamp, $3::timestamp)`,
+         AND tstzrange(start_time, end_time) &&
+             tstzrange($2::timestamptz, $3::timestamptz)`,
       [screen_id, start_time, end_time]
     );
     if (conflict.rows.length > 0) {
@@ -181,8 +191,8 @@ export const createBooking: RequestHandler = async (req, res) => {
     const blocked = await pool.query(
       `SELECT id FROM slot_blocks
        WHERE screen_id = $1
-         AND tsrange(start_time::timestamp, end_time::timestamp) &&
-             tsrange($2::timestamp, $3::timestamp)`,
+         AND tstzrange(start_time, end_time) &&
+             tstzrange($2::timestamptz, $3::timestamptz)`,
       [screen_id, start_time, end_time]
     );
     if (blocked.rows.length > 0) {

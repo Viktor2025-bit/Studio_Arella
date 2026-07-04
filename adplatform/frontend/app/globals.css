@@ -1,36 +1,53 @@
+@import 'tailwindcss';
+
 *, *::before, *::after { box-sizing: border-box; }
 
 :root {
-  /* ── Core palette ── */
-  --bg:        #F4F5F9;
-  --surface:   #ffffff;
-  --surface-2: #F8FAFC;
+  /* ── Core palette — clean white/slate ── */
+  --bg:        #F8FAFC;
+  --surface:   #FFFFFF;
+  --surface-2: #F1F5F9;
   --border:    #E2E8F0;
-  --border-2:  #F1F5F9;
+  --border-2:  #CBD5E1;
+
+  /* ── Charcoal (dark anchor — matches Sidebar/logo card) ── */
+  --charcoal-900: #1A1A1A;
+  --charcoal-800: #262220;
+  --charcoal-700: #3D3833;
 
   /* ── Text ── */
-  --text-1: #1A1A1A;
-  --text-2: #475569;
+  --text-1: #0F172A;
+  --text-2: #334155;
   --text-3: #64748B;
   --text-4: #94A3B8;
 
-  /* ── Accent colours ── */
-  --purple:  #D4AF37;
-  --purple-l: #F9F6EA;
-  --purple-b: #E3C762;
-  --cyan:    #06B6D4;
-  --cyan-l:  #CFFAFE;
-  --yellow:  #EAB308;
-  --yellow-l:#FEF9C3;
-  --green:   #22C55E;
-  --green-l: #DCFCE7;
-  --red:     #EF4444;
-  --red-l:   #FEF2F2;
+  /* ── Brand accent: gold/marigold ── */
+  --gold:       #E0A526;
+  --gold-dark:  #B8841A;
+  --gold-light: #FBF0DA;
+  --gold-mid:   #EFC65E;
+
+  /* ── Tertiary: glitch duotone — rare use only (hero underline, live/on-air glow, one featured badge). Never buttons/links/status. ── */
+  --glitch-cyan:    #00E5FF;
+  --glitch-magenta: #FF2FB0;
+
+  /* ── Semantic (warmed to sit on cream, not icy Tailwind defaults) ── */
+  --success:       #4C9A5A;
+  --success-light: #E9F3E4;
+  --warning:       #D98E2B;
+  --warning-light: #FBEEDA;
+  --error:         #C9483A;
+  --error-light:   #F7E7E2;
+
+  /* ── Fonts ── */
+  --font-body:    var(--font-quicksand), 'Quicksand', sans-serif;
+  --font-display: var(--font-fraunces), 'Fraunces', serif;
 
   /* ── Shadows ── */
-  --shadow-sm: 0 2px 8px rgba(0,0,0,0.04);
-  --shadow-md: 0 10px 30px rgba(0,0,0,0.04);
-  --shadow-lg: 0 20px 40px rgba(0,0,0,0.06);
+  --shadow-sm:   0 2px 8px rgba(33,29,23,0.06);
+  --shadow-md:   0 10px 30px rgba(33,29,23,0.07);
+  --shadow-lg:   0 20px 40px rgba(33,29,23,0.10);
+  --shadow-gold: 0 8px 20px rgba(224,165,38,0.30);
 }
 
 html, body {
@@ -38,7 +55,7 @@ html, body {
   padding: 0;
   background: var(--bg);
   color: var(--text-1);
-  font-family: 'Quicksand', sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -50,8 +67,22 @@ html, body {
 ::-webkit-scrollbar-thumb:hover { background: var(--text-4); }
 
 /* ── Focus rings ── */
-:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
 /* ── Animations ── */
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 0.75s linear infinite; }
+
+/* ── Global Interactive Elements ── */
+button {
+  transition: transform 0.15s ease, opacity 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+}
+button:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.02);
+}
+button:active:not(:disabled) {
+  transform: translateY(0px) scale(0.98);
+}
+a {
+  transition: opacity 0.15s ease;
+}

@@ -5,41 +5,21 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { PageTransition, FadeCard, Skeleton } from '@/components/ui/Animations';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { useToast } from '@/components/ui/ToastProvider';
+import Input from '@/components/ui/Input';
+import Button from '@/components/ui/Button';
+import { Table, TableHead, TableHeaderCell, TableBody, TableRow, TableCell } from '@/components/ui/Table';
 import api from '@/lib/api';
 import { Campaign } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaMagnifyingGlass, FaPlus, FaTrash, FaArrowRight, FaBullhorn } from 'react-icons/fa6';
-import Link from 'next/link';
+import { FaMagnifyingGlass, FaPlus, FaTrash, FaBullhorn } from 'react-icons/fa6';
+import { theme } from '@/lib/theme';
 
-const F = "'Quicksand', sans-serif";
+const F = theme.font.body;
 
 const card: React.CSSProperties = {
-  background: '#fff',
-  border: '1px solid #E2E8F0',
-  borderRadius: 16,
-};
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  padding: '11px 14px',
-  background: '#fff',
-  border: '1.5px solid #E5E7EB',
-  borderRadius: 10,
-  fontSize: 13,
-  outline: 'none',
-  fontFamily: F,
-  color: '#1A1A1A',
-  boxSizing: 'border-box',
-  transition: 'border-color 0.2s, box-shadow 0.2s',
-};
-
-const onFocus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-  e.target.style.borderColor = '#D4AF37';
-  e.target.style.boxShadow = '0 0 0 3px rgba(212,175,55,0.12)';
-};
-const onBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-  e.target.style.borderColor = '#E5E7EB';
-  e.target.style.boxShadow = 'none';
+  background: theme.color.surface,
+  border: `1px solid ${theme.color.border}`,
+  borderRadius: theme.radius.lg,
 };
 
 export default function CampaignsPage() {
@@ -104,45 +84,38 @@ export default function CampaignsPage() {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 4 }}>
-                <FaBullhorn size={17} color="#D4AF37" />
-                <h1 style={{ fontSize: 20, fontWeight: 800, color: '#1A1A1A', margin: 0 }}>My Campaigns</h1>
+                <FaBullhorn size={17} color={theme.color.gold} />
+                <h1 style={{ fontFamily: theme.font.display, fontSize: 24, fontWeight: 600, color: theme.color.text1, margin: 0 }}>My Campaigns</h1>
               </div>
-              <p style={{ fontSize: 13, color: '#94A3B8', margin: 0 }}>{campaigns.length} campaign{campaigns.length !== 1 ? 's' : ''} total</p>
+              <p style={{ fontSize: 13, color: theme.color.text3, margin: 0 }}>{campaigns.length} campaign{campaigns.length !== 1 ? 's' : ''} total</p>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              onClick={() => setShowModal(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#D4AF37', color: '#111111', border: 'none', borderRadius: 10, padding: '10px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: F }}
-            >
+            <Button onClick={() => setShowModal(true)} variant="primary">
               <FaPlus size={13} /> New Campaign
-            </motion.button>
+            </Button>
           </div>
 
           {/* Search */}
           <div style={{ position: 'relative', maxWidth: 320 }}>
-            <FaMagnifyingGlass size={13} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
-            <input
+            <FaMagnifyingGlass size={13} style={{ position: 'absolute', left: 12, top: 16, color: theme.color.text3, zIndex: 1 }} />
+            <Input
               type="text"
               placeholder="Search campaigns..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              style={{ ...inputStyle, paddingLeft: 34 }}
-              onFocus={onFocus} onBlur={onBlur}
+              style={{ paddingLeft: 34 }}
             />
           </div>
 
           {/* Table */}
           <FadeCard style={{ ...card, overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                <thead>
-                  <tr style={{ background: '#FAFAFA', borderBottom: '1px solid #F3F4F6' }}>
-                    {['Campaign Name', 'Status', 'Budget', 'Spent', 'Impressions', 'Ads', 'Start', 'End', ''].map(h => (
-                      <th key={h} style={{ textAlign: 'left', padding: '11px 18px', color: '#94A3B8', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
+              <Table>
+                <TableHead>
+                  {['Campaign Name', 'Status', 'Budget', 'Spent', 'Impressions', 'Ads', 'Start', 'End', ''].map(h => (
+                    <TableHeaderCell key={h}>{h}</TableHeaderCell>
+                  ))}
+                </TableHead>
+                <TableBody>
                   {loading ? (
                     Array.from({ length: 4 }).map((_, i) => (
                       <tr key={i}>
@@ -155,44 +128,42 @@ export default function CampaignsPage() {
                     <tr>
                       <td colSpan={9} style={{ padding: '56px 20px', textAlign: 'center' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                          <div style={{ width: 48, height: 48, borderRadius: 14, background: '#F9F6EA', border: '1px solid #E3C762', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <FaBullhorn size={20} color="#D4AF37" />
+                          <div style={{ width: 48, height: 48, borderRadius: 14, background: theme.color.goldLight, border: `1px solid ${theme.color.goldMid}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <FaBullhorn size={20} color={theme.color.gold} />
                           </div>
-                          <p style={{ fontSize: 14, fontWeight: 700, color: '#475569', margin: 0 }}>No campaigns yet</p>
-                          <p style={{ fontSize: 12, color: '#94A3B8', margin: 0 }}>Create your first campaign to start tracking your ad performance</p>
-                          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                            onClick={() => setShowModal(true)}
-                            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#D4AF37', color: '#111111', border: 'none', borderRadius: 9, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer', marginTop: 4, fontFamily: F }}>
-                            <FaPlus size={12} /> Create Campaign
-                          </motion.button>
+                          <p style={{ fontSize: 14, fontWeight: 700, color: theme.color.text2, margin: 0 }}>No campaigns yet</p>
+                          <p style={{ fontSize: 12, color: theme.color.text3, margin: 0 }}>Create your first campaign to start tracking your ad performance</p>
+                          <div style={{ marginTop: 4 }}>
+                            <Button onClick={() => setShowModal(true)} variant="primary">
+                              <FaPlus size={12} /> Create Campaign
+                            </Button>
+                          </div>
                         </div>
                       </td>
                     </tr>
                   ) : filtered.map(c => (
-                    <motion.tr key={c.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                      style={{ borderTop: '1px solid #F8FAFC' }}
-                      whileHover={{ background: '#FAFAFA' }}>
-                      <td style={{ padding: '13px 18px', fontWeight: 700, color: '#1A1A1A' }}>{c.name}</td>
-                      <td style={{ padding: '13px 18px' }}><StatusBadge status={c.status} /></td>
-                      <td style={{ padding: '13px 18px', color: '#64748B' }}>₦{Number(c.budget).toLocaleString()}</td>
-                      <td style={{ padding: '13px 18px', color: '#64748B' }}>₦{Number(c.spent).toLocaleString()}</td>
-                      <td style={{ padding: '13px 18px', color: '#64748B' }}>{Number(c.impressions).toLocaleString()}</td>
-                      <td style={{ padding: '13px 18px', color: '#64748B' }}>{c.ad_count || 0}</td>
-                      <td style={{ padding: '13px 18px', color: '#94A3B8', fontSize: 12 }}>{c.start_date ? new Date(c.start_date).toLocaleDateString() : '—'}</td>
-                      <td style={{ padding: '13px 18px', color: '#94A3B8', fontSize: 12 }}>{c.end_date ? new Date(c.end_date).toLocaleDateString() : '—'}</td>
-                      <td style={{ padding: '13px 18px' }}>
+                    <TableRow key={c.id}>
+                      <TableCell><span style={{ fontWeight: 700, color: theme.color.text1 }}>{c.name}</span></TableCell>
+                      <TableCell><StatusBadge status={c.status} /></TableCell>
+                      <TableCell>₦{Number(c.budget).toLocaleString()}</TableCell>
+                      <TableCell>₦{Number(c.spent).toLocaleString()}</TableCell>
+                      <TableCell>{Number(c.impressions).toLocaleString()}</TableCell>
+                      <TableCell>{c.ad_count || 0}</TableCell>
+                      <TableCell><span style={{ fontSize: 12, color: theme.color.text3 }}>{c.start_date ? new Date(c.start_date).toLocaleDateString() : '—'}</span></TableCell>
+                      <TableCell><span style={{ fontSize: 12, color: theme.color.text3 }}>{c.end_date ? new Date(c.end_date).toLocaleDateString() : '—'}</span></TableCell>
+                      <TableCell>
                         <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
                           onClick={() => handleDelete(c.id)}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#CBD5E1', display: 'flex', padding: 4 }}
-                          onMouseOver={e => (e.currentTarget.style.color = '#EF4444')}
-                          onMouseOut={e => (e.currentTarget.style.color = '#CBD5E1')}>
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.color.border, display: 'flex', padding: 4 }}
+                          onMouseOver={e => (e.currentTarget.style.color = theme.color.error)}
+                          onMouseOut={e => (e.currentTarget.style.color = theme.color.border)}>
                           <FaTrash size={13} />
                         </motion.button>
-                      </td>
-                    </motion.tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </FadeCard>
         </div>
@@ -205,7 +176,7 @@ export default function CampaignsPage() {
                 key="backdrop"
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={() => setShowModal(false)}
-                style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 200, backdropFilter: 'blur(3px)' }}
+                style={{ position: 'fixed', inset: 0, background: 'rgba(26,26,26,0.4)', zIndex: 200, backdropFilter: 'blur(3px)' }}
               />
               <div style={{ position: 'fixed', inset: 0, zIndex: 201, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', padding: 16 }}>
                 <motion.div
@@ -213,80 +184,51 @@ export default function CampaignsPage() {
                   initial={{ opacity: 0, scale: 0.93, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 12 }}
-                  transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+                  transition={{ duration: 0.22, ease: theme.motion.easing }}
                   style={{ width: '100%', maxWidth: 480, pointerEvents: 'auto' }}
                 >
-                <div style={{ background: '#fff', borderRadius: 18, padding: 28, boxShadow: '0 20px 60px rgba(0,0,0,0.14)', fontFamily: F }}>
-                  <h2 style={{ fontSize: 18, fontWeight: 800, color: '#1A1A1A', margin: '0 0 20px', letterSpacing: '-0.3px' }}>New Campaign</h2>
+                <div style={{ background: theme.color.surface, borderRadius: theme.radius.xl, padding: 28, boxShadow: theme.shadow.lg, fontFamily: F }}>
+                  <h2 style={{ fontFamily: theme.font.display, fontSize: 20, fontWeight: 600, color: theme.color.text1, margin: '0 0 20px', letterSpacing: '-0.2px' }}>New Campaign</h2>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    <div>
-                      <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Campaign name *</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Grand Opening — August 2025"
-                        value={form.name}
-                        onChange={e => setForm({ ...form, name: e.target.value })}
-                        style={inputStyle}
-                        onFocus={onFocus} onBlur={onBlur}
-                        autoFocus
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Budget (₦)</label>
-                      <input
-                        type="number"
-                        placeholder="e.g. 50000"
-                        value={form.budget}
-                        onChange={e => setForm({ ...form, budget: e.target.value })}
-                        style={inputStyle}
-                        onFocus={onFocus} onBlur={onBlur}
-                      />
-                    </div>
-
+                    <Input
+                      label="Campaign name *"
+                      type="text"
+                      placeholder="e.g. Grand Opening — August 2025"
+                      value={form.name}
+                      onChange={e => setForm({ ...form, name: e.target.value })}
+                      autoFocus
+                    />
+                    <Input
+                      label="Budget (₦)"
+                      type="number"
+                      placeholder="e.g. 50000"
+                      value={form.budget}
+                      onChange={e => setForm({ ...form, budget: e.target.value })}
+                    />
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                      <div>
-                        <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Start date</label>
-                        <input
-                          type="date"
-                          value={form.start_date}
-                          onChange={e => setForm({ ...form, start_date: e.target.value })}
-                          style={inputStyle}
-                          onFocus={onFocus} onBlur={onBlur}
-                        />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: 11, fontWeight: 700, color: '#475569', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>End date</label>
-                        <input
-                          type="date"
-                          value={form.end_date}
-                          onChange={e => setForm({ ...form, end_date: e.target.value })}
-                          style={inputStyle}
-                          onFocus={onFocus} onBlur={onBlur}
-                        />
-                      </div>
+                      <Input
+                        label="Start date"
+                        type="date"
+                        value={form.start_date}
+                        onChange={e => setForm({ ...form, start_date: e.target.value })}
+                      />
+                      <Input
+                        label="End date"
+                        type="date"
+                        value={form.end_date}
+                        onChange={e => setForm({ ...form, end_date: e.target.value })}
+                      />
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
-                    <button
-                      onClick={() => setShowModal(false)}
-                      style={{ flex: 1, padding: '12px', background: '#F8FAFC', color: '#64748B', border: '1.5px solid #E5E7EB', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: F, transition: 'border-color 0.15s' }}
-                      onMouseOver={e => (e.currentTarget.style.borderColor = '#CBD5E1')}
-                      onMouseOut={e => (e.currentTarget.style.borderColor = '#E5E7EB')}
-                    >
+                    <Button onClick={() => setShowModal(false)} variant="secondary" style={{ flex: 1 }}>
                       Cancel
-                    </button>
-                    <motion.button
-                      whileHover={!saving ? { scale: 1.02 } : {}}
-                      whileTap={!saving ? { scale: 0.98 } : {}}
-                      onClick={handleCreate}
-                      disabled={saving}
-                      style={{ flex: 1, padding: '12px', background: saving ? '#E3C762' : '#D4AF37', color: '#111111', border: 'none', borderRadius: 10, fontSize: 13, fontWeight: 800, cursor: saving ? 'not-allowed' : 'pointer', fontFamily: F, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, opacity: saving ? 0.75 : 1 }}
-                    >
-                      {saving ? 'Creating...' : <><FaArrowRight size={12} /> Create Campaign</>}
-                    </motion.button>
+                    </Button>
+                    <Button onClick={handleCreate} loading={saving} loadingText="Creating..." variant="primary" style={{ flex: 1 }}>
+                      Create Campaign
+                    </Button>
                   </div>
                 </div>
                 </motion.div>

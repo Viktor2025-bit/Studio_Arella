@@ -131,6 +131,43 @@ function StatCard({ value, suffix = '', label, start }: { value: number; suffix?
   );
 }
 
+function ImageCarousel() {
+  const [idx, setIdx] = useState(0);
+  const items = [
+    { src: "/billboards/dennis-maliepaard-7b7wSvGn2W4-unsplash.jpg", caption: "Premium Outdoor Displays" },
+    { src: "/billboards/lee-soo-hyun-Z5cyBi5CLPg-unsplash.jpg", caption: "High-Traffic City Billboards" },
+    { src: "/billboards/pawel-czerwinski-_9dSF0Hwitw-unsplash.jpg", caption: "Vibrant Digital Screens" },
+    { src: "/billboards/tania-mousinho-6tCgnd2xNfI-unsplash.jpg", caption: "Maximized Brand Visibility" },
+    { src: "/billboards/tania-mousinho-YlpfE9uCakE-unsplash.jpg", caption: "Strategic Junction Placements" }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIdx(i => (i + 1) % items.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div style={{ position: 'relative', width: '100%', height: 260, overflow: 'hidden', background: '#000' }}>
+      {items.map((item, i) => (
+        <motion.div 
+          key={item.src}
+          initial={false}
+          animate={{ opacity: i === idx ? 1 : 0, scale: i === idx ? 1 : 1.05 }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+          style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, pointerEvents: i === idx ? 'auto' : 'none' }}
+        >
+          <img src={item.src} alt={item.caption} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          <div style={{ position: 'absolute', bottom: 10, left: 10, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '6px 12px', borderRadius: 8, letterSpacing: '0.04em' }}>
+            {item.caption}
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 export default function LandingPage() {
   const typed = useTypewriter(['book a 1-minute slot for ₦1,000.', 'reach thousands daily at Bems Junction.', 'push your ad live from anywhere.', 'grow your business across Umuahia.', 'advertise without the agency fees.'], 100, 2200);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -206,7 +243,7 @@ export default function LandingPage() {
       {/* HERO */}
       <section style={{ minHeight: '100vh', paddingTop: 68, display: 'flex', alignItems: 'center', position: 'relative', zIndex: 2 }}>
         <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto', padding: '80px 24px' }}>
-          <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 64, alignItems: 'center' }}>
+          <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 64, alignItems: 'center' }}>
             <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff', border: '1px solid #E2E8F0', borderRadius: 100, padding: '6px 16px', marginBottom: 28, boxShadow: '0 4px 12px rgba(0,0,0,0.04)' }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#EAB308', boxShadow: '0 0 10px #EAB308' }} />
@@ -238,9 +275,9 @@ export default function LandingPage() {
 
             <motion.div className="hero-ticker" initial={{ opacity: 0, x: 32 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>
               <div>
-                <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.04)', overflow: 'hidden', height: 380, position: 'relative', padding: 8 }}>
+                <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.04)', overflow: 'hidden', height: 460, position: 'relative', padding: 8 }}>
                   <div style={{ background: '#F8FAFC', borderRadius: 16, height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', position: 'relative' }}>
-                    <img src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=1000&auto=format&fit=crop" alt="Digital Billboard" style={{ width: '100%', height: 180, objectFit: 'cover' }} />
+                    <ImageCarousel />
                     <div style={{ padding: 20, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'linear-gradient(to bottom, #F8FAFC, #F1F5F9)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                         <FaDisplay size={14} color="#D4AF37" />
