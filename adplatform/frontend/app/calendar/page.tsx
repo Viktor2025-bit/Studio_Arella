@@ -22,7 +22,7 @@ export default function CalendarPage() {
                 <h1 style={{ fontFamily: theme.font.display, fontSize: 26, fontWeight: 600, color: theme.color.text1, margin: 0, letterSpacing: '-0.2px' }}>Booking Calendar</h1>
               </div>
               <p style={{ fontSize: 13, color: theme.color.text2, margin: 0 }}>
-                Visual overview of all your screen bookings. Click any event for details.
+                Visual overview of all your screen and podcast bookings. Click any event for details.
               </p>
             </div>
             <Link href="/book" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: theme.color.gold, color: theme.color.charcoal900, padding: '10px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
@@ -35,8 +35,7 @@ export default function CalendarPage() {
             <div>
               <p style={{ fontSize: 13, color: theme.color.text1, fontWeight: 600, margin: '0 0 2px' }}>How to use the calendar</p>
               <p style={{ fontSize: 12, color: theme.color.text2, margin: 0, lineHeight: 1.6 }}>
-                Switch between Month, Week, and Day views using the toolbar. Each coloured block is a booking.
-                Green = active, amber = paused, grey = ended, red = cancelled. Click any event to see details.
+                Switch between Month, Week, and Day views using the toolbar. Purple blocks represent podcast studio bookings. Other coloured blocks represent ad screen bookings (Green = active, amber = paused, grey = ended, red = cancelled). Click any event to see details.
               </p>
             </div>
           </div>

@@ -12,6 +12,7 @@ import { FaArrowRight, FaArrowTrendUp, FaCalendarDays, FaBullhorn, FaPaintbrush,
 import { DollarSign, Megaphone, Monitor, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { theme } from '@/lib/theme';
+import DashboardTour from '@/components/ui/DashboardTour';
 
 const F = theme.font.body;
 const card: React.CSSProperties = { background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: theme.radius.lg, boxShadow: theme.shadow.sm };
@@ -69,6 +70,7 @@ export default function AdvertiserDashboard() {
 
   return (
     <PageTransition>
+      <DashboardTour />
       <div style={{ fontFamily: F }}>
         <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontFamily: theme.font.display, fontSize: 26, fontWeight: 600, color: theme.color.text1, margin: '0 0 4px', letterSpacing: '-0.3px' }}>
@@ -83,11 +85,11 @@ export default function AdvertiserDashboard() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
 
             {/* Stat cards */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+            <div id="tour-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
               {[
                 { label: 'Total Ad Spend', value: `₦${(stats?.total_revenue || 0).toLocaleString()}`, icon: DollarSign, color: theme.color.gold, bg: theme.color.goldLight, border: theme.color.goldMid, change: '+12%' },
-                { label: 'Active Campaigns', value: stats?.active_campaigns || 0, icon: Megaphone, color: theme.color.success, bg: theme.color.successLight, border: '#C7E0BE', change: '' },
-                { label: 'Slots Booked', value: stats?.active_screens || 0, icon: Monitor, color: '#0E7490', bg: '#DFFAFD', border: '#9CE9F2', change: '' },
+                { label: 'Active Campaigns', value: stats?.active_campaigns || 0, icon: Megaphone, color: theme.color.success, bg: theme.color.successLight, border: theme.color.success, change: '' },
+                { label: 'Slots Booked', value: stats?.active_screens || 0, icon: Monitor, color: theme.color.info, bg: theme.color.infoLight, border: theme.color.infoBorder, change: '' },
               ].map(({ label, value, icon: Icon, color, bg, border, change }, i) => (
                 <FadeCard key={label} delay={i * 0.07} style={{ ...card, padding: '20px', position: 'relative', overflow: 'hidden' }}>
                   <div style={{ position: 'absolute', top: 0, right: 0, width: 80, height: 80, background: `radial-gradient(circle at top right,${bg},transparent)`, pointerEvents: 'none' }} />
@@ -96,7 +98,7 @@ export default function AdvertiserDashboard() {
                       <Icon size={18} color={color} />
                     </div>
                     {change && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: theme.color.successLight, border: '1px solid #C7E0BE', borderRadius: 100, padding: '2px 8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: theme.color.successLight, border: `1px solid ${theme.color.success}`, borderRadius: 100, padding: '2px 8px' }}>
                         <FaCircleArrowUp size={10} color={theme.color.success} />
                         <span style={{ fontSize: 10, fontWeight: 800, color: theme.color.success }}>{change}</span>
                       </div>
@@ -109,15 +111,16 @@ export default function AdvertiserDashboard() {
             </div>
 
             {/* Chart */}
-            <FadeCard delay={0.16} style={{ ...card, padding: '22px 22px 14px' }}>
+            <div id="tour-chart">
+              <FadeCard delay={0.16} style={{ ...card, padding: '22px 22px 14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 800, color: theme.color.text1, margin: '0 0 2px', letterSpacing: '-0.2px' }}>Impression Activity</p>
                   <p style={{ fontSize: 11, color: theme.color.text3, margin: 0, fontWeight: 500 }}>Hourly performance on Studio Arella today</p>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#DFFAFD', border: '1px solid #9CE9F2', borderRadius: 100, padding: '4px 10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: theme.color.infoLight, border: `1px solid ${theme.color.infoBorder}`, borderRadius: 100, padding: '4px 10px' }}>
                   <div style={{ width: 6, height: 6, borderRadius: '50%', background: theme.color.glitchCyan }} />
-                  <span style={{ fontSize: 10, fontWeight: 800, color: '#046A80' }}>Live</span>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: theme.color.info }}>Live</span>
                 </div>
               </div>
               {chart.some((d: any) => d.impressions > 0) ? (
@@ -144,6 +147,7 @@ export default function AdvertiserDashboard() {
                 </div>
               )}
             </FadeCard>
+            </div>
 
             {/* Bookings table */}
             <FadeCard delay={0.24} style={{ ...card, padding: 22 }}>
@@ -212,29 +216,32 @@ export default function AdvertiserDashboard() {
             </FadeCard>
 
             {/* Credits */}
-            <FadeCard delay={0.14} style={{ ...card, padding: '20px 22px' }}>
+            <div id="tour-balance">
+              <FadeCard delay={0.14} style={{ ...card, padding: '20px 22px' }}>
               <p style={{ fontSize: 10, fontWeight: 800, color: theme.color.text3, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 10px' }}>Account Balance</p>
               <p style={{ fontSize: 30, fontWeight: 900, color: theme.color.text1, margin: '0 0 2px', letterSpacing: '-0.8px' }}>₦{(balance?.credits || 0).toLocaleString()}</p>
               <p style={{ fontSize: 11, color: theme.color.text3, margin: '0 0 14px', fontWeight: 500 }}>Available credits</p>
               {(balance?.credits || 0) < 1000 && (
-                <div style={{ background: theme.color.warningLight, border: '1px solid #F0D19E', borderRadius: 9, padding: '8px 12px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <span style={{ fontSize: 11, color: '#96631D', fontWeight: 700 }}>Min ₦1,000 to book a 1-min slot</span>
+                <div style={{ background: theme.color.warningLight, border: `1px solid ${theme.color.warning}`, borderRadius: 9, padding: '8px 12px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <span style={{ fontSize: 11, color: theme.color.warning, fontWeight: 700 }}>Min ₦1,000 to book a 1-min slot</span>
                 </div>
               )}
               <Link href="/finances" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, background: theme.color.charcoal900, color: '#fff', padding: '10px', borderRadius: 9, fontSize: 12, fontWeight: 800, textDecoration: 'none' }}>
                 Add Credits <FaArrowRight size={11} />
               </Link>
             </FadeCard>
+            </div>
 
             {/* Quick actions */}
-            <FadeCard delay={0.20} style={{ ...card, padding: '20px 22px' }}>
+            <div id="tour-actions">
+              <FadeCard delay={0.20} style={{ ...card, padding: '20px 22px' }}>
               <p style={{ fontSize: 10, fontWeight: 800, color: theme.color.text3, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 12px' }}>Quick Actions</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                 {[
                   { label: 'Book Ad Slot',          href: '/book',      bg: theme.color.goldLight,    color: theme.color.goldDark, border: theme.color.goldMid, Icon: FaCalendar },
-                  { label: 'Request Creative Team', href: '/creative',  bg: theme.color.warningLight,  color: '#96631D', border: '#F0D19E', Icon: FaPaintbrush },
-                  { label: 'View Calendar',          href: '/calendar',  bg: theme.color.successLight,  color: '#2F6A3B', border: '#C7E0BE', Icon: FaCalendarDays },
-                  { label: 'Create Campaign',        href: '/campaigns', bg: '#DFFAFD',                 color: '#0E7490', border: '#9CE9F2', Icon: FaBullhorn },
+                  { label: 'Request Creative Team', href: '/creative',  bg: theme.color.warningLight,  color: theme.color.warning, border: theme.color.warning, Icon: FaPaintbrush },
+                  { label: 'View Calendar',          href: '/calendar',  bg: theme.color.successLight,  color: theme.color.success, border: theme.color.success, Icon: FaCalendarDays },
+                  { label: 'Create Campaign',        href: '/campaigns', bg: theme.color.infoLight,                 color: theme.color.info, border: theme.color.infoBorder, Icon: FaBullhorn },
                 ].map(({ label, href, bg, color, border, Icon: ActionIcon }) => (
                   <Link key={label} href={href} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', background: bg, border: `1px solid ${border}`, borderRadius: 10, textDecoration: 'none', transition: 'opacity 0.15s' }}
                     onMouseOver={e => (e.currentTarget.style.opacity = '0.8')} onMouseOut={e => (e.currentTarget.style.opacity = '1')}>
@@ -245,6 +252,7 @@ export default function AdvertiserDashboard() {
                 ))}
               </div>
             </FadeCard>
+            </div>
           </div>
         </div>
       </div>

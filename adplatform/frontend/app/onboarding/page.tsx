@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
 import {
   FaArrowRight, FaCheck, FaChartLine, FaLocationDot,
-  FaCreditCard, FaRocket, FaCalendarCheck, FaGaugeHigh, FaPaintbrush,
+  FaCreditCard, FaRocket, FaCalendarCheck, FaGaugeHigh, FaPaintbrush, FaMicrophone
 } from 'react-icons/fa6';
 import api from '@/lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -117,142 +117,194 @@ export default function OnboardingPage() {
   ];
 
   return (
-    <div style={{ fontFamily: F, minHeight: '100vh', background: theme.color.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', position: 'relative' }}>
+    <div style={{ fontFamily: F, minHeight: '100vh', background: theme.color.bg, display: 'flex', position: 'relative' }}>
       {showConfetti && <Confetti />}
 
-      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 520 }}>
+      {/* LEFT PANEL: Visuals & Brand (Hidden on mobile) */}
+      <div className="hidden lg:flex" style={{ flex: 1, flexDirection: 'column', padding: '64px', position: 'relative', overflow: 'hidden', background: `linear-gradient(135deg, #0f172a 0%, #1e293b 100%)` }}>
+        
+        {/* Animated abstract background elements */}
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 120, repeat: Infinity, ease: 'linear' }}
+          style={{ position: 'absolute', top: '-20%', left: '-20%', width: '140%', height: '140%', background: 'radial-gradient(circle at 50% 50%, rgba(212,175,55,0.06) 0%, transparent 50%)', zIndex: 0 }} />
+        <motion.div animate={{ rotate: -360 }} transition={{ duration: 150, repeat: Infinity, ease: 'linear' }}
+          style={{ position: 'absolute', top: '0%', left: '0%', width: '100%', height: '100%', background: 'radial-gradient(circle at 80% 20%, rgba(139,92,246,0.06) 0%, transparent 60%)', zIndex: 0 }} />
 
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: 36 }}>
+        <div style={{ position: 'relative', zIndex: 1, marginBottom: 'auto' }}>
           <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <img src="/logo.png" alt="Studio Arella Logo" style={{ height: 48, objectFit: 'contain' }} />
+            <img src="/logo-white.png" alt="Studio Arella Logo" style={{ height: 48, objectFit: 'contain' }} />
           </Link>
         </div>
 
-        <ProgressBar step={step} total={3} />
+        {/* Hero Text */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <h1 style={{ fontSize: 'clamp(40px, 4vw, 56px)', fontWeight: 900, color: '#F8FAFC', letterSpacing: '-1.5px', lineHeight: 1.1, marginBottom: 24 }}>
+            Your creative vision,<br />amplified.
+          </h1>
+          <p style={{ fontSize: 18, color: '#94A3B8', lineHeight: 1.6, maxWidth: 480, fontWeight: 500 }}>
+            Studio Arella Media Hub is Umuahia's premier destination for high-impact digital screen advertising and professional podcast production.
+          </p>
+        </div>
 
-        <AnimatePresence mode="wait">
+        {/* Feature Cards */}
+        <div style={{ position: 'relative', zIndex: 1, marginTop: 'auto', display: 'flex', gap: 24 }}>
+           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: 24, borderRadius: 16, backdropFilter: 'blur(10px)', flex: 1 }}>
+             <FaLocationDot size={24} color={theme.color.gold} style={{ marginBottom: 16 }} />
+             <div style={{ fontSize: 15, fontWeight: 800, color: '#F8FAFC', marginBottom: 4 }}>Bems Junction Screen</div>
+             <div style={{ fontSize: 13, color: '#64748B', fontWeight: 500 }}>Reach 15,000+ daily road users</div>
+           </div>
+           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', padding: 24, borderRadius: 16, backdropFilter: 'blur(10px)', flex: 1 }}>
+             <FaMicrophone size={24} color="#8B5CF6" style={{ marginBottom: 16 }} />
+             <div style={{ fontSize: 15, fontWeight: 800, color: '#F8FAFC', marginBottom: 4 }}>Premium Podcast Studio</div>
+             <div style={{ fontSize: 13, color: '#64748B', fontWeight: 500 }}>Professional mics & acoustics</div>
+           </div>
+        </div>
+      </div>
 
-          {/* Step 1: Welcome + name confirm */}
-          {step === 1 && (
-            <motion.div key="s1" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: theme.color.gold, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>Step 1 of 3</p>
-              <h1 style={{ fontFamily: theme.font.display, fontSize: 32, fontWeight: 600, color: theme.color.text1, margin: '0 0 8px', letterSpacing: '-0.3px' }}>
-                Welcome{user?.name ? `, ${user.name.split(' ')[0]}` : ''}!
-              </h1>
-              <p style={{ fontSize: 14, color: theme.color.text2, margin: '0 0 32px', lineHeight: 1.7 }}>
-                Your Bems Screens account is ready. You can now book ad slots on the <strong style={{ color: theme.color.text1 }}>Studio Arella</strong> LED screen at Bems Junction, Umuahia — reaching thousands of daily road users.
-              </p>
+      {/* RIGHT PANEL: Form */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 24px', background: theme.color.bg, position: 'relative', zIndex: 2 }}>
+        
+        {/* Mobile Logo */}
+        <div style={{ position: 'absolute', top: 32, left: 24, display: 'block' }}>
+          <style dangerouslySetInnerHTML={{__html: `
+            @media (min-width: 1024px) { .mobile-logo { display: none !important; } }
+          `}} />
+          <Link href="/" className="mobile-logo" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+             <img src="/logo.png" alt="Studio Arella Logo" style={{ height: 40, objectFit: 'contain' }} />
+          </Link>
+        </div>
 
-              {/* What you can do */}
-              <div style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: 14, padding: '20px 22px', marginBottom: 24 }}>
-                <p style={{ fontSize: 12, fontWeight: 700, color: theme.color.text3, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>What you can do on this platform</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {[
-                    { Icon: FaCalendarCheck, color: theme.color.gold, bg: theme.color.goldLight, border: theme.color.goldMid, text: 'Book ad slots on Studio Arella from anywhere in the world' },
-                    { Icon: FaChartLine,     color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE', text: 'Track real-time impressions on your live campaigns' },
-                    { Icon: FaPaintbrush,    color: theme.color.goldDark, bg: '#F5F3FF', border: '#DDD6FE', text: 'Request our creative team to design or film your ad' },
-                    { Icon: FaCreditCard,    color: theme.color.success, bg: theme.color.successLight, border: '#C7E0BE', text: 'Pay securely via Monnify — cards or bank transfer' },
-                  ].map(({ Icon, color, bg, border, text }) => (
-                    <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ width: 34, height: 34, borderRadius: 9, background: bg, border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Icon size={15} color={color} />
+        <div style={{ width: '100%', maxWidth: 440 }}>
+          <ProgressBar step={step} total={3} />
+
+          <AnimatePresence mode="wait">
+
+            {/* Step 1: Welcome */}
+            {step === 1 && (
+              <motion.div key="s1" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: theme.color.gold, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>Step 1 of 3</p>
+                <h1 style={{ fontFamily: theme.font.display, fontSize: 32, fontWeight: 600, color: theme.color.text1, margin: '0 0 8px', letterSpacing: '-0.3px' }}>
+                  Welcome{user?.name ? `, ${user.name.split(' ')[0]}` : ''}!
+                </h1>
+                <p style={{ fontSize: 14, color: theme.color.text2, margin: '0 0 32px', lineHeight: 1.7 }}>
+                  Your account is ready. You can now book advertising slots on our <strong style={{ color: theme.color.text1 }}>Digital Screen</strong> or reserve sessions in our <strong style={{ color: theme.color.text1 }}>Podcast Studio</strong>.
+                </p>
+
+                {/* What you can do */}
+                <div style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: 14, padding: '20px 22px', marginBottom: 24, boxShadow: theme.shadow.sm }}>
+                  <p style={{ fontSize: 12, fontWeight: 700, color: theme.color.text3, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 14px' }}>What you can do</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {[
+                      { Icon: FaLocationDot,   color: theme.color.gold, bg: theme.color.goldLight, border: theme.color.goldMid, text: 'Book ad slots on the Studio Arella LED screen' },
+                      { Icon: FaMicrophone,    color: '#8B5CF6', bg: '#F5F3FF', border: '#DDD6FE', text: 'Reserve sessions in our premium podcast studio' },
+                      { Icon: FaPaintbrush,    color: theme.color.goldDark, bg: '#FEF3C7', border: '#FDE68A', text: 'Request our creative team to design or film for you' },
+                      { Icon: FaCreditCard,    color: theme.color.success, bg: theme.color.successLight, border: '#C7E0BE', text: 'Pay securely via Monnify using cards or bank transfer' },
+                    ].map(({ Icon, color, bg, border, text }) => (
+                      <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ width: 34, height: 34, borderRadius: 9, background: bg, border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          <Icon size={15} color={color} />
+                        </div>
+                        <span style={{ fontSize: 13, color: theme.color.text2, lineHeight: 1.4, fontWeight: 500 }}>{text}</span>
                       </div>
-                      <span style={{ fontSize: 13, color: theme.color.text2, lineHeight: 1.4 }}>{text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <motion.button onClick={() => setStep(2)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                style={{ width: '100%', padding: '13px', background: theme.color.gold, color: theme.color.charcoal900, border: 'none', borderRadius: 11, fontSize: 15, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: F }}>
-                Get started <FaArrowRight size={14} />
-              </motion.button>
-            </motion.div>
-          )}
-
-          {/* Step 2: Create first campaign */}
-          {step === 2 && (
-            <motion.div key="s2" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: theme.color.gold, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>Step 2 of 3</p>
-              <h1 style={{ fontFamily: theme.font.display, fontSize: 28, fontWeight: 600, color: theme.color.text1, margin: '0 0 8px', letterSpacing: '-0.3px' }}>Set up your first campaign</h1>
-              <p style={{ fontSize: 14, color: theme.color.text2, margin: '0 0 26px', lineHeight: 1.6 }}>
-                Give your advertising campaign a name and an optional budget. You can change everything later from your dashboard.
-              </p>
-
-              <div style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: 14, padding: '22px', display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 22 }}>
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: theme.color.text2, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Campaign name</label>
-                  <input type="text" placeholder="e.g. Grand Opening — August 2025" value={campaignName}
-                    onChange={e => setCampaignName(e.target.value)} style={inputStyle} autoFocus onFocus={onFocus} onBlur={onBlur} />
-                  <p style={{ fontSize: 11, color: theme.color.text4, margin: '5px 0 0' }}>What are you advertising? A product launch, event, business promo?</p>
-                </div>
-                <div>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: theme.color.text2, display: 'block', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Monthly budget range (optional)</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                    {BUDGETS.map(b => (
-                      <button key={b} onClick={() => setBudget(b)}
-                        style={{ padding: '10px 12px', border: `1.5px solid ${budget === b ? theme.color.gold : theme.color.border}`, background: budget === b ? theme.color.goldLight : theme.color.surface2, color: budget === b ? theme.color.goldDark : theme.color.text2, borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: F, transition: 'all 0.15s' }}>
-                        {b}
-                      </button>
                     ))}
                   </div>
                 </div>
-              </div>
 
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={() => setStep(1)}
-                  style={{ padding: '12px 20px', background: theme.color.surface, color: theme.color.text2, border: `1.5px solid ${theme.color.border}`, borderRadius: 10, fontSize: 13, cursor: 'pointer', fontFamily: F, fontWeight: 600 }}>
-                  Back
-                </button>
-                <motion.button onClick={handleStep2} disabled={saving} whileHover={!saving ? { scale: 1.02 } : {}} whileTap={!saving ? { scale: 0.98 } : {}}
-                  style={{ flex: 1, padding: '12px', background: saving ? theme.color.goldMid : theme.color.gold, color: theme.color.charcoal900, border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 800, cursor: saving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, opacity: saving ? 0.75 : 1, fontFamily: F }}>
-                  {saving ? 'Saving...' : <><span>{campaignName.trim() ? 'Create campaign & continue' : 'Skip for now'}</span><FaArrowRight size={13} /></>}
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Step 3: All done */}
-          {step === 3 && (
-            <motion.div key="s3" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ textAlign: 'center' }}>
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 14, delay: 0.1 }}
-                style={{ width: 72, height: 72, borderRadius: '50%', background: `linear-gradient(135deg, ${theme.color.gold}, ${theme.color.charcoal700})`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 22px' }}>
-                <FaRocket size={28} color="#fff" />
-              </motion.div>
-
-              <p style={{ fontSize: 11, fontWeight: 700, color: theme.color.success, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Account ready</p>
-              <h1 style={{ fontFamily: theme.font.display, fontSize: 28, fontWeight: 600, color: theme.color.text1, margin: '0 0 10px', letterSpacing: '-0.3px' }}>
-                You're all set{user?.name ? `, ${user.name.split(' ')[0]}` : ''}!
-              </h1>
-              <p style={{ fontSize: 14, color: theme.color.text2, margin: '0 0 30px', lineHeight: 1.7, maxWidth: 420, marginLeft: 'auto', marginRight: 'auto' }}>
-                Your Bems Screens advertiser account is ready. Book your first Studio Arella slot and get your business in front of thousands of people at Bems Junction today.
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28, textAlign: 'left' }}>
-                {NEXT_ACTIONS.map(({ Icon, color, bg, border, title, sub, href }) => (
-                  <Link key={title} href={href} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', transition: 'border-color 0.15s, box-shadow 0.15s' }}
-                    onMouseOver={e => { (e.currentTarget as HTMLElement).style.borderColor = theme.color.gold; (e.currentTarget as HTMLElement).style.boxShadow = theme.shadow.gold; }}
-                    onMouseOut={e => { (e.currentTarget as HTMLElement).style.borderColor = theme.color.border; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}>
-                    <div style={{ width: 38, height: 38, borderRadius: 10, background: bg, border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Icon size={16} color={color} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: theme.color.text1, margin: '0 0 2px' }}>{title}</p>
-                      <p style={{ fontSize: 11, color: theme.color.text3, margin: 0 }}>{sub}</p>
-                    </div>
-                    <FaArrowRight size={12} color={theme.color.border} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <motion.button onClick={() => setStep(2)} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                    style={{ width: '100%', padding: '14px', background: theme.color.gold, color: theme.color.charcoal900, border: 'none', borderRadius: 11, fontSize: 15, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: F, boxShadow: theme.shadow.gold }}>
+                    Get started <FaArrowRight size={14} />
+                  </motion.button>
+                  <Link href="/dashboard" style={{ textAlign: 'center', fontSize: 13, color: theme.color.text3, textDecoration: 'none', fontWeight: 600 }}>
+                    Skip to dashboard
                   </Link>
-                ))}
-              </div>
+                </div>
+              </motion.div>
+            )}
 
-              <Link href="/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: theme.color.gold, color: theme.color.charcoal900, padding: '13px 32px', borderRadius: 11, fontSize: 15, fontWeight: 800, textDecoration: 'none', fontFamily: F, boxShadow: theme.shadow.gold }}>
-                Go to my dashboard <FaArrowRight size={14} />
-              </Link>
-            </motion.div>
-          )}
+            {/* Step 2: Create first campaign */}
+            {step === 2 && (
+              <motion.div key="s2" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
+                <p style={{ fontSize: 11, fontWeight: 700, color: theme.color.gold, letterSpacing: '0.1em', textTransform: 'uppercase', margin: '0 0 10px' }}>Step 2 of 3</p>
+                <h1 style={{ fontFamily: theme.font.display, fontSize: 28, fontWeight: 600, color: theme.color.text1, margin: '0 0 8px', letterSpacing: '-0.3px' }}>Set up a campaign</h1>
+                <p style={{ fontSize: 14, color: theme.color.text2, margin: '0 0 26px', lineHeight: 1.6 }}>
+                  If you're booking screen ads, give your campaign a name and an optional budget. You can change this later.
+                </p>
 
-        </AnimatePresence>
+                <div style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: 14, padding: '22px', display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 22, boxShadow: theme.shadow.sm }}>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 800, color: theme.color.text2, display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Campaign name</label>
+                    <input type="text" placeholder="e.g. Grand Opening — August 2025" value={campaignName}
+                      onChange={e => setCampaignName(e.target.value)} style={inputStyle} autoFocus onFocus={onFocus} onBlur={onBlur} />
+                    <p style={{ fontSize: 11, color: theme.color.text4, margin: '6px 0 0', fontWeight: 500 }}>What are you advertising? A product launch, event, business promo?</p>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 11, fontWeight: 800, color: theme.color.text2, display: 'block', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Monthly budget range (optional)</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      {BUDGETS.map(b => (
+                        <button key={b} onClick={() => setBudget(b)}
+                          style={{ padding: '10px 12px', border: `1.5px solid ${budget === b ? theme.color.gold : theme.color.border}`, background: budget === b ? theme.color.goldLight : theme.color.surface2, color: budget === b ? theme.color.goldDark : theme.color.text2, borderRadius: 9, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: F, transition: 'all 0.15s' }}>
+                          {b}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={() => setStep(1)}
+                    style={{ padding: '14px 22px', background: theme.color.surface, color: theme.color.text2, border: `1.5px solid ${theme.color.border}`, borderRadius: 10, fontSize: 14, cursor: 'pointer', fontFamily: F, fontWeight: 700 }}>
+                    Back
+                  </button>
+                  <motion.button onClick={handleStep2} disabled={saving} whileHover={!saving ? { scale: 1.02 } : {}} whileTap={!saving ? { scale: 0.98 } : {}}
+                    style={{ flex: 1, padding: '14px', background: saving ? theme.color.goldMid : theme.color.gold, color: theme.color.charcoal900, border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 800, cursor: saving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: saving ? 0.75 : 1, fontFamily: F, boxShadow: theme.shadow.gold }}>
+                    {saving ? 'Saving...' : <><span>{campaignName.trim() ? 'Create & continue' : 'Skip for now'}</span><FaArrowRight size={13} /></>}
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Step 3: All done */}
+            {step === 3 && (
+              <motion.div key="s3" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ textAlign: 'center' }}>
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 200, damping: 14, delay: 0.1 }}
+                  style={{ width: 72, height: 72, borderRadius: '50%', background: `linear-gradient(135deg, ${theme.color.gold}, ${theme.color.charcoal700})`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 22px', boxShadow: theme.shadow.gold }}>
+                  <FaRocket size={28} color="#fff" />
+                </motion.div>
+
+                <p style={{ fontSize: 11, fontWeight: 700, color: theme.color.success, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Account ready</p>
+                <h1 style={{ fontFamily: theme.font.display, fontSize: 28, fontWeight: 600, color: theme.color.text1, margin: '0 0 10px', letterSpacing: '-0.3px' }}>
+                  You're all set{user?.name ? `, ${user.name.split(' ')[0]}` : ''}!
+                </h1>
+                <p style={{ fontSize: 14, color: theme.color.text2, margin: '0 0 30px', lineHeight: 1.7, maxWidth: 420, marginLeft: 'auto', marginRight: 'auto' }}>
+                  Your advertiser account is fully set up. Book your first Digital Screen slot or Podcast Studio session today.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28, textAlign: 'left' }}>
+                  {NEXT_ACTIONS.map(({ Icon, color, bg, border, title, sub, href }) => (
+                    <Link key={title} href={href} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, textDecoration: 'none', transition: 'border-color 0.15s, box-shadow 0.15s' }}
+                      onMouseOver={e => { (e.currentTarget as HTMLElement).style.borderColor = theme.color.gold; (e.currentTarget as HTMLElement).style.boxShadow = theme.shadow.sm; }}
+                      onMouseOut={e => { (e.currentTarget as HTMLElement).style.borderColor = theme.color.border; (e.currentTarget as HTMLElement).style.boxShadow = 'none'; }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: bg, border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Icon size={16} color={color} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 14, fontWeight: 800, color: theme.color.text1, margin: '0 0 2px' }}>{title}</p>
+                        <p style={{ fontSize: 12, color: theme.color.text3, margin: 0, fontWeight: 500 }}>{sub}</p>
+                      </div>
+                      <FaArrowRight size={12} color={theme.color.border} />
+                    </Link>
+                  ))}
+                </div>
+
+                <Link href="/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: theme.color.gold, color: theme.color.charcoal900, padding: '14px 32px', borderRadius: 11, fontSize: 15, fontWeight: 800, textDecoration: 'none', fontFamily: F, boxShadow: theme.shadow.gold, transition: 'transform 0.1s', }} onMouseDown={e=>e.currentTarget.style.transform='scale(0.98)'} onMouseUp={e=>e.currentTarget.style.transform='scale(1)'}>
+                  Go to my dashboard <FaArrowRight size={14} />
+                </Link>
+              </motion.div>
+            )}
+
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );

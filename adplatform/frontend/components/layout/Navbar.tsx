@@ -4,7 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import { FaArrowRightFromBracket, FaCalendarCheck } from 'react-icons/fa6';
+import { useThemeStore } from '@/store/themeStore';
+import { FaArrowRightFromBracket, FaCalendarCheck, FaMoon, FaSun } from 'react-icons/fa6';
 import NotificationBell from '@/components/ui/NotificationBell';
 import { Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,6 +15,7 @@ const F = theme.font.body;
 
 export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const { user, logout } = useAuthStore();
+  const { theme: appTheme, toggleTheme } = useThemeStore();
   const router = useRouter();
   const [dropOpen, setDropOpen] = useState(false);
 
@@ -27,9 +29,13 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <Link href="/book" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: theme.color.gold, color: theme.color.charcoal900, padding: '8px 16px', borderRadius: theme.radius.sm, fontSize: 12, fontWeight: 800, textDecoration: 'none', boxShadow: theme.shadow.gold }}>
+        <Link href="/book" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: theme.color.gold, color: '#1A1A1A', padding: '8px 16px', borderRadius: theme.radius.sm, fontSize: 12, fontWeight: 800, textDecoration: 'none', boxShadow: theme.shadow.gold }}>
           <FaCalendarCheck size={12} /> Book Slot
         </Link>
+
+        <button onClick={toggleTheme} style={{ width: 38, height: 38, borderRadius: '50%', background: theme.color.surface2, border: `1px solid ${theme.color.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.15s', color: theme.color.text2 }}>
+          {appTheme === 'dark' ? <FaSun size={15} /> : <FaMoon size={15} />}
+        </button>
 
         <NotificationBell />
 

@@ -10,9 +10,10 @@ import api from '@/lib/api';
 import { FaArrowRight, FaDisplay, FaMoneyBillWave, FaCalendarCheck } from 'react-icons/fa6';
 import { Monitor, DollarSign, CalendarCheck, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { theme } from '@/lib/theme';
 
 const F = "var(--font-quicksand, 'Quicksand', sans-serif)";
-const card: React.CSSProperties = { background: '#fff', border: '1px solid #E5E7EB', borderRadius: 16 };
+const card: React.CSSProperties = { background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: 16 };
 
 export default function ScreenOwnerDashboard() {
   const { user } = useAuthStore();
@@ -50,8 +51,8 @@ export default function ScreenOwnerDashboard() {
     <PageTransition>
       <div style={{ fontFamily: F }}>
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0A0A0A', margin: '0 0 4px', letterSpacing: '-0.3px' }}>Welcome back, {user?.name?.split(' ')[0]}</h1>
-          <p style={{ fontSize: 13, color: '#6B7280', margin: 0 }}>{hasScreens ? 'Your screen performance and earnings overview.' : 'List your first screen to start earning from advertisers.'}</p>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: theme.color.text1, margin: '0 0 4px', letterSpacing: '-0.3px' }}>Welcome back, {user?.name?.split(' ')[0]}</h1>
+          <p style={{ fontSize: 13, color: theme.color.text3, margin: 0 }}>{hasScreens ? 'Your screen performance and earnings overview.' : 'List your first screen to start earning from advertisers.'}</p>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 16 }}>
@@ -59,17 +60,17 @@ export default function ScreenOwnerDashboard() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
               {[
-                { label: 'Total Earnings', value: `₦${(balance?.credits || 0).toLocaleString()}`, icon: DollarSign, color: '#F97316', bg: '#FFF7ED', border: '#FED7AA' },
-                { label: 'Active Screens', value: screens.filter(s => s.status === 'active').length, icon: Monitor, color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
-                { label: 'Total Bookings', value: bookings.length, icon: CalendarCheck, color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0' },
+                { label: 'Total Earnings', value: `₦${(balance?.credits || 0).toLocaleString()}`, icon: DollarSign, color: theme.color.warning, bg: theme.color.warningLight, border: theme.color.warning },
+                { label: 'Active Screens', value: screens.filter(s => s.status === 'active').length, icon: Monitor, color: theme.color.info, bg: theme.color.infoLight, border: theme.color.infoBorder },
+                { label: 'Total Bookings', value: bookings.length, icon: CalendarCheck, color: theme.color.success, bg: theme.color.successLight, border: theme.color.success },
               ].map(({ label, value, icon: Icon, color, bg, border }, i) => (
                 <FadeCard key={label} delay={i * 0.06} style={{ ...card, padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}>
                   <div style={{ width: 42, height: 42, borderRadius: 12, background: bg, border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Icon size={19} color={color} />
                   </div>
                   <div>
-                    <p style={{ fontSize: 22, fontWeight: 900, color: '#0A0A0A', margin: 0, letterSpacing: '-0.5px' }}>{value}</p>
-                    <p style={{ fontSize: 11, color: '#9CA3AF', margin: '2px 0 0', fontWeight: 500 }}>{label}</p>
+                    <p style={{ fontSize: 22, fontWeight: 900, color: theme.color.text1, margin: 0, letterSpacing: '-0.5px' }}>{value}</p>
+                    <p style={{ fontSize: 11, color: theme.color.text4, margin: '2px 0 0', fontWeight: 500 }}>{label}</p>
                   </div>
                 </FadeCard>
               ))}
@@ -78,8 +79,8 @@ export default function ScreenOwnerDashboard() {
             <FadeCard delay={0.15} style={{ ...card, padding: '20px 20px 12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                 <div>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: '#0A0A0A', margin: 0 }}>Weekly Bookings</p>
-                  <p style={{ fontSize: 11, color: '#9CA3AF', margin: '2px 0 0' }}>How many times your screens were booked</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: theme.color.text1, margin: 0 }}>Weekly Bookings</p>
+                  <p style={{ fontSize: 11, color: theme.color.text4, margin: '2px 0 0' }}>How many times your screens were booked</p>
                 </div>
               </div>
               {bookings.length > 0 ? (
@@ -93,9 +94,9 @@ export default function ScreenOwnerDashboard() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div style={{ height: 160, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#FAFAFA', borderRadius: 10, border: '1px dashed #E5E7EB' }}>
-                  <TrendingUp size={26} color="#E5E7EB" />
-                  <p style={{ fontSize: 13, color: '#D1D5DB', margin: 0 }}>No bookings yet</p>
+                <div style={{ height: 160, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, background: theme.color.surface2, borderRadius: 10, border: `1px dashed ${theme.color.border}` }}>
+                  <TrendingUp size={26} color={theme.color.border2} />
+                  <p style={{ fontSize: 13, color: theme.color.text4, margin: 0 }}>No bookings yet</p>
                 </div>
               )}
             </FadeCard>
@@ -108,11 +109,11 @@ export default function ScreenOwnerDashboard() {
                 </Link>
               </div>
               {!hasScreens ? (
-                <div style={{ padding: '28px 0', textAlign: 'center', background: '#FAFAFA', borderRadius: 12, border: '1px dashed #E5E7EB' }}>
-                  <FaDisplay size={26} color="#E5E7EB" style={{ margin: '0 auto 10px', display: 'block' }} />
-                  <p style={{ fontSize: 14, fontWeight: 700, color: '#374151', margin: '0 0 4px' }}>No screens listed yet</p>
-                  <p style={{ fontSize: 12, color: '#9CA3AF', margin: '0 0 14px' }}>List your display to start receiving bookings</p>
-                  <Link href="/listings" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: '#F97316', color: '#fff', padding: '9px 18px', borderRadius: 9, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+                <div style={{ padding: '28px 0', textAlign: 'center', background: theme.color.surface2, borderRadius: 12, border: `1px dashed ${theme.color.border}` }}>
+                  <FaDisplay size={26} color={theme.color.border2} style={{ margin: '0 auto 10px', display: 'block' }} />
+                  <p style={{ fontSize: 14, fontWeight: 700, color: theme.color.text2, margin: '0 0 4px' }}>No screens listed yet</p>
+                  <p style={{ fontSize: 12, color: theme.color.text4, margin: '0 0 14px' }}>List your display to start receiving bookings</p>
+                  <Link href="/listings" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: theme.color.warning, color: '#fff', padding: '9px 18px', borderRadius: 9, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
                     Add first screen <FaArrowRight size={12} />
                   </Link>
                 </div>

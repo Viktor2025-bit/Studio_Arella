@@ -21,14 +21,14 @@ interface Notification {
 }
 
 const TYPE_CONFIG: Record<string, { Icon: any; color: string; bg: string; border: string }> = {
-  creative_approved:   { Icon: FaCircleCheck,  color: '#2F6A3B', bg: theme.color.successLight, border: '#C7E0BE' },
-  creative_rejected:   { Icon: FaCircleXmark,  color: '#8F3226', bg: theme.color.errorLight, border: '#EACAC3' },
+  creative_approved:   { Icon: FaCircleCheck,  color: theme.color.success, bg: theme.color.successLight, border: theme.color.success },
+  creative_rejected:   { Icon: FaCircleXmark,  color: theme.color.error, bg: theme.color.errorLight, border: theme.color.error },
   booking_confirmed:   { Icon: FaCalendarCheck,color: theme.color.goldDark, bg: theme.color.goldLight, border: theme.color.goldMid },
-  booking_reminder:    { Icon: FaCalendarDays, color: '#96631D', bg: theme.color.warningLight, border: '#F0D19E' },
-  booking_cancelled:   { Icon: FaCircleXmark,  color: '#8F3226', bg: theme.color.errorLight, border: '#EACAC3' },
-  payment_received:    { Icon: FaCreditCard,   color: '#2F6A3B', bg: theme.color.successLight, border: '#C7E0BE' },
-  new_creative_review: { Icon: FaBullhorn,     color: '#96631D', bg: theme.color.warningLight, border: '#F0D19E' },
-  new_booking:         { Icon: FaCalendarCheck,color: '#0E7490', bg: '#DFFAFD', border: '#9CE9F2' },
+  booking_reminder:    { Icon: FaCalendarDays, color: theme.color.warning, bg: theme.color.warningLight, border: theme.color.warning },
+  booking_cancelled:   { Icon: FaCircleXmark,  color: theme.color.error, bg: theme.color.errorLight, border: theme.color.error },
+  payment_received:    { Icon: FaCreditCard,   color: theme.color.success, bg: theme.color.successLight, border: theme.color.success },
+  new_creative_review: { Icon: FaBullhorn,     color: theme.color.info, bg: theme.color.infoLight, border: theme.color.infoBorder },
+  new_booking:         { Icon: FaCalendarCheck,color: theme.color.info, bg: theme.color.infoLight, border: theme.color.infoBorder },
 };
 
 function timeAgo(dateStr: string): string {

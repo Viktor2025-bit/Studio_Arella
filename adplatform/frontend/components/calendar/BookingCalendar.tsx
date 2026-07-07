@@ -7,6 +7,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import styles from './BookingCalendar.module.css';
 import api from '@/lib/api';
 import { FaArrowRight, FaCalendarDays, FaLocationDot } from 'react-icons/fa6';
+import { ChevronLeft, ChevronRight, Monitor, Mic } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -23,12 +24,81 @@ const localizer = dateFnsLocalizer({
 
 interface CalEvent {
   id: string; title: string; start: Date; end: Date;
-  resource: { status: string; screen?: string; cost?: number; bookingNumber?: string; };
+  resource: { type: string; status: string; screen?: string; cost?: number; bookingNumber?: string; };
 }
 
 const statusColors: Record<string, string> = {
   active: theme.color.success, paused: theme.color.gold,
   ended: theme.color.text4, cancelled: theme.color.error,
+};
+
+const CustomToolbar = (toolbar: any) => {
+  const goToBack = () => toolbar.onNavigate('PREV');
+  const goToNext = () => toolbar.onNavigate('NEXT');
+  const goToCurrent = () => toolbar.onNavigate('TODAY');
+
+  const label = () => {
+    const date = format(toolbar.date, 'MMMM yyyy');
+    return <span style={{ fontSize: 16, fontWeight: 800, color: theme.color.text1, letterSpacing: '-0.3px' }}>{date}</span>;
+  };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+      <div>
+        <button onClick={goToCurrent} style={{ padding: '8px 16px', background: theme.color.surface2, color: theme.color.text2, border: `1px solid ${theme.color.border}`, borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s' }}
+          onMouseOver={e => { e.currentTarget.style.background = theme.color.goldLight; e.currentTarget.style.color = theme.color.goldDark; e.currentTarget.style.borderColor = theme.color.goldMid; }}
+          onMouseOut={e => { e.currentTarget.style.background = theme.color.surface2; e.currentTarget.style.color = theme.color.text2; e.currentTarget.style.borderColor = theme.color.border; }}>
+          Today
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <button onClick={goToBack} style={{ padding: '6px', background: theme.color.surface2, border: `1px solid ${theme.color.border}`, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', color: theme.color.text2, transition: 'all 0.15s' }}
+          onMouseOver={e => { e.currentTarget.style.background = theme.color.surface; e.currentTarget.style.color = theme.color.text1; }}
+          onMouseOut={e => { e.currentTarget.style.background = theme.color.surface2; e.currentTarget.style.color = theme.color.text2; }}>
+          <ChevronLeft size={16} strokeWidth={2.5} />
+        </button>
+        
+        {label()}
+
+        <button onClick={goToNext} style={{ padding: '6px', background: theme.color.surface2, border: `1px solid ${theme.color.border}`, borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', color: theme.color.text2, transition: 'all 0.15s' }}
+          onMouseOver={e => { e.currentTarget.style.background = theme.color.surface; e.currentTarget.style.color = theme.color.text1; }}
+          onMouseOut={e => { e.currentTarget.style.background = theme.color.surface2; e.currentTarget.style.color = theme.color.text2; }}>
+          <ChevronRight size={16} strokeWidth={2.5} />
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', background: theme.color.surface2, border: `1px solid ${theme.color.border}`, borderRadius: 8, padding: 3 }}>
+        {['month', 'week', 'day', 'agenda'].map(v => (
+          <button
+            key={v}
+            onClick={() => toolbar.onView(v)}
+            style={{
+              padding: '6px 14px', background: toolbar.view === v ? theme.color.surface : 'transparent',
+              color: toolbar.view === v ? theme.color.text1 : theme.color.text3,
+              border: 'none', borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: 'pointer',
+              boxShadow: toolbar.view === v ? theme.shadow.sm : 'none',
+              textTransform: 'capitalize', transition: 'all 0.15s'
+            }}>
+            {v}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const CustomEvent = ({ event }: { event: CalEvent }) => {
+  const isPodcast = event.resource.type === 'podcast';
+  const Icon = isPodcast ? Mic : Monitor;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 4px', height: '100%' }}>
+      <Icon size={12} style={{ opacity: 0.85, flexShrink: 0 }} />
+      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.2px' }}>
+        {event.resource.bookingNumber}
+      </span>
+    </div>
+  );
 };
 
 export default function BookingCalendar({ screenId }: { screenId?: string }) {
@@ -42,17 +112,32 @@ export default function BookingCalendar({ screenId }: { screenId?: string }) {
   const fetchBookings = useCallback(async () => {
     try {
       const url = screenId ? `/bookings?screen_id=${screenId}` : '/bookings?limit=100';
-      const res = await api.get(url);
-      const mapped: CalEvent[] = (res.data.bookings || [])
+      const [adRes, podRes] = await Promise.all([
+        api.get(url),
+        !screenId ? api.get('/podcasts/my-bookings').catch(() => ({ data: { bookings: [] } })) : Promise.resolve({ data: { bookings: [] } })
+      ]);
+
+      const adMapped: CalEvent[] = (adRes.data.bookings || [])
         .filter((b: any) => b.start_time && b.end_time)
         .map((b: any) => ({
           id: b.id,
           title: b.booking_number + (b.screen_name ? ` · ${b.screen_name}` : ''),
           start: new Date(b.start_time),
           end: new Date(b.end_time),
-          resource: { status: b.status, screen: b.screen_name, cost: b.total_cost, bookingNumber: b.booking_number },
+          resource: { type: 'ad', status: b.status, screen: b.screen_name, cost: b.total_cost, bookingNumber: b.booking_number },
         }));
-      setEvents(mapped);
+
+      const podMapped: CalEvent[] = (podRes.data.bookings || [])
+        .filter((b: any) => b.start_time && b.end_time)
+        .map((b: any) => ({
+          id: b.id,
+          title: b.booking_number + ' · Podcast Studio',
+          start: new Date(b.start_time),
+          end: new Date(b.end_time),
+          resource: { type: 'podcast', status: b.status, screen: 'Podcast Studio', cost: b.total_cost, bookingNumber: b.booking_number },
+        }));
+
+      setEvents([...adMapped, ...podMapped]);
     } catch { setEvents([]); }
     finally { setLoading(false); }
   }, [screenId]);
@@ -66,9 +151,13 @@ export default function BookingCalendar({ screenId }: { screenId?: string }) {
         {Object.entries(statusColors).map(([s, c]) => (
           <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 10, height: 10, borderRadius: 3, background: c }} />
-            <span style={{ fontSize: 11, color: theme.color.text3, fontWeight: 600, textTransform: 'capitalize' }}>{s}</span>
+            <span style={{ fontSize: 11, color: theme.color.text3, fontWeight: 600, textTransform: 'capitalize' }}>Ad {s}</span>
           </div>
         ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <div style={{ width: 10, height: 10, borderRadius: 3, background: '#8B5CF6' }} />
+          <span style={{ fontSize: 11, color: theme.color.text3, fontWeight: 600 }}>Podcast Session</span>
+        </div>
         <span style={{ fontSize: 11, color: theme.color.text4, marginLeft: 'auto' }}>{events.length} bookings shown</span>
       </div>
 
@@ -83,13 +172,30 @@ export default function BookingCalendar({ screenId }: { screenId?: string }) {
           style={{ height: 500 }}
           view={view} onView={setView} date={date} onNavigate={setDate}
           selectable
+          components={{
+            toolbar: CustomToolbar,
+            event: CustomEvent
+          }}
           onSelectSlot={(slotInfo) => {
             const iso = format(slotInfo.start, 'yyyy-MM-dd');
             router.push(`/book?date=${iso}`);
           }}
-          eventPropGetter={e => ({
-            style: { background: statusColors[(e as CalEvent).resource.status] || theme.color.gold, border: 'none', borderRadius: 5, color: theme.color.charcoal900, fontSize: 11, fontWeight: 700, opacity: (e as CalEvent).resource.status === 'cancelled' ? 0.4 : 1 }
-          })}
+          eventPropGetter={e => {
+            const isPodcast = (e as CalEvent).resource.type === 'podcast';
+            const baseColor = isPodcast ? '#8B5CF6' : (statusColors[(e as CalEvent).resource.status] || theme.color.gold);
+            return {
+              style: { 
+                background: baseColor, 
+                border: '1px solid rgba(0,0,0,0.1)', 
+                borderRadius: 6, 
+                color: isPodcast ? '#fff' : theme.color.charcoal900, 
+                fontSize: 11, 
+                fontWeight: 800, 
+                opacity: (e as CalEvent).resource.status === 'cancelled' ? 0.4 : 1,
+                boxShadow: theme.shadow.sm,
+              }
+            };
+          }}
           onSelectEvent={e => setSelected(e as CalEvent)}
           popup
         />
@@ -105,8 +211,8 @@ export default function BookingCalendar({ screenId }: { screenId?: string }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <FaCalendarDays size={14} color={theme.color.gold} />
                   <span style={{ fontSize: 14, fontWeight: 800, color: theme.color.text1 }}>{selected.resource.bookingNumber}</span>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: statusColors[selected.resource.status] || theme.color.gold, padding: '2px 9px', borderRadius: 100 }}>
-                    {selected.resource.status}
+                  <span style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: selected.resource.type === 'podcast' ? '#8B5CF6' : (statusColors[selected.resource.status] || theme.color.gold), padding: '2px 9px', borderRadius: 100, textTransform: 'capitalize' }}>
+                    {selected.resource.type === 'podcast' ? `Podcast ${selected.resource.status}` : selected.resource.status}
                   </span>
                 </div>
                 {selected.resource.screen && (

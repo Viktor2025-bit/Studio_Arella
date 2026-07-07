@@ -157,3 +157,23 @@ export const getAllTransactions : RequestHandler = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const getAllPodcastBookings : RequestHandler = async (req, res) => {
+  const authReq = req as AuthRequest;
+  if (!adminOnly(req, res)) return;
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const offset = (Number(page) - 1) * Number(limit);
+    const result = await pool.query(
+      `SELECT pb.*, u.name as user_name, u.email as user_email
+       FROM podcast_bookings pb
+       LEFT JOIN users u ON pb.user_id = u.id
+       ORDER BY pb.created_at DESC LIMIT $1 OFFSET $2`,
+      [Number(limit), offset]
+    );
+    const count = await pool.query('SELECT COUNT(*) FROM podcast_bookings');
+    res.json({ bookings: result.rows, total: parseInt(count.rows[0].count) });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};

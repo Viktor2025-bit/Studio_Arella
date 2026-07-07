@@ -56,19 +56,28 @@ async function getMonnifyToken(): Promise<string> {
 export const initializePayment: RequestHandler = async (req, res) => {
   const authReq = req as AuthRequest;
   try {
-    const { booking_id } = req.body;
+    const { booking_id, booking_type } = req.body;
     
     // 1. Get booking
-    const bookingRes = await pool.query('SELECT * FROM bookings WHERE id = $1 AND user_id = $2 AND status = $3', [booking_id, authReq.user?.id, 'pending_payment']);
-    if (bookingRes.rows.length === 0) {
-      res.status(404).json({ message: 'Booking not found or already paid' }); return;
+    let booking;
+    if (booking_type === 'podcast') {
+      const resQuery = await pool.query('SELECT * FROM podcast_bookings WHERE id = $1 AND user_id = $2 AND status = $3', [booking_id, authReq.user?.id, 'pending']);
+      if (resQuery.rows.length === 0) { res.status(404).json({ message: 'Booking not found or already paid' }); return; }
+      booking = resQuery.rows[0];
+    } else {
+      const bookingRes = await pool.query('SELECT * FROM bookings WHERE id = $1 AND user_id = $2 AND status = $3', [booking_id, authReq.user?.id, 'pending_payment']);
+      if (bookingRes.rows.length === 0) {
+        res.status(404).json({ message: 'Booking not found or already paid' }); return;
+      }
+      booking = bookingRes.rows[0];
     }
-    const booking = bookingRes.rows[0];
 
     // 2. Check if slots are still locked
-    const slotsRes = await pool.query("SELECT id FROM booking_slots WHERE booking_id = $1 AND status = 'locked' AND locked_until >= NOW()", [booking_id]);
-    if (slotsRes.rows.length === 0) {
-      res.status(400).json({ message: 'Cart expired. Please re-select your slots.' }); return;
+    if (booking_type !== 'podcast') {
+      const slotsRes = await pool.query("SELECT id FROM booking_slots WHERE booking_id = $1 AND status = 'locked' AND locked_until >= NOW()", [booking_id]);
+      if (slotsRes.rows.length === 0) {
+        res.status(400).json({ message: 'Cart expired. Please re-select your slots.' }); return;
+      }
     }
 
     const amount = parseFloat(booking.total_cost);
@@ -82,15 +91,15 @@ export const initializePayment: RequestHandler = async (req, res) => {
       customerName: user.rows[0].name,
       customerEmail: user.rows[0].email,
       paymentReference,
-      paymentDescription: `Studio Arella Ad Slot — ${booking.booking_number}`,
+      paymentDescription: booking_type === 'podcast' ? `Studio Arella Podcast — ${booking.booking_number}` : `Studio Arella Ad Slot — ${booking.booking_number}`,
       currencyCode: 'NGN',
       contractCode: MONNIFY_CONTRACT,
-      redirectUrl: `${process.env.FRONTEND_URL}/bookings/payment-callback`,
+      redirectUrl: booking_type === 'podcast' ? `${process.env.FRONTEND_URL}/podcast/payment-callback` : `${process.env.FRONTEND_URL}/bookings/payment-callback`,
       paymentMethods: ['CARD', 'ACCOUNT_TRANSFER'],
       metadata: {
         user_id: authReq.user?.id,
         booking_id,
-        type: 'booking'
+        type: booking_type === 'podcast' ? 'podcast_booking' : 'booking'
       },
     }, token);
 
@@ -148,23 +157,35 @@ export const payFromWallet: RequestHandler = async (req, res) => {
   const authReq = req as AuthRequest;
   const client = await pool.connect();
   try {
-    const { booking_id } = req.body;
+    const { booking_id, booking_type } = req.body;
     
     await client.query('BEGIN');
 
     // 1. Get booking
-    const bookingRes = await client.query('SELECT * FROM bookings WHERE id = $1 AND user_id = $2 AND status = $3', [booking_id, authReq.user?.id, 'pending_payment']);
-    if (bookingRes.rows.length === 0) {
-      await client.query('ROLLBACK');
-      res.status(404).json({ message: 'Booking not found or already paid / expired' }); return;
+    let booking;
+    if (booking_type === 'podcast') {
+      const resQuery = await client.query('SELECT * FROM podcast_bookings WHERE id = $1 AND user_id = $2 AND status = $3', [booking_id, authReq.user?.id, 'pending']);
+      if (resQuery.rows.length === 0) {
+        await client.query('ROLLBACK');
+        res.status(404).json({ message: 'Booking not found or already paid' }); return;
+      }
+      booking = resQuery.rows[0];
+    } else {
+      const bookingRes = await client.query('SELECT * FROM bookings WHERE id = $1 AND user_id = $2 AND status = $3', [booking_id, authReq.user?.id, 'pending_payment']);
+      if (bookingRes.rows.length === 0) {
+        await client.query('ROLLBACK');
+        res.status(404).json({ message: 'Booking not found or already paid / expired' }); return;
+      }
+      booking = bookingRes.rows[0];
     }
-    const booking = bookingRes.rows[0];
 
     // 2. Check if slots are still locked
-    const slotsRes = await client.query("SELECT id FROM booking_slots WHERE booking_id = $1 AND status = 'locked' AND locked_until >= NOW()", [booking_id]);
-    if (slotsRes.rows.length === 0) {
-      await client.query('ROLLBACK');
-      res.status(400).json({ message: 'Cart expired. Please re-select your slots.' }); return;
+    if (booking_type !== 'podcast') {
+      const slotsRes = await client.query("SELECT id FROM booking_slots WHERE booking_id = $1 AND status = 'locked' AND locked_until >= NOW()", [booking_id]);
+      if (slotsRes.rows.length === 0) {
+        await client.query('ROLLBACK');
+        res.status(400).json({ message: 'Cart expired. Please re-select your slots.' }); return;
+      }
     }
 
     // 3. Check wallet balance
@@ -185,8 +206,12 @@ export const payFromWallet: RequestHandler = async (req, res) => {
     `, [authReq.user?.id, totalCost, `Paid for booking ${booking.booking_number}`, booking.booking_number]);
 
     // 5. Activate booking & slots
-    await client.query("UPDATE bookings SET status = 'active', payment_reference = 'WALLET' WHERE id = $1", [booking_id]);
-    await client.query("UPDATE booking_slots SET status = 'active', locked_until = NULL WHERE booking_id = $1", [booking_id]);
+    if (booking_type === 'podcast') {
+      await client.query("UPDATE podcast_bookings SET status = 'confirmed', payment_status = 'paid' WHERE id = $1", [booking_id]);
+    } else {
+      await client.query("UPDATE bookings SET status = 'active', payment_reference = 'WALLET' WHERE id = $1", [booking_id]);
+      await client.query("UPDATE booking_slots SET status = 'active', locked_until = NULL WHERE booking_id = $1", [booking_id]);
+    }
 
     await client.query('COMMIT');
     res.json({ success: true, message: 'Payment successful using wallet!' });
@@ -315,12 +340,17 @@ export const verifyPayment: RequestHandler = async (req, res) => {
     }
 
     // Handle booking payment
-    const existing = await pool.query(
-      "SELECT id FROM bookings WHERE booking_number LIKE $1 AND status = 'active'",
-      [`%${reference.slice(-8)}%`]
-    );
-    if (existing.rows.length > 0) {
-      res.json({ already_confirmed: true, message: 'Booking already confirmed.' }); return;
+    if (meta.type === 'podcast_booking') {
+      const existing = await pool.query("SELECT id FROM podcast_bookings WHERE booking_number LIKE $1 AND status = 'confirmed'", [`%${reference.slice(-8)}%`]);
+      if (existing.rows.length > 0) { res.json({ already_confirmed: true, message: 'Booking already confirmed.' }); return; }
+    } else {
+      const existing = await pool.query(
+        "SELECT id FROM bookings WHERE booking_number LIKE $1 AND status = 'active'",
+        [`%${reference.slice(-8)}%`]
+      );
+      if (existing.rows.length > 0) {
+        res.json({ already_confirmed: true, message: 'Booking already confirmed.' }); return;
+      }
     }
 
     await processConfirmedPayment(reference, meta, txn.amountPaid);
@@ -390,28 +420,39 @@ async function processConfirmedPayment(reference: string, meta: any, amountPaid:
       await client.query('COMMIT');
       return;
     }
+    
+    const isPodcast = meta.type === 'podcast_booking';
 
     // 1. Mark booking as active
-    await client.query(
-      "UPDATE bookings SET status = 'active', payment_reference = $1 WHERE id = $2",
-      [reference, bookingId]
-    );
+    if (isPodcast) {
+      await client.query(
+        "UPDATE podcast_bookings SET status = 'confirmed', payment_status = 'paid' WHERE id = $1",
+        [bookingId]
+      );
+    } else {
+      await client.query(
+        "UPDATE bookings SET status = 'active', payment_reference = $1 WHERE id = $2",
+        [reference, bookingId]
+      );
 
-    // 2. Mark slots as active and remove locks
-    await client.query(
-      "UPDATE booking_slots SET status = 'active', locked_until = NULL WHERE booking_id = $1",
-      [bookingId]
-    );
+      // 2. Mark slots as active and remove locks
+      await client.query(
+        "UPDATE booking_slots SET status = 'active', locked_until = NULL WHERE booking_id = $1",
+        [bookingId]
+      );
+    }
 
     // 3. Create invoice
     // 3. Create invoice
     const baseReference = reference.slice(-8).toUpperCase();
     const invoiceNumber = `INV-${new Date().getFullYear()}-${baseReference}`;
-    await client.query(
-      `INSERT INTO invoices (booking_id, invoice_number, advertiser_id, amount)
-       VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
-      [bookingId, invoiceNumber, meta.user_id, amountPaid]
-    );
+    if (!isPodcast) {
+      await client.query(
+        `INSERT INTO invoices (booking_id, invoice_number, advertiser_id, amount)
+         VALUES ($1, $2, $3, $4) ON CONFLICT DO NOTHING`,
+        [bookingId, invoiceNumber, meta.user_id, amountPaid]
+      );
+    }
 
     // 4. Record transaction (pending transaction from Monnify init was removed, so we just insert the debit)
     await client.query(`
@@ -419,31 +460,43 @@ async function processConfirmedPayment(reference: string, meta: any, amountPaid:
       VALUES ($1, 'debit', 'booking', $2, $3, $4)
     `, [meta.user_id, amountPaid, `Paid for booking INV-${baseReference}`, reference]);
 
-    const booking = await client.query('SELECT * FROM bookings WHERE id = $1', [bookingId]);
-    const b = booking.rows[0];
+    if (isPodcast) {
+      const booking = await client.query('SELECT * FROM podcast_bookings WHERE id = $1', [bookingId]);
+      const b = booking.rows[0];
+      createNotification({
+        user_id: meta.user_id,
+        type: 'booking_confirmed',
+        title: 'Podcast Booking Confirmed!',
+        body: `Your podcast booking ${b.booking_number} is now confirmed for ${new Date(b.start_time).toLocaleString()}.`,
+        link: '/admin/podcasts',
+      });
+    } else {
+      const booking = await client.query('SELECT * FROM bookings WHERE id = $1', [bookingId]);
+      const b = booking.rows[0];
 
-    // Notifications
-    const userRes = await client.query('SELECT name, email FROM users WHERE id = $1', [meta.user_id]);
-    const screenRes = await client.query('SELECT name FROM screens WHERE id = $1', [b.screen_id]);
-    
-    const ext = await client.query('SELECT MIN(start_time) as min_start, MAX(end_time) as max_end, COUNT(id) as total_runs FROM booking_slots WHERE booking_id = $1', [bookingId]);
-    const bookingSummary = {
-      ...b,
-      start_time: ext.rows[0].min_start,
-      end_time: ext.rows[0].max_end,
-      total_runs: ext.rows[0].total_runs,
-      screen_name: screenRes.rows[0].name
-    };
+      // Notifications
+      const userRes = await client.query('SELECT name, email FROM users WHERE id = $1', [meta.user_id]);
+      const screenRes = await client.query('SELECT name FROM screens WHERE id = $1', [b.screen_id]);
+      
+      const ext = await client.query('SELECT MIN(start_time) as min_start, MAX(end_time) as max_end, COUNT(id) as total_runs FROM booking_slots WHERE booking_id = $1', [bookingId]);
+      const bookingSummary = {
+        ...b,
+        start_time: ext.rows[0].min_start,
+        end_time: ext.rows[0].max_end,
+        total_runs: ext.rows[0].total_runs,
+        screen_name: screenRes.rows[0].name
+      };
 
-    sendBookingConfirmationEmail(userRes.rows[0].email, userRes.rows[0].name, bookingSummary).catch(console.error);
+      sendBookingConfirmationEmail(userRes.rows[0].email, userRes.rows[0].name, bookingSummary).catch(console.error);
 
-    createNotification({
-      user_id: meta.user_id,
-      type: 'booking_confirmed',
-      title: 'Booking Confirmed!',
-      body: `Your booking ${b.booking_number} is now active with ${ext.rows[0].total_runs} scheduled runs.`,
-      link: '/campaigns',
-    });
+      createNotification({
+        user_id: meta.user_id,
+        type: 'booking_confirmed',
+        title: 'Booking Confirmed!',
+        body: `Your booking ${b.booking_number} is now active with ${ext.rows[0].total_runs} scheduled runs.`,
+        link: '/campaigns',
+      });
+    }
     
     // Quick fix: the notifyAdmins function in old code took (type, title, body, link), wait let me check its signature from another call
     // the old code used notifyAdmins({ type, title, body, link }) but it was updated somewhere? Let's use the object form just in case.

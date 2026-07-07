@@ -9,38 +9,21 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import { FaImage, FaFilm, FaWallet, FaCreditCard } from 'react-icons/fa6';
 import { AnimatedButton, PageTransition } from '@/components/ui/Animations';
-
-// ---------- Brand tokens (Studio Arella) ----------
-const C = {
-  gold: "#E8A020",
-  darkGold: "#C47D0E",
-  black: "#0A0A0A",
-  cream: "#F7F4EF",
-  hazard: "#D32F2F", // Booked/Unavailable (Red)
-  hazardDark: "#B71C1C",
-  pending: "#FFCA28", // Partially Booked (Yellow)
-  muted: "rgba(10,10,10,0.55)",
-  mutedOnDark: "rgba(247,244,239,0.6)",
-  line: "rgba(10,10,10,0.10)",
-  panel: "#FFFFFF",
-  green: "#388E3C", // Available (Green)
-  greenLight: "rgba(56,142,60,0.15)",
-};
+import { theme } from '@/lib/theme';
 
 const SCREEN_ID = '00000000-0000-0000-0000-000000000001';
-const RATE_PER_MINUTE = 1000;
-const START_HOUR = 6;
-const END_HOUR = 19; // 7 PM
+const START_HOUR = 7;
+const END_HOUR = 20; // 8 PM
 const DAY_MIN = (END_HOUR - START_HOUR) * 60;
 const PPM = 1.4; 
 
-function calcCost(totalSeconds: number) {
+function calcCost(totalSeconds: number, rate: number) {
   if (totalSeconds <= 0) return { cost: 0, base: 0, extra: 0, extraSeconds: 0 };
-  if (totalSeconds <= 60) return { cost: RATE_PER_MINUTE, base: RATE_PER_MINUTE, extra: 0, extraSeconds: 0 };
+  if (totalSeconds <= 60) return { cost: rate, base: rate, extra: 0, extraSeconds: 0 };
   const extraSeconds = totalSeconds - 60;
-  const extra = Math.round(extraSeconds * (RATE_PER_MINUTE / 60) * 100) / 100;
-  const cost = Math.round((RATE_PER_MINUTE + extra) * 100) / 100;
-  return { cost, base: RATE_PER_MINUTE, extra, extraSeconds };
+  const extra = Math.round(extraSeconds * (rate / 60) * 100) / 100;
+  const cost = Math.round((rate + extra) * 100) / 100;
+  return { cost, base: rate, extra, extraSeconds };
 }
 
 function naira(n: number) { return `₦${Number(n).toLocaleString("en-NG", { minimumFractionDigits: 2 })}`; }
@@ -66,13 +49,7 @@ function formatDurationSec(sec: number) {
   if (m === 0) return `${s}s`;
   return s === 0 ? `${m} min` : `${m}m ${s}s`;
 }
-function getMBU(videoSeconds: number) {
-  if (!videoSeconds || videoSeconds <= 0) return 60;
-  if (videoSeconds >= 60) return videoSeconds;
-  return Math.ceil(60 / videoSeconds) * videoSeconds;
-}
 
-// Removed getMBU, maxLoopsForward, maxLoopsBackward. Using availableMinsForward and availableMinsBackward
 function availableMinsForward(startMin: number, bookings: any[]) {
   const dayEnd = END_HOUR * 60;
   let boundary = dayEnd;
@@ -114,6 +91,11 @@ function DoohScheduler() {
   const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
   const [viewDate, setViewDate] = useState(today);
   const [calCursor, setCalCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
+  const [baseRate, setBaseRate] = useState(333.33);
+
+  useEffect(() => {
+    api.get('/pricing/rate').then(res => setBaseRate(res.data.rate)).catch(console.error);
+  }, []);
   
   // Creatives integration
   const [approvedCreatives, setApprovedCreatives] = useState<any[]>([]);
@@ -274,7 +256,7 @@ function DoohScheduler() {
   
   const draftDurationMin = draft ? Math.ceil((videoSeconds * draft.loops) / 60) : 0;
   const draftDurationSec = draftDurationMin * 60;
-  const draftPrice = calcCost(draftDurationSec);
+  const draftPrice = calcCost(draftDurationSec, baseRate);
 
   function handleAddToCart() {
     if (!selectedCreative) { toast("Please select a creative first", "error"); return; }
@@ -415,31 +397,27 @@ function DoohScheduler() {
   return (
     <DashboardLayout>
       <PageTransition>
-        <div className="qs" style={{ minHeight: "100%", color: C.black }}>
+        <div className="qs" style={{ minHeight: "100%", color: theme.color.text1 }}>
           <style>{`
-            @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
-            .qs { font-family: 'Quicksand', sans-serif; }
-            .mono { font-family: 'IBM Plex Mono', monospace; }
+            .qs { font-family: var(--font-quicksand), 'Quicksand', sans-serif; }
+            .mono { font-family: var(--font-plex), 'IBM Plex Mono', monospace; }
             .timeline-bg { touch-action: none; }
             .day-cell { transition: all 120ms ease; }
-            .day-cell:hover:not(.empty) { background: rgba(232,160,32,0.10); }
+            .day-cell:hover:not(.empty) { background: ${theme.color.goldLight}; }
             input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
             .pill { box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
-            .hazard-stripe { background-image: repeating-linear-gradient(135deg, ${C.hazard}, ${C.hazard} 5px, ${C.hazardDark} 5px, ${C.hazardDark} 10px); }
-            @keyframes pulseGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(184,134,11,0.5); } 50% { box-shadow: 0 0 0 5px rgba(184,134,11,0); } }
-            .pending-pulse { animation: pulseGlow 1.8s ease-in-out infinite; }
             ::-webkit-scrollbar { width: 8px; }
-            ::-webkit-scrollbar-thumb { background: rgba(10,10,10,0.15); border-radius: 4px; }
+            ::-webkit-scrollbar-thumb { background: ${theme.color.border}; border-radius: 4px; }
           `}</style>
 
           {/* Header & Step Indicator */}
-          <div style={{ background: C.black, padding: "18px 24px", borderRadius: 14, marginBottom: 20 }}>
+          <div style={{ background: theme.color.charcoal900, padding: "20px 28px", borderRadius: 16, marginBottom: 24, border: `1px solid ${theme.color.border}`, boxShadow: theme.shadow.md }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
               <div>
-                <div style={{ color: C.gold, fontWeight: 700, fontSize: 20 }}>Studio Arella</div>
-                <div className="mono" style={{ color: C.mutedOnDark, fontSize: 12, marginTop: 2 }}>Bems Junction LED Screen — Umuahia</div>
+                <div style={{ color: theme.color.gold, fontWeight: 800, fontSize: 22, letterSpacing: '-0.3px' }}>Studio Arella</div>
+                <div className="mono" style={{ color: theme.color.text4, fontSize: 13, marginTop: 4 }}>Bems Junction LED Screen — Umuahia</div>
               </div>
-              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
                 {[
                   { step: 1, label: "Choose Ad" },
                   { step: 2, label: "Schedule" },
@@ -448,14 +426,15 @@ function DoohScheduler() {
                   <div key={s.step} style={{ display: "flex", alignItems: "center", gap: 8, opacity: currentStep === s.step ? 1 : 0.5 }}>
                     <div style={{
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      width: 28, height: 28, borderRadius: "50%",
-                      background: currentStep === s.step ? C.gold : currentStep > s.step ? C.green : "rgba(247,244,239,0.1)",
-                      color: currentStep === s.step ? C.black : "#fff",
-                      fontWeight: 700, fontSize: 12, transition: "all 0.2s"
+                      width: 32, height: 32, borderRadius: "50%",
+                      background: currentStep === s.step ? theme.color.gold : currentStep > s.step ? theme.color.success : theme.color.surface2,
+                      color: currentStep === s.step ? theme.color.charcoal900 : theme.color.text1,
+                      fontWeight: 700, fontSize: 13, transition: "all 0.2s",
+                      border: currentStep > s.step ? `1px solid ${theme.color.success}` : `1px solid ${theme.color.border}`
                     }}>
                       {currentStep > s.step ? "✓" : s.step}
                     </div>
-                    <span style={{ color: currentStep === s.step ? C.gold : C.cream, fontSize: 13, fontWeight: 600, display: "none" }} className="md:inline-block">
+                    <span style={{ color: currentStep === s.step ? theme.color.gold : theme.color.surface, fontSize: 14, fontWeight: 700, display: "none" }} className="md:inline-block">
                       {s.label}
                     </span>
                   </div>
@@ -466,37 +445,56 @@ function DoohScheduler() {
 
           {/* STEP 1: CHOOSE AD */}
           {currentStep === 1 && (
-            <div style={{ background: C.panel, borderRadius: 14, padding: "32px 24px", border: `1px solid ${C.line}` }}>
-              <div style={{ fontWeight: 700, fontSize: 22, marginBottom: 8 }}>Step 1: Choose Your Creative</div>
-              <p style={{ color: C.muted, fontSize: 15, marginBottom: 32 }}>Select the advertisement you want to schedule on the screen.</p>
+            <div style={{ background: theme.color.surface, borderRadius: 24, padding: "40px 36px", border: `1px solid ${theme.color.border2}`, boxShadow: theme.shadow.md, transition: "all 0.3s ease" }}>
+              <div style={{ fontWeight: 800, fontSize: 26, marginBottom: 12, color: theme.color.text1, letterSpacing: "-0.5px" }}>Step 1: Choose Your Creative</div>
+              <p style={{ color: theme.color.text3, fontSize: 15, marginBottom: 32 }}>Select the advertisement you want to schedule on the screen.</p>
               
               {approvedCreatives.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 0', background: "rgba(10,10,10,0.02)", borderRadius: 12 }}>
-                  <FaFilm size={32} color={C.line} style={{ marginBottom: 16 }} />
-                  <p style={{ fontSize: 15, color: C.muted }}>You have no approved ads yet.</p>
+                <div style={{ textAlign: 'center', padding: '60px 0', background: theme.color.surface2, borderRadius: 12, border: `1px dashed ${theme.color.border}` }}>
+                  <FaFilm size={32} color={theme.color.text4} style={{ marginBottom: 16 }} />
+                  <p style={{ fontSize: 15, color: theme.color.text3 }}>You have no approved ads yet.</p>
+                  <AnimatedButton onClick={() => router.push('/creative')} style={{ marginTop: 16, background: theme.color.charcoal900, color: theme.color.surface, border: "none", padding: "10px 20px", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                    Create or Upload Ad
+                  </AnimatedButton>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
                   {approvedCreatives.map(c => {
                     const isSelected = selectedCreative?.id === c.id;
                     return (
                       <div key={c.id} onClick={() => setSelectedCreative(c)}
                         style={{
-                          border: isSelected ? `2px solid ${C.gold}` : `1px solid ${C.line}`,
-                          borderRadius: 12, padding: 16, cursor: 'pointer',
-                          background: isSelected ? "rgba(232,160,32,0.05)" : C.panel,
+                          border: isSelected ? `2px solid ${theme.color.gold}` : `1px solid ${theme.color.border}`,
+                          borderRadius: 14, padding: 18, cursor: 'pointer',
+                          background: isSelected ? theme.color.goldLight : theme.color.surface,
                           display: 'flex', gap: 16, alignItems: 'center',
                           transition: 'all 0.2s',
-                          boxShadow: isSelected ? "0 4px 12px rgba(232,160,32,0.15)" : "none"
+                          boxShadow: isSelected ? `0 4px 12px ${theme.color.goldLight}` : "none"
                         }}>
-                        <div style={{ width: 48, height: 48, borderRadius: 10, background: "rgba(10,10,10,0.05)", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          {(c.file_type || c.media_type || '').includes('video') ? <FaFilm color={C.muted} size={18} /> : <FaImage color={C.muted} size={18} />}
+                        <div style={{ width: 52, height: 52, borderRadius: 12, background: theme.color.surface2, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: "hidden" }}>
+                          {c.file_url ? (
+                            (c.file_type || c.media_type || '').includes('video') ? (
+                              <video 
+                                src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${c.file_url}`} 
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                autoPlay muted loop playsInline 
+                              />
+                            ) : (
+                              <img 
+                                src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${c.file_url}`} 
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                                alt="Ad preview" 
+                              />
+                            )
+                          ) : (
+                            (c.file_type || c.media_type || '').includes('video') ? <FaFilm color={theme.color.text3} size={20} /> : <FaImage color={theme.color.text3} size={20} />
+                          )}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: C.black, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</p>
-                          <p className="mono" style={{ margin: 0, fontSize: 12, color: C.muted }}>Duration: {c.duration_seconds || 60} sec</p>
+                          <p style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700, color: theme.color.text1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</p>
+                          <p className="mono" style={{ margin: 0, fontSize: 12, color: theme.color.text3 }}>Duration: {c.duration_seconds || 60} sec</p>
                         </div>
-                        <div style={{ width: 20, height: 20, borderRadius: '50%', border: isSelected ? `5px solid ${C.gold}` : `2px solid ${C.line}` }} />
+                        <div style={{ width: 22, height: 22, borderRadius: '50%', border: isSelected ? `6px solid ${theme.color.gold}` : `2px solid ${theme.color.border2}` }} />
                       </div>
                     );
                   })}
@@ -504,8 +502,8 @@ function DoohScheduler() {
               )}
               
               {selectedCreative && (
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 32, paddingTop: 24, borderTop: `1px solid ${C.line}` }}>
-                  <AnimatedButton onClick={() => setCurrentStep(2)} style={{ background: C.gold, color: C.black, border: 'none', padding: '14px 28px', borderRadius: 8, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: "flex", gap: 8, alignItems: "center" }}>
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 36, paddingTop: 24, borderTop: `1px solid ${theme.color.border}` }}>
+                  <AnimatedButton onClick={() => setCurrentStep(2)} style={{ background: theme.color.gold, color: theme.color.charcoal900, border: 'none', padding: '14px 28px', borderRadius: 10, fontSize: 16, fontWeight: 800, cursor: 'pointer', display: "flex", gap: 8, alignItems: "center", boxShadow: theme.shadow.gold }}>
                     Next: Choose Date & Time <ChevronRight size={18} />
                   </AnimatedButton>
                 </div>
@@ -515,41 +513,38 @@ function DoohScheduler() {
 
           {/* STEP 2: SCHEDULE */}
           {currentStep === 2 && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <div className="booking-layout">
               
               {/* LEFT COLUMN: Calendar */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%", maxWidth: 500 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <button onClick={() => setCurrentStep(1)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 14, fontWeight: 600 }}>
+                  <button onClick={() => setCurrentStep(1)} style={{ background: "none", border: "none", color: theme.color.text3, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 14, fontWeight: 700 }}>
                     <ChevronLeft size={16} /> Back
-                  </button>
-                  <button onClick={() => setCurrentStep(3)} style={{ background: C.black, color: C.cream, border: "none", borderRadius: 8, padding: "8px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700 }}>
-                    <Ticket size={14} /> View Cart ({cart.length})
                   </button>
                 </div>
 
-                <div style={{ background: C.panel, borderRadius: 14, padding: 24, border: `1px solid ${C.line}` }}>
-                  <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 4, textAlign: "center" }}>Select a Date</div>
-                  <div style={{ fontSize: 13, color: C.muted, marginBottom: 20, textAlign: "center" }}>Green dots mean fully available.</div>
+                <div style={{ background: theme.color.surface, borderRadius: 24, padding: "32px", border: `1px solid ${theme.color.border2}`, boxShadow: theme.shadow.md, transition: "all 0.3s ease" }}>
+                  <div style={{ fontWeight: 800, fontSize: 24, marginBottom: 8, color: theme.color.text1, letterSpacing: "-0.5px" }}>Select a Date</div>
+                  <div style={{ fontSize: 14, color: theme.color.text3, marginBottom: 24 }}>Green dots mean fully available.</div>
                   
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, background: "rgba(10,10,10,0.03)", padding: 8, borderRadius: 10 }}>
-                    <button onClick={() => setCalCursor(new Date(calCursor.getFullYear(), calCursor.getMonth() - 1, 1))} style={iconBtnStyle}><ChevronLeft size={16} /></button>
-                    <div style={{ fontWeight: 700, fontSize: 15 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, background: theme.color.surface2, padding: "10px 14px", borderRadius: 12, border: `1px solid ${theme.color.border}` }}>
+                    <button onClick={() => setCalCursor(new Date(calCursor.getFullYear(), calCursor.getMonth() - 1, 1))} style={iconBtnStyle}><ChevronLeft size={18} color={theme.color.text2} /></button>
+                    <div style={{ fontWeight: 800, fontSize: 16, color: theme.color.text1 }}>
                       {calCursor.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
                     </div>
-                    <button onClick={() => setCalCursor(new Date(calCursor.getFullYear(), calCursor.getMonth() + 1, 1))} style={iconBtnStyle}><ChevronRight size={16} /></button>
+                    <button onClick={() => setCalCursor(new Date(calCursor.getFullYear(), calCursor.getMonth() + 1, 1))} style={iconBtnStyle}><ChevronRight size={18} color={theme.color.text2} /></button>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 4, marginBottom: 12 }}>
-                    {WEEKDAYS.map((w) => <div key={w} className="mono" style={{ fontSize: 12, textAlign: "center", color: C.muted, fontWeight: 600 }}>{w}</div>)}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 6, marginBottom: 14 }}>
+                    {WEEKDAYS.map((w) => <div key={w} className="mono" style={{ fontSize: 13, textAlign: "center", color: theme.color.text3, fontWeight: 700 }}>{w}</div>)}
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 6 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 8 }}>
                     {monthCells.map((d, i) => {
                       if (!d) return <div key={i} />;
                       const status = dayStatus(d);
                       const isViewing = isSameDate(d, viewDate);
                       const isToday = isSameDate(d, today);
                       const isPast = d.getTime() < today.getTime();
-                      const colorMap: any = { 'green': C.green, 'amber': C.pending, 'red': C.hazard, 'none': 'transparent' };
+                      const colorMap: any = { 'green': theme.color.success, 'amber': theme.color.warning, 'red': theme.color.error, 'none': 'transparent' };
                       
                       return (
                         <button key={i} onClick={() => { 
@@ -560,56 +555,130 @@ function DoohScheduler() {
                             setShowSlotModal(true);
                           }} className="day-cell"
                           style={{
-                            aspectRatio: "1", borderRadius: 10, border: isToday && !isViewing ? `1px solid ${C.gold}` : "1px solid transparent",
-                            background: isViewing ? "rgba(10,10,10,0.05)" : "transparent", color: isPast ? C.muted : C.black,
-                            fontSize: 15, cursor: (status === 'red' || isPast) ? "not-allowed" : "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4,
-                            boxShadow: isViewing ? "inset 0 0 0 2px #0A0A0A" : "none",
+                            aspectRatio: "1", borderRadius: 12, border: isToday && !isViewing ? `1px solid ${theme.color.gold}` : "1px solid transparent",
+                            background: isViewing ? theme.color.surface2 : "transparent", color: isPast ? theme.color.text4 : theme.color.text1,
+                            fontSize: 16, cursor: (status === 'red' || isPast) ? "not-allowed" : "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
+                            boxShadow: isViewing ? `inset 0 0 0 2px ${theme.color.charcoal900}` : "none",
                             opacity: isPast ? 0.4 : 1
                           }}>
-                          <span className="mono" style={{ fontWeight: isViewing ? 700 : 500 }}>{d.getDate()}</span>
+                          <span className="mono" style={{ fontWeight: isViewing ? 800 : 600 }}>{d.getDate()}</span>
                           <span style={{ width: 6, height: 6, borderRadius: '50%', background: colorMap[status] }} title={status === 'green' ? 'Available' : status === 'amber' ? 'Partially full' : 'Full'} />
                         </button>
                       );
                     })}
                   </div>
-                  <div style={{ display: "flex", gap: 20, marginTop: 20, fontSize: 12, color: C.muted, justifyContent: "center" }}>
-                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Dot color={C.green} /> Available</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Dot color={C.pending} /> Partially full</span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}><Dot color={C.hazard} /> Full</span>
+                  <div style={{ display: "flex", gap: 24, marginTop: 24, fontSize: 13, color: theme.color.text3, justifyContent: "center", fontWeight: 600 }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: 8 }}><Dot color={theme.color.success} /> Available</span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 8 }}><Dot color={theme.color.warning} /> Partially full</span>
+                    <span style={{ display: "flex", alignItems: "center", gap: 8 }}><Dot color={theme.color.error} /> Full</span>
                   </div>
                 </div>
+              </div>
+
+              {/* RIGHT COLUMN: Cart / Summary Panel */}
+              <div style={{ background: theme.color.surface, borderRadius: 24, border: `1px solid ${theme.color.border2}`, padding: "28px 24px", position: "sticky", top: 24, boxShadow: theme.shadow.md, transition: "all 0.3s ease" }}>
+                 <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 24, color: theme.color.text1, letterSpacing: "-0.3px" }}>Booking Summary</div>
+                 
+                 {/* Selected Creative Summary */}
+                 <div style={{ marginBottom: 24 }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: theme.color.text3, textTransform: "uppercase", letterSpacing: '0.05em', marginBottom: 10 }}>Selected Ad</div>
+                    <div style={{ background: theme.color.surface2, padding: 16, borderRadius: 14, display: "flex", flexDirection: "column", gap: 16, border: `1px solid ${theme.color.border}` }}>
+                       <div style={{ width: '100%', height: 160, borderRadius: 12, background: theme.color.surface, border: `1px solid ${theme.color.border}`, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                         {selectedCreative?.file_url ? (
+                           (selectedCreative.file_type || selectedCreative.media_type || '').includes('video') ? (
+                             <video 
+                               src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${selectedCreative.file_url}`} 
+                               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                               autoPlay muted loop playsInline 
+                             />
+                           ) : (
+                             <img 
+                               src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${selectedCreative.file_url}`} 
+                               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                               alt="Ad preview" 
+                             />
+                           )
+                         ) : (
+                           <FaFilm color={theme.color.text3} size={40} />
+                         )}
+                       </div>
+                       <div style={{ width: '100%', textAlign: 'center' }}>
+                         <p style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 800, color: theme.color.text1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedCreative?.title || "No Ad Selected"}</p>
+                         <p className="mono" style={{ margin: 0, fontSize: 14, color: theme.color.text3, fontWeight: 500 }}>{videoSeconds} sec</p>
+                       </div>
+                    </div>
+                 </div>
+
+                 {/* Cart Items */}
+                 {cart.length > 0 ? (
+                   <>
+                     <div style={{ fontSize: 12, fontWeight: 800, color: theme.color.text3, textTransform: "uppercase", letterSpacing: '0.05em', marginBottom: 10 }}>Cart Items ({cart.length})</div>
+                     <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 320, overflowY: "auto", marginBottom: 24, paddingRight: 4 }}>
+                       {cart.map(c => (
+                         <div key={c.id} style={{ background: theme.color.surface2, padding: "12px 14px", borderRadius: 10, fontSize: 13, display: "flex", justifyContent: "space-between", alignItems: "center", border: `1px solid ${theme.color.border}` }}>
+                           <div>
+                             <div style={{ fontWeight: 800, color: theme.color.text1, marginBottom: 2 }}>{c.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
+                             <div className="mono" style={{ color: theme.color.text3, fontSize: 11 }}>{formatMin(c.startMin)} - {formatDurationSec(c.durationSec)}</div>
+                           </div>
+                           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                             <span className="mono" style={{ fontWeight: 800, color: theme.color.success, fontSize: 14 }}>{naira(c.priceInfo.cost)}</span>
+                             <button onClick={() => removeFromCart(c.id)} style={{ background: "none", border: "none", color: theme.color.error, cursor: "pointer", padding: 4 }}><Trash2 size={16} /></button>
+                           </div>
+                         </div>
+                       ))}
+                     </div>
+                     
+                     <div style={{ borderTop: `1px dashed ${theme.color.border}`, paddingTop: 20, marginBottom: 24 }}>
+                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                         <span style={{ fontSize: 15, color: theme.color.text2, fontWeight: 700 }}>Total Cost</span>
+                         <span className="mono" style={{ fontSize: 22, fontWeight: 900, color: theme.color.gold }}>{naira(cartTotal)}</span>
+                       </div>
+                     </div>
+
+                     <AnimatedButton onClick={() => setCurrentStep(3)} style={{ width: "100%", background: theme.color.charcoal900, color: theme.color.surface, border: "none", padding: "16px", borderRadius: 12, fontSize: 15, fontWeight: 800, cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
+                       Proceed to Checkout <ChevronRight size={18} />
+                     </AnimatedButton>
+                   </>
+                 ) : (
+                   <div style={{ textAlign: "center", padding: "40px 0", color: theme.color.text3, fontSize: 14 }}>
+                     <Ticket size={32} style={{ opacity: 0.3, marginBottom: 12, margin: "0 auto", display: "block" }} color={theme.color.text4} />
+                     <p style={{ margin: 0, fontWeight: 600 }}>Select a date to add slots to your cart.</p>
+                   </div>
+                 )}
               </div>
 
               {/* SLOT MODAL: Period & Minute Grid */}
               <Portal>
                 {showSlotModal && (
-                  <div className="qs" style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(10,10,10,0.6)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
-                  <div style={{ background: C.panel, borderRadius: 16, width: "100%", maxWidth: 650, maxHeight: "95vh", overflowY: "auto", position: "relative" }}>
+                  <div className="qs" style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(10,10,10,0.4)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, animation: "fadeIn 0.2s ease-out" }}>
+                  <style>{`@keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }`}</style>
+                  <div style={{ background: theme.color.surface, borderRadius: 24, width: "100%", maxWidth: 700, maxHeight: "95vh", overflowY: "auto", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.2)", border: `1px solid ${theme.color.border2}` }}>
                     
-                    <button onClick={() => setShowSlotModal(false)} style={{ position: "absolute", top: 16, right: 16, background: "rgba(10,10,10,0.05)", border: "none", borderRadius: "50%", padding: 8, cursor: "pointer", zIndex: 10, display: "flex" }}>
+                    <button onClick={() => setShowSlotModal(false)} style={{ position: "absolute", top: 20, right: 20, background: theme.color.surface2, border: `1px solid ${theme.color.border}`, borderRadius: "50%", padding: 10, cursor: "pointer", zIndex: 10, display: "flex", color: theme.color.text1 }}>
                       <X size={18} />
                     </button>
                     
-                    <div style={{ padding: "32px 24px" }}>
-                      <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 24, paddingRight: 32 }}>
-                        Schedule for {viewDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                    <div style={{ padding: "36px 32px" }}>
+                      <div style={{ fontWeight: 800, fontSize: 24, marginBottom: 28, paddingRight: 40, color: theme.color.text1 }}>
+                        Schedule for {viewDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                       </div>
 
                       {/* Period Selector (Hours) */}
-                      <div style={{ marginBottom: 24 }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 12 }}>Period (Hour)</div>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 8 }}>
+                      <div style={{ marginBottom: 28 }}>
+                        <div style={{ fontSize: 12, fontWeight: 800, color: theme.color.text3, textTransform: "uppercase", letterSpacing: '0.05em', marginBottom: 14 }}>Select Hour</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 10 }}>
                           {hours.map((h) => (
                             <button key={h} onClick={() => {
                               setSelectedHour(h);
                               autoSelectSlot(viewDate, h);
                             }}
                               style={{
-                                background: selectedHour === h ? C.gold : "rgba(10,10,10,0.03)",
-                                color: selectedHour === h ? C.black : C.black,
-                                fontWeight: selectedHour === h ? 700 : 600,
-                                border: `1px solid ${selectedHour === h ? C.gold : "transparent"}`,
-                                borderRadius: 8, padding: "10px 0", fontSize: 13, cursor: "pointer", transition: "all 0.15s"
+                                background: selectedHour === h ? theme.color.gold : theme.color.surface2,
+                                color: selectedHour === h ? theme.color.charcoal900 : theme.color.text1,
+                                fontWeight: selectedHour === h ? 800 : 700,
+                                border: `1px solid ${selectedHour === h ? theme.color.goldMid : theme.color.border}`,
+                                borderRadius: 999, padding: "12px 0", fontSize: 14, cursor: "pointer", transition: "all 0.2s ease",
+                                boxShadow: selectedHour === h ? theme.shadow.gold : "0 2px 4px rgba(0,0,0,0.02)"
                               }}>
                               {formatMin(h * 60)}
                             </button>
@@ -621,65 +690,65 @@ function DoohScheduler() {
                       {draft && isSameDate(draft.date, viewDate) && (() => {
                         const isInvalid = draftInsideBooking || draftMaxLoops < 1;
                         return (
-                          <div style={{ marginTop: 24, padding: "20px", background: isInvalid ? "rgba(211,47,47,0.05)" : C.greenLight, border: `1px solid ${isInvalid ? C.hazard : C.green}`, borderRadius: 12 }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                              <div style={{ fontWeight: 700, fontSize: 16, color: isInvalid ? C.hazard : C.green }}>
+                          <div style={{ marginTop: 28, padding: "28px", background: isInvalid ? theme.color.errorLight : `linear-gradient(135deg, ${theme.color.surface2} 0%, ${theme.color.surface} 100%)`, border: `1px solid ${isInvalid ? theme.color.error : theme.color.border2}`, borderRadius: 20, boxShadow: theme.shadow.md }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                              <div style={{ fontWeight: 800, fontSize: 20, color: isInvalid ? theme.color.error : theme.color.text1, letterSpacing: "-0.3px" }}>
                                 {isInvalid ? 'Invalid Selection' : 'Duration & Booking Details'}
                               </div>
-                              <button onClick={() => setDraft(null)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, color: C.muted, fontSize: 12 }}><X size={14} /> Clear</button>
+                              <button onClick={() => setDraft(null)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, color: theme.color.text3, fontSize: 13, fontWeight: 700 }}><X size={16} /> Clear</button>
                             </div>
 
                             {/* Loops Stepper */}
-                            <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16, flexWrap: "wrap" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 20, flexWrap: "wrap" }}>
                               <div>
-                                <div style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: "uppercase", marginBottom: 4 }}>Loops (Full Plays)</div>
-                                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                  <button onClick={() => setDraft((d: any) => ({ ...d, loops: Math.max(1, d.loops - 1) }))} style={{...stepBtnStyle, width: 32, height: 32}}>−</button>
-                                  <span className="mono" style={{ width: 40, textAlign: "center", fontWeight: 700, fontSize: 18 }}>{draft.loops}</span>
+                                <div style={{ fontSize: 12, fontWeight: 800, color: theme.color.text3, textTransform: "uppercase", marginBottom: 6 }}>Loops (Full Plays)</div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                  <button onClick={() => setDraft((d: any) => ({ ...d, loops: Math.max(1, d.loops - 1) }))} style={{...stepBtnStyle, width: 36, height: 36}}>−</button>
+                                  <span className="mono" style={{ width: 44, textAlign: "center", fontWeight: 800, fontSize: 20, color: theme.color.text1 }}>{draft.loops}</span>
                                   <button
                                     onClick={() => setDraft((d: any) => ({ ...d, loops: Math.min(draftMaxLoops, d.loops + 1) }))}
                                     disabled={draft.loops >= draftMaxLoops}
-                                    style={{ ...stepBtnStyle, width: 32, height: 32, opacity: draft.loops >= draftMaxLoops ? 0.4 : 1, cursor: draft.loops >= draftMaxLoops ? "not-allowed" : "pointer" }}>
+                                    style={{ ...stepBtnStyle, width: 36, height: 36, opacity: draft.loops >= draftMaxLoops ? 0.4 : 1, cursor: draft.loops >= draftMaxLoops ? "not-allowed" : "pointer" }}>
                                     +
                                   </button>
                                 </div>
                               </div>
                               <div style={{ flex: 1, minWidth: 200 }}>
-                                <div style={{ background: "#fff", borderRadius: 8, padding: "12px", border: `1px solid ${C.line}` }}>
-                                  <div className="mono" style={{ fontSize: 13, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <span style={{ color: C.muted }}>
-                                      {formatMin(draft.startMin)} – {formatMin(draft.startMin + draftDurationSec / 60)} ({formatDurationSec(draftDurationSec)})
+                                <div style={{ background: theme.color.surface, borderRadius: 16, padding: "16px 20px", border: `1px solid ${theme.color.border2}`, boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)" }}>
+                                  <div className="mono" style={{ fontSize: 15, display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: 700 }}>
+                                    <span style={{ color: theme.color.text2 }}>
+                                      {formatMin(draft.startMin)} – {formatMin(draft.startMin + draftDurationSec / 60)} <span style={{ color: theme.color.text4, fontWeight: 500, fontSize: 13 }}>({formatDurationSec(draftDurationSec)})</span>
                                     </span>
-                                    <span style={{ color: C.green, fontWeight: 700, fontSize: 16 }}>{naira(draftPrice.cost)}</span>
+                                    <span style={{ color: theme.color.goldDark, fontWeight: 800, fontSize: 20 }}>{naira(draftPrice.cost)}</span>
                                   </div>
                                 </div>
                               </div>
                             </div>
 
                             {isInvalid ? (
-                               <div style={{ display: "flex", gap: 8, alignItems: "center", background: "#fff", borderRadius: 8, padding: "12px", fontSize: 13, color: "#B23B3B" }}>
-                                 <AlertTriangle size={16} style={{ flexShrink: 0 }} />
-                                 <span>{draftInsideBooking ? "That start time is already booked." : `Not enough open room here for even one full play of your video. Try a different start time.`}</span>
+                               <div style={{ display: "flex", gap: 10, alignItems: "center", background: theme.color.surface, borderRadius: 10, padding: "14px", fontSize: 14, color: theme.color.error, border: `1px solid ${theme.color.errorLight}` }}>
+                                 <AlertTriangle size={18} style={{ flexShrink: 0 }} />
+                                 <span style={{ fontWeight: 600 }}>{draftInsideBooking ? "That start time is already booked." : `Not enough open room here for even one full play of your video. Try a different start time.`}</span>
                                </div>
                             ) : (
                                <>
-                                 <div style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 16 }}>
+                                 <div style={{ fontSize: 14, color: theme.color.text3, lineHeight: 1.6, marginBottom: 20, fontWeight: 500 }}>
                                    <strong>Video Length:</strong> {videoSeconds}s<br/>
                                    <strong>Total Time Needed:</strong> {videoSeconds * draft.loops}s<br/>
-                                   <strong style={{ color: C.black }}>Maximum allocated time for your video:</strong> {draftDurationMin} Minute{draftDurationMin === 1 ? "" : "s"}
+                                   <strong style={{ color: theme.color.text1 }}>Maximum allocated time for your video:</strong> {draftDurationMin} Minute{draftDurationMin === 1 ? "" : "s"}
                                  </div>
                                  
-                                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap", alignItems: "center" }}>
+                                 <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
                                    <button onClick={() => {
                                       handleAddToCart();
                                       toast("Added to Cart! You can close this window to checkout.");
-                                   }} style={{ padding: "12px 20px", borderRadius: 8, border: "none", background: C.black, color: C.cream, fontSize: 14, fontWeight: 700, cursor: "pointer", display: "flex", gap: 8, alignItems: "center" }}>
-                                     <Ticket size={16} /> Add to Cart
+                                   }} style={{ padding: "16px 28px", borderRadius: 12, border: "none", background: theme.color.charcoal900, color: theme.color.surface, fontSize: 16, fontWeight: 800, cursor: "pointer", display: "flex", gap: 10, alignItems: "center", boxShadow: theme.shadow.md, transition: "all 0.2s" }}>
+                                     <Ticket size={18} /> Add to Cart
                                    </button>
-                                   <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: C.muted, background: "#fff", padding: "8px 12px", borderRadius: 8, border: `1px solid ${C.line}` }}>
-                                     <RepeatIcon size={14} /> Repeat?
-                                     <input type="number" min={1} max={365} value={repeatCount} onChange={(e) => setRepeatCount(Math.max(1, Number(e.target.value)))} className="mono" style={{ ...inputStyle, width: 56, padding: "6px" }} />
-                                     <select value={repeatUnit} onChange={(e) => setRepeatUnit(e.target.value)} style={{ ...inputStyle, padding: "6px", width: "auto" }}>
+                                   <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: theme.color.text2, background: theme.color.surface, padding: "12px 16px", borderRadius: 12, border: `1px solid ${theme.color.border2}`, fontWeight: 600 }}>
+                                     <RepeatIcon size={16} /> Repeat?
+                                     <input type="number" min={1} max={365} value={repeatCount} onChange={(e) => setRepeatCount(Math.max(1, Number(e.target.value)))} className="mono" style={{ ...inputStyle, width: 60, padding: "8px" }} />
+                                     <select value={repeatUnit} onChange={(e) => setRepeatUnit(e.target.value)} style={{ ...inputStyle, padding: "8px", width: "auto" }}>
                                        <option value="days">days</option>
                                        <option value="weeks">weeks</option>
                                        <option value="months">months</option>
@@ -687,7 +756,7 @@ function DoohScheduler() {
                                      <button onClick={() => {
                                         handleRepeatAdd();
                                         toast("Added Repeating Slots to Cart!");
-                                     }} style={{ padding: "6px 12px", borderRadius: 6, border: "none", background: "rgba(10,10,10,0.05)", fontSize: 13, fontWeight: 600, cursor: "pointer", color: C.black }}>
+                                     }} style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: theme.color.surface2, fontSize: 14, fontWeight: 700, cursor: "pointer", color: theme.color.text1 }}>
                                        Add {repeatCount}×
                                      </button>
                                    </div>
@@ -699,10 +768,10 @@ function DoohScheduler() {
                       })()}
 
                       {/* Minute Grid */}
-                      <div style={{ background: "rgba(10,10,10,0.02)", borderRadius: 12, padding: "20px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                          <div style={{ fontWeight: 700, fontSize: 14 }}>{formatMin(selectedHour * 60)} Slots (Minute-by-Minute)</div>
-                          <div style={{ fontSize: 11, fontWeight: 600, color: C.darkGold, background: "rgba(232,160,32,0.15)", padding: "4px 8px", borderRadius: 6 }}>
+                      <div style={{ background: theme.color.surface2, borderRadius: 20, padding: "28px", border: `1px solid ${theme.color.border2}`, marginTop: 28, boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                          <div style={{ fontWeight: 800, fontSize: 18, color: theme.color.text1, letterSpacing: "-0.3px" }}>{formatMin(selectedHour * 60)} Slots (Minute-by-Minute)</div>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: theme.color.goldDark, background: theme.color.goldLight, padding: "6px 12px", borderRadius: 8 }}>
                             {(() => {
                                const bookings = bookingsForDate(localDateKey(viewDate));
                                let available = 0;
@@ -714,7 +783,7 @@ function DoohScheduler() {
                           </div>
                         </div>
 
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(10, 1fr)", gap: 6 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(10, 1fr)", gap: 8 }}>
                           {Array.from({ length: 60 }).map((_, m) => {
                             const minOfDay = selectedHour * 60 + m;
                             const bookings = bookingsForDate(localDateKey(viewDate));
@@ -736,15 +805,16 @@ function DoohScheduler() {
                                 }}
                                 disabled={isBooked}
                                 style={{
-                                  aspectRatio: "1.5", borderRadius: 6, border: `1px solid ${isSelected ? C.gold : isBooked ? "transparent" : C.line}`,
-                                  background: isBooked ? "rgba(211,47,47,0.1)" : isSelected ? C.gold : "#fff",
-                                  color: isBooked ? C.hazard : isSelected ? C.black : C.muted,
-                                  fontWeight: isSelected ? 700 : 500,
-                                  fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center",
-                                  cursor: isBooked ? "not-allowed" : "pointer", opacity: isBooked ? 0.7 : 1, transition: "all 0.1s"
+                                  aspectRatio: "1.5", borderRadius: 10, border: `1px solid ${isSelected ? theme.color.goldMid : isBooked ? "transparent" : theme.color.border2}`,
+                                  background: isBooked ? theme.color.surface2 : isSelected ? theme.color.gold : theme.color.surface,
+                                  color: isBooked ? theme.color.text4 : isSelected ? theme.color.charcoal900 : theme.color.text2,
+                                  fontWeight: isSelected ? 800 : 600,
+                                  fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center",
+                                  cursor: isBooked ? "not-allowed" : "pointer", opacity: isBooked ? 0.6 : 1, transition: "all 0.2s ease",
+                                  boxShadow: isSelected ? theme.shadow.gold : "0 1px 2px rgba(0,0,0,0.03)"
                                 }}
                                 className="mono">
-                                1 min
+                                1m
                               </button>
                             );
                           })}
@@ -761,67 +831,67 @@ function DoohScheduler() {
 
           {/* STEP 3: REVIEW & CHECKOUT */}
           {currentStep === 3 && (
-            <div style={{ maxWidth: 700, margin: "0 auto", background: C.panel, borderRadius: 14, border: `1px solid ${C.line}`, padding: "32px 24px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-                <button onClick={() => setCurrentStep(2)} style={{ background: "none", border: "none", color: C.muted, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 14, fontWeight: 600 }}>
-                  <ChevronLeft size={16} /> Back to Schedule
+            <div style={{ maxWidth: 750, margin: "0 auto", background: theme.color.surface, borderRadius: 16, border: `1px solid ${theme.color.border}`, padding: "40px 32px", boxShadow: theme.shadow.sm }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
+                <button onClick={() => setCurrentStep(2)} style={{ background: "none", border: "none", color: theme.color.text3, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 700 }}>
+                  <ChevronLeft size={18} /> Back to Schedule
                 </button>
-                <div style={{ fontWeight: 700, fontSize: 18 }}>Checkout</div>
+                <div style={{ fontWeight: 800, fontSize: 22, color: theme.color.text1 }}>Checkout</div>
               </div>
 
               {cart.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "60px 0", background: "rgba(10,10,10,0.02)", borderRadius: 12 }}>
-                  <Ticket size={32} color={C.line} style={{ marginBottom: 16 }} />
-                  <p style={{ fontSize: 15, color: C.muted }}>Your cart is empty.</p>
-                  <AnimatedButton onClick={() => setCurrentStep(2)} style={{ marginTop: 16, background: C.black, color: C.cream, border: "none", padding: "10px 20px", borderRadius: 8, fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                <div style={{ textAlign: "center", padding: "80px 0", background: theme.color.surface2, borderRadius: 16, border: `1px dashed ${theme.color.border}` }}>
+                  <Ticket size={40} color={theme.color.text4} style={{ marginBottom: 20 }} />
+                  <p style={{ fontSize: 16, color: theme.color.text3, fontWeight: 500 }}>Your cart is empty.</p>
+                  <AnimatedButton onClick={() => setCurrentStep(2)} style={{ marginTop: 24, background: theme.color.charcoal900, color: theme.color.surface, border: "none", padding: "12px 24px", borderRadius: 10, fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
                     Go Schedule Slots
                   </AnimatedButton>
                 </div>
               ) : (
                 <>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 32 }}>
                     {[...cart].sort((a, b) => a.date.getTime() - b.date.getTime() || a.startMin - b.startMin).map((c) => (
-                      <div key={c.id} style={{ background: "rgba(10,10,10,0.03)", borderRadius: 12, padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
-                        <div className="mono" style={{ fontSize: 13, color: C.muted }}>
-                          <div style={{ color: C.black, fontWeight: 700, fontSize: 15, marginBottom: 4 }}>{c.date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</div>
+                      <div key={c.id} style={{ background: theme.color.surface2, borderRadius: 14, padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 20, border: `1px solid ${theme.color.border}` }}>
+                        <div className="mono" style={{ fontSize: 14, color: theme.color.text3 }}>
+                          <div style={{ color: theme.color.text1, fontWeight: 800, fontSize: 16, marginBottom: 6 }}>{c.date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</div>
                           <div>{formatMin(c.startMin)} – {formatMin(c.startMin + Math.round(c.durationSec / 60))} · {formatDurationSec(c.durationSec)} airtime</div>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                          <span className="mono" style={{ color: C.green, fontSize: 16, fontWeight: 700 }}>{naira(c.priceInfo.cost)}</span>
-                          <button onClick={() => removeFromCart(c.id)} style={{ background: "none", border: "none", cursor: "pointer", padding: 8, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }} className="hover:bg-red-100">
-                            <Trash2 size={16} color={C.hazard} />
+                        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                          <span className="mono" style={{ color: theme.color.success, fontSize: 18, fontWeight: 800 }}>{naira(c.priceInfo.cost)}</span>
+                          <button onClick={() => removeFromCart(c.id)} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: 10, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <Trash2 size={18} color={theme.color.error} />
                           </button>
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  <div style={{ background: C.black, borderRadius: 12, padding: "20px 24px", marginBottom: 24, color: C.cream }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                      <span style={{ fontWeight: 600, fontSize: 16 }}>Total Airtime</span>
-                      <span className="mono" style={{ fontWeight: 600, fontSize: 16 }}>{cart.length} block(s)</span>
+                  <div style={{ background: theme.color.charcoal900, borderRadius: 16, padding: "24px 32px", marginBottom: 32, color: theme.color.surface, boxShadow: theme.shadow.md }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                      <span style={{ fontWeight: 700, fontSize: 16, color: theme.color.text4 }}>Total Airtime</span>
+                      <span className="mono" style={{ fontWeight: 700, fontSize: 16 }}>{cart.length} block(s)</span>
                     </div>
-                    <div style={{ height: 1, background: "rgba(247,244,239,0.15)", marginBottom: 16 }} />
+                    <div style={{ height: 1, background: "rgba(255,255,255,0.1)", marginBottom: 20 }} />
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontWeight: 700, fontSize: 18 }}>Total Amount</span>
-                      <span className="mono" style={{ color: C.gold, fontWeight: 700, fontSize: 24 }}>{naira(cartTotal)}</span>
+                      <span style={{ fontWeight: 800, fontSize: 20 }}>Total Amount</span>
+                      <span className="mono" style={{ color: theme.color.gold, fontWeight: 900, fontSize: 28 }}>{naira(cartTotal)}</span>
                     </div>
                   </div>
 
-                  <div style={{ display: "flex", gap: 16, flexDirection: "column" }}>
+                  <div style={{ display: "flex", gap: 20, flexDirection: "column" }}>
                     {bookingId ? (
-                       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                         <div style={{ textAlign: "center", color: C.green, fontWeight: 700, marginBottom: 8 }}>Slots reserved successfully! Choose a payment method:</div>
-                         <AnimatedButton onClick={() => handlePay('wallet')} disabled={paying} style={{ background: C.black, color: '#fff', border: 'none', padding: '16px', borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                           <FaWallet size={18} /> Pay from Wallet
+                       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                         <div style={{ textAlign: "center", color: theme.color.success, fontWeight: 800, marginBottom: 8, fontSize: 16 }}>Slots reserved successfully! Choose a payment method:</div>
+                         <AnimatedButton onClick={() => handlePay('wallet')} disabled={paying} style={{ background: theme.color.charcoal900, color: '#fff', border: 'none', padding: '18px', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                           <FaWallet size={20} /> Pay from Wallet
                          </AnimatedButton>
-                         <AnimatedButton onClick={() => handlePay('monnify')} disabled={paying} style={{ background: "rgba(232,160,32,0.1)", color: C.darkGold, border: `2px solid ${C.gold}`, padding: '16px', borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                           <FaCreditCard size={18} /> Pay with Card / Bank
+                         <AnimatedButton onClick={() => handlePay('monnify')} disabled={paying} style={{ background: theme.color.goldLight, color: theme.color.goldDark, border: `2px solid ${theme.color.goldMid}`, padding: '18px', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                           <FaCreditCard size={20} /> Pay with Card / Bank
                          </AnimatedButton>
                        </div>
                     ) : (
-                      <AnimatedButton onClick={handleReserve} disabled={reserving} style={{ width: "100%", padding: "16px 0", borderRadius: 10, border: "none", background: C.gold, color: C.black, fontWeight: 700, fontSize: 16, cursor: reserving ? 'not-allowed' : 'pointer', opacity: reserving ? 0.7 : 1, display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
-                        {reserving ? 'Reserving Slots...' : <><Ticket size={18} /> Reserve & Proceed to Payment</>}
+                      <AnimatedButton onClick={handleReserve} disabled={reserving} style={{ width: "100%", padding: "18px 0", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontWeight: 800, fontSize: 18, cursor: reserving ? 'not-allowed' : 'pointer', opacity: reserving ? 0.7 : 1, display: "flex", gap: 10, alignItems: "center", justifyContent: "center", boxShadow: theme.shadow.gold }}>
+                        {reserving ? 'Reserving Slots...' : <><Ticket size={20} /> Reserve & Proceed to Payment</>}
                       </AnimatedButton>
                     )}
                   </div>
@@ -836,11 +906,10 @@ function DoohScheduler() {
   );
 }
 
-const inputStyle = { width: "100%", padding: "8px 10px", borderRadius: 8, border: `1px solid ${C.line}`, fontSize: 13, boxSizing: "border-box" as const };
-const iconBtnStyle = { background: "none", border: `1px solid ${C.line}`, borderRadius: 8, padding: 4, cursor: "pointer", display: "flex" };
-const miniLabel = { fontSize: 10, color: C.muted, display: "block", marginBottom: 4 };
-const stepBtnStyle = { width: 26, height: 26, borderRadius: 6, border: `1px solid ${C.line}`, background: "#fff", fontSize: 15, lineHeight: 1, cursor: "pointer" };
+const inputStyle = { width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${theme.color.border}`, fontSize: 14, boxSizing: "border-box" as const, background: theme.color.surface, color: theme.color.text1 };
+const iconBtnStyle = { background: "none", border: `1px solid ${theme.color.border}`, borderRadius: 10, padding: 6, cursor: "pointer", display: "flex" };
+const stepBtnStyle = { width: 30, height: 30, borderRadius: 8, border: `1px solid ${theme.color.border}`, background: theme.color.surface, color: theme.color.text1, fontSize: 18, lineHeight: 1, cursor: "pointer" };
 
 function Dot({ color }: { color: string }) {
-  return <span style={{ width: 4, height: 4, borderRadius: "50%", background: color, display: "inline-block" }} />;
+  return <span style={{ width: 6, height: 6, borderRadius: "50%", background: color, display: "inline-block" }} />;
 }

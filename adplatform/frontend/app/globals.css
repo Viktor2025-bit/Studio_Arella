@@ -38,6 +38,9 @@
   --warning-light: #FBEEDA;
   --error:         #C9483A;
   --error-light:   #F7E7E2;
+  --info:          #0E7490;
+  --info-light:    #DFFAFD;
+  --info-border:   #9CE9F2;
 
   /* ── Fonts ── */
   --font-body:    var(--font-quicksand), 'Quicksand', sans-serif;
@@ -48,6 +51,56 @@
   --shadow-md:   0 10px 30px rgba(33,29,23,0.07);
   --shadow-lg:   0 20px 40px rgba(33,29,23,0.10);
   --shadow-gold: 0 8px 20px rgba(224,165,38,0.30);
+}
+
+.dark {
+  --bg:        #0a0a0a;
+  --surface:   #111111;
+  --surface-2: rgba(255, 255, 255, 0.04);
+  --border:    rgba(255, 255, 255, 0.1);
+  --border-2:  rgba(255, 255, 255, 0.2);
+
+  --charcoal-900: #0a0a0a;
+  --charcoal-800: #111111;
+  --charcoal-700: rgba(255, 255, 255, 0.1);
+
+  --text-1: #F8FAFC;
+  --text-2: #E2E8F0;
+  --text-3: #94A3B8;
+  --text-4: #64748B;
+
+  --success-light: rgba(76, 154, 90, 0.15);
+  --warning-light: rgba(217, 142, 43, 0.15);
+  --error-light:   rgba(201, 72, 58, 0.15);
+  --gold-light:    rgba(224, 165, 38, 0.15);
+  --info:          #00E5FF;
+  --info-light:    rgba(0, 229, 255, 0.15);
+  --info-border:   rgba(0, 229, 255, 0.3);
+  
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+
+  .booking-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .booking-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  --shadow-sm:   0 2px 8px rgba(0,0,0,0.5);
+  --shadow-md:   0 10px 30px rgba(0,0,0,0.6);
+  --shadow-lg:   0 20px 40px rgba(0,0,0,0.8);
 }
 
 html, body {

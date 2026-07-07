@@ -22,13 +22,19 @@ import { getAds, createAd, updateAd, deleteAd, getAdminReviewQueue, reviewAd } f
 import { getScreens, createScreen, updateScreen, deleteScreen } from '../controllers/screenController';
 import { getBalance, getTransactions, addCredits, getTotalRevenue } from '../controllers/financeController';
 import { getDashboardStats, getHourlyAnalytics, getAdvertiserProofOfPlay } from '../controllers/analyticsController';
-import { getPlatformStats, getAllUsers, getAllBookings, getAllCampaigns, getAllScreens, updateUserRole, getAllTransactions } from '../controllers/adminController';
-import { getPlans } from '../controllers/pricingController';
+import { getPlatformStats, getAllUsers, getAllBookings, getAllCampaigns, getAllScreens, updateUserRole, getAllTransactions, getAllPodcastBookings } from '../controllers/adminController';
+import { getPlans, getBaseRate } from '../controllers/pricingController';
 import { initializePayment, initializeCreditPayment, verifyPayment, monnifyWebhook, devBypassPayment, payFromWallet } from '../controllers/paymentController';
 import { getNotifications, markRead, markAllRead, deleteNotification, getUnreadCount } from '../controllers/notificationController';
 import { submitCreativeRequest, getMyCreativeRequests, getAllCreativeRequests, updateCreativeRequestStatus } from '../controllers/creativeController';
+import { getAvailability, reserveSlot, getMyBookings } from '../controllers/podcastController';
 
 const router = Router();
+
+// ── Podcasts ──────────────────────────────────────────────────────────────────
+router.get('/podcasts/availability', getAvailability);
+router.post('/podcasts/reserve', authenticate, reserveSlot);
+router.get('/podcasts/my-bookings', authenticate, getMyBookings);
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 router.post('/auth/register', register);
@@ -91,7 +97,8 @@ router.post('/finances/add-credits', authenticate, addCredits);
 router.get('/finances/revenue', authenticate, getTotalRevenue);
 
 // ── Plans ─────────────────────────────────────────────────────────────────────
-router.get('/plans', getPlans);
+router.get('/pricing/plans', getPlans);
+router.get('/pricing/rate', getBaseRate);
 
 // ── Payments ──────────────────────────────────────────────────────────────────
 router.post('/payments/initialize', authenticate, initializePayment);
@@ -123,6 +130,7 @@ router.get('/admin/stats', authenticate, getPlatformStats);
 router.get('/admin/users', authenticate, getAllUsers);
 router.put('/admin/users/:id/role', authenticate, updateUserRole);
 router.get('/admin/bookings', authenticate, getAllBookings);
+router.get('/admin/podcasts', authenticate, getAllPodcastBookings);
 router.get('/admin/campaigns', authenticate, getAllCampaigns);
 router.get('/admin/screens', authenticate, getAllScreens);
 router.get('/admin/transactions', authenticate, getAllTransactions);

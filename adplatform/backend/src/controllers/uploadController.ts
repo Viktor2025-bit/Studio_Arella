@@ -14,7 +14,7 @@ cloudinary.config({
 // Use memory storage — we stream the buffer to Cloudinary
 export const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB max
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB max
   fileFilter: (_req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/quicktime', 'video/webm'];
     if (allowed.includes(file.mimetype)) {

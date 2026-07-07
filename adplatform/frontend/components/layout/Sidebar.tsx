@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, CalendarCheck, Megaphone, Film, DollarSign, Settings, HelpCircle, X, Shield, Calendar, Paintbrush, Monitor, BarChart2 } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, Megaphone, Film, DollarSign, Settings, HelpCircle, X, Shield, Calendar, Paintbrush, Monitor, BarChart2, Mic } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { theme } from '@/lib/theme';
 
@@ -12,6 +12,7 @@ const advertiserNav = [
   { href: '/dashboard',  label: 'Dashboard',        icon: LayoutDashboard },
   { href: '/analytics',  label: 'Analytics',        icon: BarChart2 },
   { href: '/book',       label: 'Book Ad Slot',      icon: CalendarCheck, highlight: true },
+  { href: '/podcast',    label: 'Book Podcast',      icon: Mic },
   { href: '/calendar',   label: 'My Calendar',       icon: Calendar },
   { href: '/campaigns',  label: 'My Campaigns',      icon: Megaphone },
   { href: '/ads',        label: 'My Ads',            icon: Film },
@@ -25,6 +26,7 @@ const adminNav = [
   { href: '/admin/review',    label: 'Review Queue',    icon: Film },
   { href: '/admin/campaigns', label: 'All Campaigns',   icon: Megaphone },
   { href: '/admin/bookings',  label: 'All Bookings',    icon: CalendarCheck },
+  { href: '/admin/podcasts',  label: 'All Podcasts',    icon: Mic },
   { href: '/admin/screens',   label: 'Screen Settings', icon: Monitor },
   { href: '/admin/finances',  label: 'Revenue',         icon: DollarSign },
 ];
@@ -49,47 +51,47 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean;
       <aside style={{ width: 240, background: theme.color.charcoal900, height: '100%', borderRight: 'none', display: 'flex', flexDirection: 'column', fontFamily: F, position: 'fixed', top: 0, left: 0, zIndex: 30 }}>
 
         {/* Logo */}
-        <div style={{ padding: '20px 18px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-              <img src="/logo-white.png" alt="Studio Arella Logo" style={{ height: 56, objectFit: 'contain' }} />
+            <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', padding: '4px 0' }}>
+              <img src="/logo-white.png" alt="Studio Arella Logo" style={{ height: 46, objectFit: 'contain' }} />
             </Link>
             {mobileOpen && (
-              <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.4)', padding: 4 }}>
+              <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.6)', padding: 6, borderRadius: '50%' }}>
                 <X size={16} />
               </button>
             )}
           </div>
           {/* Role badge */}
-          <div style={{ marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 5, background: 'rgba(224,165,38,0.15)', border: '1px solid rgba(224,165,38,0.28)', borderRadius: theme.radius.pill, padding: '3px 10px' }}>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: theme.color.gold, display: 'inline-block' }} />
-            <span style={{ fontSize: 10, fontWeight: 800, color: theme.color.goldMid, letterSpacing: '0.04em' }}>
-              {user?.role === 'admin' ? 'Admin — Bems Group' : 'Advertiser'}
+          <div style={{ marginTop: 20, display: 'inline-flex', alignItems: 'center', gap: 6, background: `linear-gradient(90deg, rgba(224,165,38,0.15) 0%, transparent 100%)`, border: '1px solid rgba(224,165,38,0.2)', borderRight: 'none', borderRadius: 100, padding: '4px 12px' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: theme.color.gold, boxShadow: `0 0 8px ${theme.color.gold}` }} />
+            <span style={{ fontSize: 10, fontWeight: 800, color: theme.color.gold, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              {user?.role === 'admin' ? 'Admin' : 'Advertiser'}
             </span>
           </div>
         </div>
 
         {/* Nav items */}
-        <nav style={{ flex: 1, padding: '10px', overflowY: 'auto' }}>
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <nav style={{ flex: 1, padding: '16px 12px', overflowY: 'auto' }}>
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
             {navItems.map(({ href, label, icon: Icon, highlight }: any) => {
               const active = isActive(href);
               return (
                 <li key={href}>
-                  <Link href={href} onClick={onClose} style={{
-                    display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: theme.radius.sm,
+                  <Link href={href} id={href === '/book' ? 'tour-book-ad' : href === '/podcast' ? 'tour-book-podcast' : undefined} onClick={onClose} style={{
+                    display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10,
                     textDecoration: 'none', fontSize: 13, fontWeight: active ? 800 : 600,
-                    color: active  ? theme.color.charcoal900 : highlight ? theme.color.goldMid : 'rgba(255,255,255,0.5)',
-                    background: active ? theme.color.gold : 'transparent',
-                    boxShadow: active ? theme.shadow.gold : 'none',
-                    transition: 'all 0.15s',
+                    color: active ? '#1a1a1a' : highlight ? theme.color.goldMid : 'rgba(255,255,255,0.55)',
+                    background: active ? `linear-gradient(90deg, ${theme.color.gold}, #f6c04f)` : 'transparent',
+                    boxShadow: active ? `0 4px 14px rgba(224,165,38,0.25)` : 'none',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                   }}
-                    onMouseOver={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(224,165,38,0.12)'; }}
+                    onMouseOver={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
                     onMouseOut={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                    <Icon size={15} strokeWidth={active ? 2.5 : 1.8} />
-                    {label}
+                    <Icon size={16} strokeWidth={active ? 2.5 : 2} style={{ opacity: active ? 1 : 0.8 }} />
+                    <span style={{ letterSpacing: '-0.1px' }}>{label}</span>
                     {highlight && !active && (
-                      <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 900, background: theme.color.warning, color: '#fff', padding: '2px 7px', borderRadius: theme.radius.pill, letterSpacing: '0.05em' }}>BOOK</span>
+                      <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 900, background: `linear-gradient(90deg, ${theme.color.gold}, #f6c04f)`, color: '#1a1a1a', padding: '3px 8px', borderRadius: 100, letterSpacing: '0.05em', boxShadow: `0 2px 8px rgba(224,165,38,0.3)` }}>BOOK</span>
                     )}
                   </Link>
                 </li>
@@ -97,17 +99,18 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean;
             })}
           </ul>
 
-          <div style={{ marginTop: 20, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <p style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '0 12px', marginBottom: 6 }}>Account</p>
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+            <p style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.25)', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '0 14px', marginBottom: 8 }}>Account</p>
+            <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
               {bottomNav.map(({ href, label, icon: Icon }) => {
                 const active = pathname === href;
                 return (
                   <li key={href}>
-                    <Link href={href} onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: theme.radius.sm, textDecoration: 'none', fontSize: 13, fontWeight: active ? 800 : 600, color: active  ? theme.color.charcoal900 : 'rgba(255,255,255,0.4)', background: active ? theme.color.gold : 'transparent', transition: 'all 0.15s' }}
-                      onMouseOver={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(224,165,38,0.12)'; }}
+                    <Link href={href} onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, textDecoration: 'none', fontSize: 13, fontWeight: active ? 800 : 600, color: active ? '#1a1a1a' : 'rgba(255,255,255,0.55)', background: active ? `linear-gradient(90deg, ${theme.color.gold}, #f6c04f)` : 'transparent', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)' }}
+                      onMouseOver={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
                       onMouseOut={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                      <Icon size={15} strokeWidth={1.8} />{label}
+                      <Icon size={16} strokeWidth={active ? 2.5 : 2} style={{ opacity: active ? 1 : 0.8 }} />
+                      <span style={{ letterSpacing: '-0.1px' }}>{label}</span>
                     </Link>
                   </li>
                 );
@@ -117,14 +120,14 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean;
         </nav>
 
         {/* User footer */}
-        <div style={{ padding: '12px 14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 34, height: 34, borderRadius: '50%', background: `linear-gradient(135deg,${theme.color.gold},${theme.color.charcoal700})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 900, color: '#fff', flexShrink: 0 }}>
+        <div style={{ padding: '16px', borderTop: '1px solid rgba(255,255,255,0.04)', background: 'rgba(0,0,0,0.1)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: `linear-gradient(135deg, ${theme.color.gold}, #f6c04f)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 900, color: '#1a1a1a', flexShrink: 0, boxShadow: `0 2px 10px rgba(224,165,38,0.3)` }}>
               {user?.name?.[0]?.toUpperCase() || 'U'}
             </div>
             <div style={{ overflow: 'hidden', flex: 1 }}>
-              <p style={{ fontSize: 12, fontWeight: 800, color: '#fff', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name}</p>
-              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 500 }}>{user?.email}</p>
+              <p style={{ fontSize: 13, fontWeight: 800, color: '#fff', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.1px' }}>{user?.name}</p>
+              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: 600 }}>{user?.email}</p>
             </div>
           </div>
         </div>
