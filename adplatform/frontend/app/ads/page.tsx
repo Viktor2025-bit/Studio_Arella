@@ -260,7 +260,7 @@ export default function AdsPage() {
 
           {/* Grid */}
           {loading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(100%, 240px),1fr))', gap: 14 }}>
               {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i} style={{ ...card, padding: 18 }}>
                   <Skeleton height={120} radius={10} style={{ marginBottom: 12 }} />
@@ -290,14 +290,30 @@ export default function AdsPage() {
               </div>
             </FadeCard>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(260px,1fr))', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(100%, 260px),1fr))', gap: 14 }}>
               {ads.map((ad, i) => {
                 const fileUrl = ad.file_url ? `${API_BASE}${ad.file_url}` : null;
                 const info = statusInfo[ad.status] || statusInfo.pending;
                 return (
                   <FadeCard key={ad.id} delay={i * 0.05} style={{ ...card, overflow: 'hidden' }}>
                     {/* Thumbnail / preview */}
-                    <div style={{ height: 140, background: theme.color.charcoal900, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                    <div 
+                      style={{ height: 220, background: theme.color.charcoal900, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}
+                      onMouseEnter={e => {
+                        const vid = e.currentTarget.querySelector('video');
+                        if (vid) {
+                          const p = vid.play();
+                          if (p !== undefined) p.catch(() => {});
+                        }
+                      }}
+                      onMouseLeave={e => {
+                        const vid = e.currentTarget.querySelector('video');
+                        if (vid) {
+                          vid.pause();
+                          vid.currentTime = 0;
+                        }
+                      }}
+                    >
                       {fileUrl && ad.file_type === 'video' ? (
                         <video
                           src={fileUrl}
@@ -305,8 +321,6 @@ export default function AdsPage() {
                           loop
                           playsInline
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          onMouseOver={e => (e.currentTarget as HTMLVideoElement).play()}
-                          onMouseOut={e => { const v = e.currentTarget as HTMLVideoElement; v.pause(); v.currentTime = 0; }}
                         />
                       ) : fileUrl && (ad.file_type === 'image' || ad.file_type === 'gif') ? (
                         <img src={fileUrl} alt={ad.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }}

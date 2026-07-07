@@ -115,8 +115,14 @@ function DoohScheduler() {
   
   const [checkoutItems, setCheckoutItems] = useState<any[]>([]);
   const [checkoutTotal, setCheckoutTotal] = useState(0);
-  const [repeatCount, setRepeatCount] = useState(4);
-  const [repeatUnit, setRepeatUnit] = useState("weeks");
+  const [spreadModal, setSpreadModal] = useState(false);
+  const [spreadDuration, setSpreadDuration] = useState("4weeks");
+  const [spreadPattern, setSpreadPattern] = useState("weekdays");
+  const [customDays, setCustomDays] = useState<number[]>([]);
+  
+  const [editCartItem, setEditCartItem] = useState<any>(null);
+  const [editHour, setEditHour] = useState(8);
+  const [editMinute, setEditMinute] = useState(0);
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedHour, setSelectedHour] = useState(8);
   const [showSlotModal, setShowSlotModal] = useState(false);
@@ -279,35 +285,90 @@ function DoohScheduler() {
     toast("Added to cart", "success");
   }
 
-  function handleRepeatAdd() {
+  function handleSpreadAdd() {
     if (!selectedCreative) { toast("Please select a creative first", "error"); return; }
-    if (!draft || draft.loops < 1) { setMessage("There isn't enough open room here to fit even one full play of your video."); return; }
-    const stepDate = (i: number) => {
-      if (repeatUnit === "days") return addDays(draft.date, i);
-      if (repeatUnit === "weeks") return addDays(draft.date, i * 7);
-      if (repeatUnit === "months") return addMonths(draft.date, i);
-      return addYears(draft.date, i);
-    };
+    if (!draft || draft.loops < 1) { toast("There isn't enough open room here to fit even one full play of your video.", "error"); return; }
+    
+    const startDate = draft.date;
+    let endDate = new Date(startDate);
+    if (spreadDuration === "1week") endDate = addDays(startDate, 7);
+    else if (spreadDuration === "4weeks") endDate = addDays(startDate, 28);
+    else if (spreadDuration === "3months") endDate = addMonths(startDate, 3);
+    else if (spreadDuration === "6months") endDate = addMonths(startDate, 6);
+    else if (spreadDuration === "1year") endDate = addYears(startDate, 1);
+
     let added = 0, skipped = 0;
     const newItems: any[] = [];
-    for (let i = 0; i < repeatCount; i++) {
-      const d = stepDate(i);
-      const dateKey = localDateKey(d);
-      const existing = [
-        ...liveBookings.filter((b) => b.dateKey === dateKey).map((b) => ({ ...b, type: "other" })),
-        ...cart.filter((c) => localDateKey(c.date) === dateKey).map((c) => ({ startMin: c.startMin, durationMin: Math.round(c.durationSec / 60) })),
-        ...newItems.filter((n) => localDateKey(n.date) === dateKey).map((n) => ({ startMin: n.startMin, durationMin: Math.round(n.durationSec / 60) })),
-      ];
-      const requiredEnd = draft.startMin + draftDurationSec / 60;
-      const conflict = isStartInsideBooking(draft.startMin, existing) || existing.some((b) => draft.startMin < b.startMin + (b.durationMin || 0) && requiredEnd > b.startMin);
-      if (conflict) { skipped++; continue; }
-      newItems.push({ id: crypto.randomUUID(), creative: selectedCreative, date: d, startMin: draft.startMin, durationSec: draftDurationSec, videoSeconds, loops: draft.loops, priceInfo: draftPrice });
-      added++;
+    let curDate = new Date(startDate);
+    
+    let dayIndex = 0;
+    while (curDate < endDate) {
+      const dayOfWeek = curDate.getDay(); // 0 = Sun, 1 = Mon ... 6 = Sat
+      
+      let shouldAdd = false;
+      if (spreadPattern === "daily") shouldAdd = true;
+      else if (spreadPattern === "weekdays") shouldAdd = (dayOfWeek >= 1 && dayOfWeek <= 5);
+      else if (spreadPattern === "weekends") shouldAdd = (dayOfWeek === 0 || dayOfWeek === 6);
+      else if (spreadPattern === "custom") shouldAdd = customDays.includes(dayOfWeek);
+      else if (spreadPattern === "alternate") shouldAdd = (dayIndex % 2 === 0);
+      
+      if (shouldAdd) {
+        const dateKey = localDateKey(curDate);
+        const existing = [
+          ...liveBookings.filter((b) => b.dateKey === dateKey).map((b) => ({ ...b, type: "other" })),
+          ...cart.filter((c) => localDateKey(c.date) === dateKey).map((c) => ({ startMin: c.startMin, durationMin: Math.round(c.durationSec / 60) })),
+          ...newItems.filter((n) => localDateKey(n.date) === dateKey).map((n) => ({ startMin: n.startMin, durationMin: Math.round(n.durationSec / 60) })),
+        ];
+        const requiredEnd = draft.startMin + draftDurationSec / 60;
+        const conflict = isStartInsideBooking(draft.startMin, existing) || existing.some((b) => draft.startMin < b.startMin + (b.durationMin || 0) && requiredEnd > b.startMin);
+        
+        if (conflict) { 
+          skipped++; 
+        } else {
+          newItems.push({ id: crypto.randomUUID(), creative: selectedCreative, date: new Date(curDate), startMin: draft.startMin, durationSec: draftDurationSec, videoSeconds, loops: draft.loops, priceInfo: draftPrice });
+          added++;
+        }
+      }
+      
+      curDate = addDays(curDate, 1);
+      dayIndex++;
     }
+    
     if (newItems.length > 0) setCart((prev) => [...prev, ...newItems]);
+    setSpreadModal(false);
     setDraft(null);
-    setMessage(skipped > 0 ? `Added ${added} booking${added === 1 ? "" : "s"} to cart. Skipped ${skipped} — they clashed with an existing booking.` : `Added ${added} booking${added === 1 ? "" : "s"} to cart.`);
+    setMessage(skipped > 0 ? `Added ${added} bookings. Skipped ${skipped} due to conflicts.` : `Successfully spread ${added} bookings.`);
     toast(`Added ${added} slots`, "success");
+  }
+
+  function openCartEdit(item: any) {
+    setEditCartItem(item);
+    setEditHour(Math.floor(item.startMin / 60));
+    setEditMinute(item.startMin % 60);
+  }
+
+  function saveCartEdit() {
+    if (!editCartItem) return;
+    const newStartMin = editHour * 60 + editMinute;
+    if (newStartMin < START_HOUR * 60 || newStartMin >= END_HOUR * 60) {
+       toast("Time must be between 7 AM and 8 PM", "error"); return;
+    }
+    
+    const dateKey = localDateKey(editCartItem.date);
+    const existing = [
+      ...liveBookings.filter((b) => b.dateKey === dateKey).map((b) => ({ ...b, type: "other" })),
+      ...cart.filter((c) => c.id !== editCartItem.id && localDateKey(c.date) === dateKey).map((c) => ({ startMin: c.startMin, durationMin: Math.round(c.durationSec / 60) })),
+    ];
+    const requiredEnd = newStartMin + editCartItem.durationSec / 60;
+    const conflict = isStartInsideBooking(newStartMin, existing) || existing.some((b) => newStartMin < b.startMin + (b.durationMin || 0) && requiredEnd > b.startMin);
+    
+    if (conflict) {
+       toast("This time slot is already booked on this day. Choose another time.", "error"); return;
+    }
+    
+    setCart(prev => prev.map(c => c.id === editCartItem.id ? { ...c, startMin: newStartMin } : c));
+    setEditCartItem(null);
+    toast("Time updated successfully", "success");
   }
 
   function removeFromCart(id: any) { setCart((prev) => prev.filter((c) => c.id !== id)); }
@@ -351,7 +412,7 @@ function DoohScheduler() {
       } else {
         const res = await api.post('/payments/wallet', { booking_id: bookingId });
         toast(res.data.message || 'Payment successful!', 'success');
-        router.push('/campaigns');
+        router.push('/bookings');
       }
     } catch (err: any) {
       toast(err?.response?.data?.message || 'Payment failed', 'error');
@@ -445,7 +506,7 @@ function DoohScheduler() {
 
           {/* STEP 1: CHOOSE AD */}
           {currentStep === 1 && (
-            <div style={{ background: theme.color.surface, borderRadius: 24, padding: "40px 36px", border: `1px solid ${theme.color.border2}`, boxShadow: theme.shadow.md, transition: "all 0.3s ease" }}>
+            <div style={{ background: theme.color.surface, borderRadius: 24, padding: "clamp(24px, 5vw, 40px) clamp(20px, 5vw, 36px)", border: `1px solid ${theme.color.border2}`, boxShadow: theme.shadow.md, transition: "all 0.3s ease" }}>
               <div style={{ fontWeight: 800, fontSize: 26, marginBottom: 12, color: theme.color.text1, letterSpacing: "-0.5px" }}>Step 1: Choose Your Creative</div>
               <p style={{ color: theme.color.text3, fontSize: 15, marginBottom: 32 }}>Select the advertisement you want to schedule on the screen.</p>
               
@@ -458,7 +519,7 @@ function DoohScheduler() {
                   </AnimatedButton>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: 16 }}>
                   {approvedCreatives.map(c => {
                     const isSelected = selectedCreative?.id === c.id;
                     return (
@@ -471,7 +532,7 @@ function DoohScheduler() {
                           transition: 'all 0.2s',
                           boxShadow: isSelected ? `0 4px 12px ${theme.color.goldLight}` : "none"
                         }}>
-                        <div style={{ width: 52, height: 52, borderRadius: 12, background: theme.color.surface2, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: "hidden" }}>
+                        <div style={{ width: 52, height: 52, flexShrink: 0, borderRadius: 12, background: theme.color.surface2, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: "hidden" }}>
                           {c.file_url ? (
                             (c.file_type || c.media_type || '').includes('video') ? (
                               <video 
@@ -494,7 +555,7 @@ function DoohScheduler() {
                           <p style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700, color: theme.color.text1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</p>
                           <p className="mono" style={{ margin: 0, fontSize: 12, color: theme.color.text3 }}>Duration: {c.duration_seconds || 60} sec</p>
                         </div>
-                        <div style={{ width: 22, height: 22, borderRadius: '50%', border: isSelected ? `6px solid ${theme.color.gold}` : `2px solid ${theme.color.border2}` }} />
+                        <div style={{ width: 22, height: 22, flexShrink: 0, borderRadius: '50%', border: isSelected ? `6px solid ${theme.color.gold}` : `2px solid ${theme.color.border2}` }} />
                       </div>
                     );
                   })}
@@ -502,8 +563,11 @@ function DoohScheduler() {
               )}
               
               {selectedCreative && (
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 36, paddingTop: 24, borderTop: `1px solid ${theme.color.border}` }}>
-                  <AnimatedButton onClick={() => setCurrentStep(2)} style={{ background: theme.color.gold, color: theme.color.charcoal900, border: 'none', padding: '14px 28px', borderRadius: 10, fontSize: 16, fontWeight: 800, cursor: 'pointer', display: "flex", gap: 8, alignItems: "center", boxShadow: theme.shadow.gold }}>
+                <div style={{ marginTop: 32, display: 'flex' }}>
+                  <AnimatedButton onClick={() => {
+                    setCurrentStep(2);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }} style={{ background: theme.color.gold, color: theme.color.charcoal900, border: "none", padding: "16px 32px", borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: "pointer", display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, boxShadow: theme.shadow.gold, width: "100%" }}>
                     Next: Choose Date & Time <ChevronRight size={18} />
                   </AnimatedButton>
                 </div>
@@ -518,8 +582,8 @@ function DoohScheduler() {
               {/* LEFT COLUMN: Calendar */}
               <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
                 <div style={{ display: "flex", justifyContent: "space-between" }}>
-                  <button onClick={() => setCurrentStep(1)} style={{ background: "none", border: "none", color: theme.color.text3, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, fontSize: 14, fontWeight: 700 }}>
-                    <ChevronLeft size={16} /> Back
+                  <button onClick={() => setCurrentStep(1)} style={{ background: theme.color.surface2, border: `1px solid ${theme.color.border}`, color: theme.color.text1, padding: "8px 16px", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 800, transition: "all 0.2s" }}>
+                    <ChevronLeft size={16} /> Back to Step 1
                   </button>
                 </div>
 
@@ -615,14 +679,17 @@ function DoohScheduler() {
                      <div style={{ fontSize: 12, fontWeight: 800, color: theme.color.text3, textTransform: "uppercase", letterSpacing: '0.05em', marginBottom: 10 }}>Cart Items ({cart.length})</div>
                      <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 320, overflowY: "auto", marginBottom: 24, paddingRight: 4 }}>
                        {cart.map(c => (
-                         <div key={c.id} style={{ background: theme.color.surface2, padding: "12px 14px", borderRadius: 10, fontSize: 13, display: "flex", justifyContent: "space-between", alignItems: "center", border: `1px solid ${theme.color.border}` }}>
+                         <div key={c.id} style={{ background: theme.color.surface2, padding: "clamp(10px, 3vw, 12px) clamp(10px, 3vw, 14px)", borderRadius: 10, display: "flex", justifyContent: "space-between", alignItems: "center", border: `1px solid ${theme.color.border}`, flexWrap: "wrap", gap: 10 }}>
                            <div>
-                             <div style={{ fontWeight: 800, color: theme.color.text1, marginBottom: 2 }}>{c.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
-                             <div className="mono" style={{ color: theme.color.text3, fontSize: 11 }}>{formatMin(c.startMin)} - {formatDurationSec(c.durationSec)}</div>
+                             <div style={{ fontWeight: 800, color: theme.color.text1, marginBottom: 2, fontSize: "clamp(12px, 3.5vw, 14px)" }}>{c.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
+                             <div className="mono" style={{ color: theme.color.text3, fontSize: "clamp(10px, 3vw, 11px)" }}>{formatMin(c.startMin)} - {formatDurationSec(c.durationSec)}</div>
                            </div>
-                           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                             <span className="mono" style={{ fontWeight: 800, color: theme.color.success, fontSize: 14 }}>{naira(c.priceInfo.cost)}</span>
-                             <button onClick={() => removeFromCart(c.id)} style={{ background: "none", border: "none", color: theme.color.error, cursor: "pointer", padding: 4 }}><Trash2 size={16} /></button>
+                           <div className="w-full md:w-auto flex justify-between md:justify-end items-center" style={{ gap: "clamp(8px, 2vw, 12px)" }}>
+                             <span className="mono" style={{ fontWeight: 800, color: theme.color.success, fontSize: "clamp(13px, 4vw, 14px)" }}>{naira(c.priceInfo.cost)}</span>
+                             <div style={{ display: "flex", gap: "clamp(8px, 2vw, 12px)" }}>
+                               <button onClick={() => openCartEdit(c)} style={{ background: "none", border: "none", color: theme.color.text3, cursor: "pointer", padding: 4 }}><Clock size={15} /></button>
+                               <button onClick={() => removeFromCart(c.id)} style={{ background: "none", border: "none", color: theme.color.error, cursor: "pointer", padding: 4 }}><Trash2 size={15} /></button>
+                             </div>
                            </div>
                          </div>
                        ))}
@@ -635,197 +702,16 @@ function DoohScheduler() {
                        </div>
                      </div>
 
-                     <AnimatedButton onClick={() => setCurrentStep(3)} style={{ width: "100%", background: theme.color.charcoal900, color: theme.color.surface, border: "none", padding: "16px", borderRadius: 12, fontSize: 15, fontWeight: 800, cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
+                     <AnimatedButton onClick={() => setCurrentStep(3)} style={{ width: "100%", background: theme.color.gold, color: theme.color.charcoal900, border: "none", padding: "16px", borderRadius: 12, fontSize: 15, fontWeight: 800, cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", gap: 8, boxShadow: theme.shadow.gold }}>
                        Proceed to Checkout <ChevronRight size={18} />
                      </AnimatedButton>
                    </>
                  ) : (
                    <div style={{ textAlign: "center", padding: "40px 0", color: theme.color.text3, fontSize: 14 }}>
-                     <Ticket size={32} style={{ opacity: 0.3, marginBottom: 12, margin: "0 auto", display: "block" }} color={theme.color.text4} />
                      <p style={{ margin: 0, fontWeight: 600 }}>Select a date to add slots to your cart.</p>
                    </div>
                  )}
               </div>
-
-              {/* SLOT MODAL: Period & Minute Grid */}
-              <Portal>
-                {showSlotModal && (
-                  <div className="qs" style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(10,10,10,0.4)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, animation: "fadeIn 0.2s ease-out" }}>
-                  <style>{`@keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }`}</style>
-                  <div style={{ background: theme.color.surface, borderRadius: 24, width: "100%", maxWidth: 700, maxHeight: "95vh", overflowY: "auto", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.2)", border: `1px solid ${theme.color.border2}` }}>
-                    
-                    <button onClick={() => setShowSlotModal(false)} style={{ position: "absolute", top: 20, right: 20, background: theme.color.surface2, border: `1px solid ${theme.color.border}`, borderRadius: "50%", padding: 10, cursor: "pointer", zIndex: 10, display: "flex", color: theme.color.text1 }}>
-                      <X size={18} />
-                    </button>
-                    
-                    <div style={{ padding: "36px 32px" }}>
-                      <div style={{ fontWeight: 800, fontSize: 24, marginBottom: 28, paddingRight: 40, color: theme.color.text1 }}>
-                        Schedule for {viewDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-                      </div>
-
-                      {/* Period Selector (Hours) */}
-                      <div style={{ marginBottom: 28 }}>
-                        <div style={{ fontSize: 12, fontWeight: 800, color: theme.color.text3, textTransform: "uppercase", letterSpacing: '0.05em', marginBottom: 14 }}>Select Hour</div>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 10 }}>
-                          {hours.map((h) => (
-                            <button key={h} onClick={() => {
-                              setSelectedHour(h);
-                              autoSelectSlot(viewDate, h);
-                            }}
-                              style={{
-                                background: selectedHour === h ? theme.color.gold : theme.color.surface2,
-                                color: selectedHour === h ? theme.color.charcoal900 : theme.color.text1,
-                                fontWeight: selectedHour === h ? 800 : 700,
-                                border: `1px solid ${selectedHour === h ? theme.color.goldMid : theme.color.border}`,
-                                borderRadius: 999, padding: "12px 0", fontSize: 14, cursor: "pointer", transition: "all 0.2s ease",
-                                boxShadow: selectedHour === h ? theme.shadow.gold : "0 2px 4px rgba(0,0,0,0.02)"
-                              }}>
-                              {formatMin(h * 60)}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Draft Summary & Add to Cart */}
-                      {draft && isSameDate(draft.date, viewDate) && (() => {
-                        const isInvalid = draftInsideBooking || draftMaxLoops < 1;
-                        return (
-                          <div style={{ marginTop: 28, padding: "28px", background: isInvalid ? theme.color.errorLight : `linear-gradient(135deg, ${theme.color.surface2} 0%, ${theme.color.surface} 100%)`, border: `1px solid ${isInvalid ? theme.color.error : theme.color.border2}`, borderRadius: 20, boxShadow: theme.shadow.md }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-                              <div style={{ fontWeight: 800, fontSize: 20, color: isInvalid ? theme.color.error : theme.color.text1, letterSpacing: "-0.3px" }}>
-                                {isInvalid ? 'Invalid Selection' : 'Duration & Booking Details'}
-                              </div>
-                              <button onClick={() => setDraft(null)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, color: theme.color.text3, fontSize: 13, fontWeight: 700 }}><X size={16} /> Clear</button>
-                            </div>
-
-                            {/* Loops Stepper */}
-                            <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 20, flexWrap: "wrap" }}>
-                              <div>
-                                <div style={{ fontSize: 12, fontWeight: 800, color: theme.color.text3, textTransform: "uppercase", marginBottom: 6 }}>Loops (Full Plays)</div>
-                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                  <button onClick={() => setDraft((d: any) => ({ ...d, loops: Math.max(1, d.loops - 1) }))} style={{...stepBtnStyle, width: 36, height: 36}}>−</button>
-                                  <span className="mono" style={{ width: 44, textAlign: "center", fontWeight: 800, fontSize: 20, color: theme.color.text1 }}>{draft.loops}</span>
-                                  <button
-                                    onClick={() => setDraft((d: any) => ({ ...d, loops: Math.min(draftMaxLoops, d.loops + 1) }))}
-                                    disabled={draft.loops >= draftMaxLoops}
-                                    style={{ ...stepBtnStyle, width: 36, height: 36, opacity: draft.loops >= draftMaxLoops ? 0.4 : 1, cursor: draft.loops >= draftMaxLoops ? "not-allowed" : "pointer" }}>
-                                    +
-                                  </button>
-                                </div>
-                              </div>
-                              <div style={{ flex: 1, minWidth: 200 }}>
-                                <div style={{ background: theme.color.surface, borderRadius: 16, padding: "16px 20px", border: `1px solid ${theme.color.border2}`, boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)" }}>
-                                  <div className="mono" style={{ fontSize: 15, display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: 700 }}>
-                                    <span style={{ color: theme.color.text2 }}>
-                                      {formatMin(draft.startMin)} – {formatMin(draft.startMin + draftDurationSec / 60)} <span style={{ color: theme.color.text4, fontWeight: 500, fontSize: 13 }}>({formatDurationSec(draftDurationSec)})</span>
-                                    </span>
-                                    <span style={{ color: theme.color.goldDark, fontWeight: 800, fontSize: 20 }}>{naira(draftPrice.cost)}</span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            {isInvalid ? (
-                               <div style={{ display: "flex", gap: 10, alignItems: "center", background: theme.color.surface, borderRadius: 10, padding: "14px", fontSize: 14, color: theme.color.error, border: `1px solid ${theme.color.errorLight}` }}>
-                                 <AlertTriangle size={18} style={{ flexShrink: 0 }} />
-                                 <span style={{ fontWeight: 600 }}>{draftInsideBooking ? "That start time is already booked." : `Not enough open room here for even one full play of your video. Try a different start time.`}</span>
-                               </div>
-                            ) : (
-                               <>
-                                 <div style={{ fontSize: 14, color: theme.color.text3, lineHeight: 1.6, marginBottom: 20, fontWeight: 500 }}>
-                                   <strong>Video Length:</strong> {videoSeconds}s<br/>
-                                   <strong>Total Time Needed:</strong> {videoSeconds * draft.loops}s<br/>
-                                   <strong style={{ color: theme.color.text1 }}>Maximum allocated time for your video:</strong> {draftDurationMin} Minute{draftDurationMin === 1 ? "" : "s"}
-                                 </div>
-                                 
-                                 <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center" }}>
-                                   <button onClick={() => {
-                                      handleAddToCart();
-                                      toast("Added to Cart! You can close this window to checkout.");
-                                   }} style={{ padding: "16px 28px", borderRadius: 12, border: "none", background: theme.color.charcoal900, color: theme.color.surface, fontSize: 16, fontWeight: 800, cursor: "pointer", display: "flex", gap: 10, alignItems: "center", boxShadow: theme.shadow.md, transition: "all 0.2s" }}>
-                                     <Ticket size={18} /> Add to Cart
-                                   </button>
-                                   <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: theme.color.text2, background: theme.color.surface, padding: "12px 16px", borderRadius: 12, border: `1px solid ${theme.color.border2}`, fontWeight: 600 }}>
-                                     <RepeatIcon size={16} /> Repeat?
-                                     <input type="number" min={1} max={365} value={repeatCount} onChange={(e) => setRepeatCount(Math.max(1, Number(e.target.value)))} className="mono" style={{ ...inputStyle, width: 60, padding: "8px" }} />
-                                     <select value={repeatUnit} onChange={(e) => setRepeatUnit(e.target.value)} style={{ ...inputStyle, padding: "8px", width: "auto" }}>
-                                       <option value="days">days</option>
-                                       <option value="weeks">weeks</option>
-                                       <option value="months">months</option>
-                                     </select>
-                                     <button onClick={() => {
-                                        handleRepeatAdd();
-                                        toast("Added Repeating Slots to Cart!");
-                                     }} style={{ padding: "8px 14px", borderRadius: 8, border: "none", background: theme.color.surface2, fontSize: 14, fontWeight: 700, cursor: "pointer", color: theme.color.text1 }}>
-                                       Add {repeatCount}×
-                                     </button>
-                                   </div>
-                                 </div>
-                               </>
-                            )}
-                          </div>
-                        );
-                      })()}
-
-                      {/* Minute Grid */}
-                      <div style={{ background: theme.color.surface2, borderRadius: 20, padding: "28px", border: `1px solid ${theme.color.border2}`, marginTop: 28, boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-                          <div style={{ fontWeight: 800, fontSize: 18, color: theme.color.text1, letterSpacing: "-0.3px" }}>{formatMin(selectedHour * 60)} Slots (Minute-by-Minute)</div>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: theme.color.goldDark, background: theme.color.goldLight, padding: "6px 12px", borderRadius: 8 }}>
-                            {(() => {
-                               const bookings = bookingsForDate(localDateKey(viewDate));
-                               let available = 0;
-                               for(let m=0; m<60; m++) {
-                                 if(!isStartInsideBooking(selectedHour * 60 + m, bookings)) available++;
-                               }
-                               return `${available} Available Slots`;
-                            })()}
-                          </div>
-                        </div>
-
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(10, 1fr)", gap: 8 }}>
-                          {Array.from({ length: 60 }).map((_, m) => {
-                            const minOfDay = selectedHour * 60 + m;
-                            const bookings = bookingsForDate(localDateKey(viewDate));
-                            const isBooked = isStartInsideBooking(minOfDay, bookings);
-                            
-                            let isSelected = false;
-                            if (draft && isSameDate(draft.date, viewDate)) {
-                              const draftEnd = draft.startMin + draftDurationSec / 60;
-                              if (minOfDay >= draft.startMin && minOfDay < draftEnd) {
-                                isSelected = true;
-                              }
-                            }
-
-                            return (
-                              <button key={m}
-                                onClick={() => {
-                                  if (isBooked) return;
-                                  setDraft({ date: viewDate, startMin: minOfDay, loops: 1 });
-                                }}
-                                disabled={isBooked}
-                                style={{
-                                  aspectRatio: "1.5", borderRadius: 10, border: `1px solid ${isSelected ? theme.color.goldMid : isBooked ? "transparent" : theme.color.border2}`,
-                                  background: isBooked ? theme.color.surface2 : isSelected ? theme.color.gold : theme.color.surface,
-                                  color: isBooked ? theme.color.text4 : isSelected ? theme.color.charcoal900 : theme.color.text2,
-                                  fontWeight: isSelected ? 800 : 600,
-                                  fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center",
-                                  cursor: isBooked ? "not-allowed" : "pointer", opacity: isBooked ? 0.6 : 1, transition: "all 0.2s ease",
-                                  boxShadow: isSelected ? theme.shadow.gold : "0 1px 2px rgba(0,0,0,0.03)"
-                                }}
-                                className="mono">
-                                1m
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-                </div>
-                )}
-              </Portal>
             </div>
           )}
 
@@ -833,15 +719,17 @@ function DoohScheduler() {
           {currentStep === 3 && (
             <div style={{ maxWidth: 750, margin: "0 auto", background: theme.color.surface, borderRadius: 16, border: `1px solid ${theme.color.border}`, padding: "40px 32px", boxShadow: theme.shadow.sm }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-                <button onClick={() => setCurrentStep(2)} style={{ background: "none", border: "none", color: theme.color.text3, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 700 }}>
-                  <ChevronLeft size={18} /> Back to Schedule
+                <button onClick={() => {
+                  setCurrentStep(2);
+                  if (bookingId) setBookingId(null);
+                }} style={{ background: theme.color.surface2, border: `1px solid ${theme.color.border}`, color: theme.color.text1, padding: "8px 16px", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 800, transition: "all 0.2s" }}>
+                  <ChevronLeft size={16} /> Back to Edit Cart
                 </button>
-                <div style={{ fontWeight: 800, fontSize: 22, color: theme.color.text1 }}>Checkout</div>
+                <div style={{ fontWeight: 800, fontSize: "clamp(18px, 5vw, 22px)", color: theme.color.text1 }}>Checkout</div>
               </div>
 
               {cart.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "80px 0", background: theme.color.surface2, borderRadius: 16, border: `1px dashed ${theme.color.border}` }}>
-                  <Ticket size={40} color={theme.color.text4} style={{ marginBottom: 20 }} />
                   <p style={{ fontSize: 16, color: theme.color.text3, fontWeight: 500 }}>Your cart is empty.</p>
                   <AnimatedButton onClick={() => setCurrentStep(2)} style={{ marginTop: 24, background: theme.color.charcoal900, color: theme.color.surface, border: "none", padding: "12px 24px", borderRadius: 10, fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
                     Go Schedule Slots
@@ -851,30 +739,35 @@ function DoohScheduler() {
                 <>
                   <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 32 }}>
                     {[...cart].sort((a, b) => a.date.getTime() - b.date.getTime() || a.startMin - b.startMin).map((c) => (
-                      <div key={c.id} style={{ background: theme.color.surface2, borderRadius: 14, padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 20, border: `1px solid ${theme.color.border}` }}>
-                        <div className="mono" style={{ fontSize: 14, color: theme.color.text3 }}>
-                          <div style={{ color: theme.color.text1, fontWeight: 800, fontSize: 16, marginBottom: 6 }}>{c.date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</div>
+                      <div key={c.id} style={{ background: theme.color.surface2, borderRadius: 14, padding: "clamp(14px, 4vw, 20px) clamp(16px, 4vw, 24px)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "clamp(12px, 3vw, 20px)", border: `1px solid ${theme.color.border}`, flexWrap: "wrap" }}>
+                        <div className="mono" style={{ color: theme.color.text3, fontSize: "clamp(12px, 3vw, 14px)" }}>
+                          <div style={{ color: theme.color.text1, fontWeight: 800, marginBottom: 6, fontSize: "clamp(13px, 4vw, 16px)" }}>{c.date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</div>
                           <div>{formatMin(c.startMin)} – {formatMin(c.startMin + Math.round(c.durationSec / 60))} · {formatDurationSec(c.durationSec)} airtime</div>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                          <span className="mono" style={{ color: theme.color.success, fontSize: 18, fontWeight: 800 }}>{naira(c.priceInfo.cost)}</span>
-                          <button onClick={() => removeFromCart(c.id)} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: 10, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <Trash2 size={18} color={theme.color.error} />
-                          </button>
+                        <div className="w-full md:w-auto flex justify-between md:justify-end items-center" style={{ gap: "clamp(10px, 3vw, 14px)" }}>
+                          <span className="mono" style={{ color: theme.color.success, fontWeight: 800, fontSize: "clamp(15px, 4.5vw, 18px)" }}>{naira(c.priceInfo.cost)}</span>
+                          <div style={{ display: "flex", gap: "clamp(10px, 3vw, 14px)" }}>
+                            <button onClick={() => openCartEdit(c)} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: "clamp(6px, 2vw, 10px)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: theme.color.text3 }}>
+                              <Clock size={16} />
+                            </button>
+                            <button onClick={() => removeFromCart(c.id)} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: "clamp(6px, 2vw, 10px)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <Trash2 size={16} color={theme.color.error} />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  <div style={{ background: theme.color.charcoal900, borderRadius: 16, padding: "24px 32px", marginBottom: 32, color: theme.color.surface, boxShadow: theme.shadow.md }}>
+                  <div style={{ background: theme.color.charcoal900, borderRadius: 16, padding: "clamp(16px, 4vw, 24px) clamp(20px, 5vw, 32px)", marginBottom: 32, color: '#fff', boxShadow: theme.shadow.md }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                      <span style={{ fontWeight: 700, fontSize: 16, color: theme.color.text4 }}>Total Airtime</span>
-                      <span className="mono" style={{ fontWeight: 700, fontSize: 16 }}>{cart.length} block(s)</span>
+                      <span style={{ fontWeight: 700, fontSize: "clamp(14px, 3.5vw, 16px)", color: theme.color.text4 }}>Total Airtime</span>
+                      <span className="mono" style={{ fontWeight: 700, fontSize: "clamp(14px, 3.5vw, 16px)" }}>{cart.length} block(s)</span>
                     </div>
                     <div style={{ height: 1, background: "rgba(255,255,255,0.1)", marginBottom: 20 }} />
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontWeight: 800, fontSize: 20 }}>Total Amount</span>
-                      <span className="mono" style={{ color: theme.color.gold, fontWeight: 900, fontSize: 28 }}>{naira(cartTotal)}</span>
+                      <span style={{ fontWeight: 800, fontSize: "clamp(16px, 4vw, 20px)" }}>Total Amount</span>
+                      <span className="mono" style={{ color: theme.color.gold, fontWeight: 900, fontSize: "clamp(20px, 6vw, 28px)" }}>{naira(cartTotal)}</span>
                     </div>
                   </div>
 
@@ -891,7 +784,7 @@ function DoohScheduler() {
                        </div>
                     ) : (
                       <AnimatedButton onClick={handleReserve} disabled={reserving} style={{ width: "100%", padding: "18px 0", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontWeight: 800, fontSize: 18, cursor: reserving ? 'not-allowed' : 'pointer', opacity: reserving ? 0.7 : 1, display: "flex", gap: 10, alignItems: "center", justifyContent: "center", boxShadow: theme.shadow.gold }}>
-                        {reserving ? 'Reserving Slots...' : <><Ticket size={20} /> Reserve & Proceed to Payment</>}
+                        {reserving ? 'Reserving Slots...' : <>Reserve & Proceed to Payment</>}
                       </AnimatedButton>
                     )}
                   </div>
@@ -899,6 +792,322 @@ function DoohScheduler() {
               )}
             </div>
           )}
+
+          {/* ALL MODALS (Rendered outside step logic so they can appear in any step) */}
+          <Portal>
+            {/* SLOT MODAL: Period & Minute Grid */}
+            {showSlotModal && (
+              <div className="qs" style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(10,10,10,0.4)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, animation: "fadeIn 0.2s ease-out" }}>
+              <style>{`@keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }`}</style>
+              <div style={{ background: theme.color.surface, borderRadius: 24, width: "100%", maxWidth: 700, maxHeight: "95vh", overflowY: "auto", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.2)", border: `1px solid ${theme.color.border2}` }}>
+                
+                <button onClick={() => setShowSlotModal(false)} style={{ position: "absolute", top: 16, right: 16, background: theme.color.surface2, border: `1px solid ${theme.color.border}`, borderRadius: "50%", padding: 10, cursor: "pointer", zIndex: 10, display: "flex", color: theme.color.text1 }}>
+                  <X size={18} />
+                </button>
+                
+                <div style={{ padding: "clamp(20px, 5vw, 36px) clamp(20px, 5vw, 32px)" }}>
+                  <div style={{ fontWeight: 800, fontSize: 24, marginBottom: 28, paddingRight: 40, color: theme.color.text1 }}>
+                    Schedule for {viewDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+                  </div>
+
+                  {/* Period Selector (Hours) */}
+                  <div style={{ marginBottom: 28 }}>
+                    <div style={{ fontSize: 12, fontWeight: 800, color: theme.color.text3, textTransform: "uppercase", letterSpacing: '0.05em', marginBottom: 14 }}>Select Hour</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 10 }}>
+                      {hours.map((h) => (
+                        <button key={h} onClick={() => {
+                          setSelectedHour(h);
+                          autoSelectSlot(viewDate, h);
+                        }}
+                          style={{
+                            background: selectedHour === h ? theme.color.gold : theme.color.surface2,
+                            color: selectedHour === h ? theme.color.charcoal900 : theme.color.text1,
+                            fontWeight: selectedHour === h ? 800 : 700,
+                            border: `1px solid ${selectedHour === h ? theme.color.goldMid : theme.color.border}`,
+                            borderRadius: 999, padding: "12px 0", fontSize: 14, cursor: "pointer", transition: "all 0.2s ease",
+                            boxShadow: selectedHour === h ? theme.shadow.gold : "0 2px 4px rgba(0,0,0,0.02)"
+                          }}>
+                          {formatMin(h * 60)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Draft Summary & Add to Cart */}
+                  {draft && isSameDate(draft.date, viewDate) && (() => {
+                    const isInvalid = draftInsideBooking || draftMaxLoops < 1;
+                    return (
+                      <div style={{ marginTop: 28, padding: "28px", background: isInvalid ? theme.color.errorLight : `linear-gradient(135deg, ${theme.color.surface2} 0%, ${theme.color.surface} 100%)`, border: `1px solid ${isInvalid ? theme.color.error : theme.color.border2}`, borderRadius: 20, boxShadow: theme.shadow.md }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                          <div style={{ fontWeight: 800, fontSize: 20, color: isInvalid ? theme.color.error : theme.color.text1, letterSpacing: "-0.3px" }}>
+                            {isInvalid ? 'Invalid Selection' : 'Duration & Booking Details'}
+                          </div>
+                          <button onClick={() => setDraft(null)} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, color: theme.color.text3, fontSize: 13, fontWeight: 700 }}><X size={16} /> Clear</button>
+                        </div>
+
+                        {/* Loops Stepper */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 20, flexWrap: "wrap" }}>
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 800, color: theme.color.text3, textTransform: "uppercase", marginBottom: 6 }}>Loops (Full Plays)</div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <button onClick={() => setDraft((d: any) => ({ ...d, loops: Math.max(1, d.loops - 1) }))} style={{...stepBtnStyle, width: 36, height: 36}}>−</button>
+                              <span className="mono" style={{ width: 44, textAlign: "center", fontWeight: 800, fontSize: 20, color: theme.color.text1 }}>{draft.loops}</span>
+                              <button
+                                onClick={() => setDraft((d: any) => ({ ...d, loops: Math.min(draftMaxLoops, d.loops + 1) }))}
+                                disabled={draft.loops >= draftMaxLoops}
+                                style={{ ...stepBtnStyle, width: 36, height: 36, opacity: draft.loops >= draftMaxLoops ? 0.4 : 1, cursor: draft.loops >= draftMaxLoops ? "not-allowed" : "pointer" }}>
+                                +
+                              </button>
+                            </div>
+                          </div>
+                          <div style={{ flex: 1, minWidth: 200 }}>
+                            <div style={{ background: theme.color.surface, borderRadius: 16, padding: "16px 20px", border: `1px solid ${theme.color.border2}`, boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)" }}>
+                              <div className="mono" style={{ fontSize: 15, display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: 700 }}>
+                                <span style={{ color: theme.color.text2 }}>
+                                  {formatMin(draft.startMin)} – {formatMin(draft.startMin + draftDurationSec / 60)} <span style={{ color: theme.color.text4, fontWeight: 500, fontSize: 13 }}>({formatDurationSec(draftDurationSec)})</span>
+                                </span>
+                                <span style={{ color: theme.color.goldDark, fontWeight: 800, fontSize: 20 }}>{naira(draftPrice.cost)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {isInvalid ? (
+                           <div style={{ display: "flex", gap: 10, alignItems: "center", background: theme.color.surface, borderRadius: 10, padding: "14px", fontSize: 14, color: theme.color.error, border: `1px solid ${theme.color.errorLight}` }}>
+                             <AlertTriangle size={18} style={{ flexShrink: 0 }} />
+                             <span style={{ fontWeight: 600 }}>{draftInsideBooking ? "That start time is already booked." : `Not enough open room here for even one full play of your video. Try a different start time.`}</span>
+                           </div>
+                        ) : (
+                           <>
+                             <div style={{ fontSize: 14, color: theme.color.text3, lineHeight: 1.6, marginBottom: 20, fontWeight: 500 }}>
+                               <strong>Video Length:</strong> {videoSeconds}s<br/>
+                               <strong>Total Time Needed:</strong> {videoSeconds * draft.loops}s<br/>
+                               <strong style={{ color: theme.color.text1 }}>Maximum allocated time for your video:</strong> {draftDurationMin} Minute{draftDurationMin === 1 ? "" : "s"}
+                             </div>
+                             
+                             <div className="flex flex-wrap items-center gap-3 md:gap-4 w-full">
+                               <button onClick={() => {
+                                  handleAddToCart();
+                                  toast("Added to Cart! You can close this window to checkout.");
+                               }} className="flex-1 min-w-[200px] justify-center" style={{ padding: "16px 28px", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontSize: 16, fontWeight: 800, cursor: "pointer", display: "flex", gap: 10, alignItems: "center", boxShadow: theme.shadow.gold, transition: "all 0.2s" }}>
+                                 Add to Cart
+                               </button>
+                               <button onClick={() => setSpreadModal(true)} className="flex-1 min-w-[160px] justify-center" style={{ padding: "14px 20px", borderRadius: 12, border: `1px solid ${theme.color.border2}`, background: theme.color.surface, fontSize: 15, fontWeight: 700, cursor: "pointer", color: theme.color.text1, display: "flex", gap: 8, alignItems: "center", boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
+                                 <RepeatIcon size={16} /> Spread Booking...
+                               </button>
+                               {cart.length > 0 && (
+                                 <button onClick={() => {
+                                    setShowSlotModal(false);
+                                    setCurrentStep(3);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                 }} className="w-full md:w-auto md:flex-1 justify-center" style={{ padding: "14px 20px", borderRadius: 12, border: "none", background: theme.color.charcoal900, color: "#fff", fontSize: 15, fontWeight: 700, cursor: "pointer", display: "flex", gap: 8, alignItems: "center", boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}>
+                                   View Cart ({cart.length}) <ChevronRight size={16} />
+                                 </button>
+                               )}
+                             </div>
+                           </>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Minute Grid */}
+                  <div style={{ background: theme.color.surface2, borderRadius: 20, padding: "28px", border: `1px solid ${theme.color.border2}`, marginTop: 28, boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                      <div style={{ fontWeight: 800, fontSize: 18, color: theme.color.text1, letterSpacing: "-0.3px" }}>{formatMin(selectedHour * 60)} Slots (Minute-by-Minute)</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: theme.color.goldDark, background: theme.color.goldLight, padding: "6px 12px", borderRadius: 8 }}>
+                        {(() => {
+                           const bookings = bookingsForDate(localDateKey(viewDate));
+                           let available = 0;
+                           for(let m=0; m<60; m++) {
+                             if(!isStartInsideBooking(selectedHour * 60 + m, bookings)) available++;
+                           }
+                           return `${available} Available Slots`;
+                        })()}
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(40px, 1fr))", gap: 8 }}>
+                      {Array.from({ length: 60 }).map((_, m) => {
+                        const minOfDay = selectedHour * 60 + m;
+                        const bookings = bookingsForDate(localDateKey(viewDate));
+                        const isBooked = isStartInsideBooking(minOfDay, bookings);
+                        
+                        let isSelected = false;
+                        if (draft && isSameDate(draft.date, viewDate)) {
+                          const draftEnd = draft.startMin + draftDurationSec / 60;
+                          if (minOfDay >= draft.startMin && minOfDay < draftEnd) {
+                            isSelected = true;
+                          }
+                        }
+
+                        return (
+                          <button key={m}
+                            onClick={() => {
+                              if (isBooked) return;
+                              setDraft({ date: viewDate, startMin: minOfDay, loops: 1 });
+                            }}
+                            disabled={isBooked}
+                            style={{
+                              aspectRatio: "1.5", borderRadius: 10, border: `1px solid ${isSelected ? theme.color.goldMid : isBooked ? "transparent" : theme.color.border2}`,
+                              background: isBooked ? theme.color.surface2 : isSelected ? theme.color.gold : theme.color.surface,
+                              color: isBooked ? theme.color.text4 : isSelected ? theme.color.charcoal900 : theme.color.text2,
+                              fontWeight: isSelected ? 800 : 600,
+                              fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center",
+                              cursor: isBooked ? "not-allowed" : "pointer", opacity: isBooked ? 0.6 : 1, transition: "all 0.2s ease",
+                              boxShadow: isSelected ? theme.shadow.gold : "0 1px 2px rgba(0,0,0,0.03)"
+                            }}
+                            className="mono">
+                            1m
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+            )}
+            
+            {/* SPREAD MODAL */}
+            {spreadModal && draft && (
+              <div className="qs" style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(10,10,10,0.6)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, animation: "fadeIn 0.2s ease-out" }}>
+                <div style={{ background: theme.color.surface, borderRadius: 24, width: "100%", maxWidth: 500, padding: "clamp(20px, 5vw, 32px)", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.2)", border: `1px solid ${theme.color.border2}` }}>
+                  <button onClick={() => setSpreadModal(false)} style={{ position: "absolute", top: 16, right: 16, background: theme.color.surface2, border: `1px solid ${theme.color.border}`, borderRadius: "50%", padding: 10, cursor: "pointer", color: theme.color.text1 }}>
+                    <X size={18} />
+                  </button>
+                  <div style={{ fontWeight: 800, fontSize: 24, marginBottom: 8, color: theme.color.text1 }}>Spread Booking</div>
+                  <div style={{ fontSize: 14, color: theme.color.text3, marginBottom: 24 }}>Select how you want to duplicate your {formatMin(draft.startMin)} slot.</div>
+                  
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: theme.color.text2 }}>1. Duration (How long?)</label>
+                    <select value={spreadDuration} onChange={e => setSpreadDuration(e.target.value)} style={{ ...inputStyle, padding: "12px", fontSize: 15, fontWeight: 600 }}>
+                      <option value="1week">1 Week</option>
+                      <option value="4weeks">4 Weeks</option>
+                      <option value="3months">3 Months</option>
+                      <option value="6months">6 Months</option>
+                      <option value="1year">1 Year</option>
+                    </select>
+                  </div>
+                  
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: theme.color.text2 }}>2. Pattern (Which days?)</label>
+                    <select value={spreadPattern} onChange={e => setSpreadPattern(e.target.value)} style={{ ...inputStyle, padding: "12px", fontSize: 15, fontWeight: 600 }}>
+                      <option value="daily">Every Day</option>
+                      <option value="weekdays">Every Weekday (Mon-Fri)</option>
+                      <option value="weekends">Every Weekend (Sat-Sun)</option>
+                      <option value="alternate">Every Other Day</option>
+                      <option value="custom">Custom Days...</option>
+                    </select>
+                  </div>
+                  
+                  {spreadPattern === "custom" && (
+                    <div style={{ marginBottom: 24 }}>
+                       <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: theme.color.text2 }}>Select Days</label>
+                       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                         {[1, 2, 3, 4, 5, 6, 0].map(day => (
+                           <button key={day} onClick={() => {
+                             if (customDays.includes(day)) setCustomDays(prev => prev.filter(d => d !== day));
+                             else setCustomDays(prev => [...prev, day]);
+                           }} style={{ padding: "8px 12px", borderRadius: 8, border: `1px solid ${customDays.includes(day) ? theme.color.goldMid : theme.color.border}`, background: customDays.includes(day) ? theme.color.goldLight : theme.color.surface2, color: customDays.includes(day) ? theme.color.goldDark : theme.color.text1, fontWeight: 700, cursor: "pointer", fontSize: 13 }}>
+                             {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][day]}
+                           </button>
+                         ))}
+                       </div>
+                    </div>
+                  )}
+                  
+                  <div style={{ background: theme.color.surface2, padding: 16, borderRadius: 12, marginBottom: 24, fontSize: 13, color: theme.color.text2, border: `1px solid ${theme.color.border}` }}>
+                    <Info size={16} style={{ float: "left", marginRight: 8, color: theme.color.gold }} />
+                    If any future slots clash with existing bookings, we'll simply skip those blocked days and add the rest!
+                  </div>
+                  
+                  <AnimatedButton onClick={handleSpreadAdd} style={{ width: "100%", padding: "16px", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontWeight: 800, fontSize: 16, cursor: "pointer", boxShadow: theme.shadow.gold }}>
+                    Generate Booking Spread
+                  </AnimatedButton>
+                </div>
+              </div>
+            )}
+            {/* SUCCESS / MESSAGE MODAL */}
+            {message && (
+              <div className="qs" style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(10,10,10,0.6)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, animation: "fadeIn 0.2s ease-out" }}>
+                <div style={{ background: theme.color.surface, borderRadius: 24, width: "100%", maxWidth: 400, padding: "32px", textAlign: "center", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.2)", border: `1px solid ${theme.color.border2}` }}>
+                  <div style={{ width: 64, height: 64, borderRadius: "50%", background: theme.color.success + "20", color: theme.color.success, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+                    <Check size={32} />
+                  </div>
+                  <div style={{ fontWeight: 800, fontSize: 22, marginBottom: 12, color: theme.color.text1 }}>Booking Spread Complete</div>
+                  <div style={{ fontSize: 15, color: theme.color.text2, marginBottom: 32, lineHeight: 1.5 }}>
+                    {message}
+                  </div>
+                  
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <AnimatedButton onClick={() => {
+                      setMessage("");
+                      setShowSlotModal(false);
+                      setCurrentStep(3);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }} style={{ width: "100%", padding: "16px", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontWeight: 800, fontSize: 16, cursor: "pointer", boxShadow: theme.shadow.gold, display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
+                      View Cart & Checkout <ChevronRight size={18} />
+                    </AnimatedButton>
+                    <button onClick={() => {
+                      setMessage("");
+                    }} style={{ width: "100%", padding: "14px", borderRadius: 12, border: `1px solid ${theme.color.border}`, background: "transparent", color: theme.color.text2, fontWeight: 700, fontSize: 15, cursor: "pointer", transition: "all 0.2s" }}>
+                      Continue Scheduling
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* EDIT CART ITEM MODAL */}
+            {editCartItem && (
+              <div className="qs" style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(10,10,10,0.6)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, animation: "fadeIn 0.2s ease-out" }}>
+                <div style={{ background: theme.color.surface, borderRadius: 24, width: "100%", maxWidth: 400, padding: "clamp(20px, 5vw, 32px)", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.2)", border: `1px solid ${theme.color.border2}` }}>
+                  <button onClick={() => setEditCartItem(null)} style={{ position: "absolute", top: 16, right: 16, background: theme.color.surface2, border: `1px solid ${theme.color.border}`, borderRadius: "50%", padding: 10, cursor: "pointer", color: theme.color.text1 }}>
+                    <X size={18} />
+                  </button>
+                  <div style={{ fontWeight: 800, fontSize: 22, marginBottom: 8, color: theme.color.text1 }}>Edit Slot Time</div>
+                  <div style={{ fontSize: 14, color: theme.color.text3, marginBottom: 24 }}>For {editCartItem.date.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}</div>
+                  
+                  <div style={{ display: "flex", gap: 12, marginBottom: 32, alignItems: "center", justifyContent: "center" }}>
+                    <select 
+                      value={editHour % 12 === 0 ? 12 : editHour % 12} 
+                      onChange={e => {
+                        const val = Number(e.target.value);
+                        const isPM = editHour >= 12;
+                        setEditHour((val === 12 ? 0 : val) + (isPM ? 12 : 0));
+                      }} 
+                      style={{ ...inputStyle, padding: "12px", fontSize: 18, fontWeight: 800, textAlign: "center", width: 80 }}
+                    >
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(h => <option key={h} value={h}>{h}</option>)}
+                    </select>
+                    <span style={{ fontSize: 20, fontWeight: 800, color: theme.color.text2 }}>:</span>
+                    <select value={editMinute} onChange={e => setEditMinute(Number(e.target.value))} style={{ ...inputStyle, padding: "12px", fontSize: 18, fontWeight: 800, textAlign: "center", width: 80 }}>
+                      {Array.from({length: 60}).map((_, m) => <option key={m} value={m}>{pad(m)}</option>)}
+                    </select>
+                    <select 
+                      value={editHour < 12 ? 'AM' : 'PM'} 
+                      onChange={e => {
+                        if (e.target.value === 'PM' && editHour < 12) setEditHour(editHour + 12);
+                        if (e.target.value === 'AM' && editHour >= 12) setEditHour(editHour - 12);
+                      }} 
+                      style={{ ...inputStyle, padding: "12px", fontSize: 18, fontWeight: 800, textAlign: "center", width: 80, marginLeft: 8 }}
+                    >
+                      <option value="AM">AM</option>
+                      <option value="PM">PM</option>
+                    </select>
+                  </div>
+                  
+                  <AnimatedButton onClick={saveCartEdit} style={{ width: "100%", padding: "16px", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontWeight: 800, fontSize: 16, cursor: "pointer", boxShadow: theme.shadow.gold }}>
+                    Save New Time
+                  </AnimatedButton>
+                </div>
+              </div>
+            )}
+          </Portal>
+
+
 
         </div>
       </PageTransition>

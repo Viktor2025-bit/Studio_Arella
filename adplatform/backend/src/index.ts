@@ -1,4 +1,4 @@
-import express from 'express'; // nodemon restart trigger
+import express from 'express'; // nodemon restart trigger 2
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';

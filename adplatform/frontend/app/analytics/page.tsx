@@ -73,33 +73,35 @@ export default function AnalyticsPage() {
                   <p style={{ fontSize: 13, color: theme.color.text3, margin: 0 }}>Data will appear here once your ads start playing.</p>
                 </div>
               ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr style={{ borderBottom: `1px solid ${theme.color.border2}` }}>
-                      <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: theme.color.text2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Creative</th>
-                      <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: theme.color.text2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Booking Ref</th>
-                      <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: theme.color.text2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Play Count</th>
-                      <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: theme.color.text2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Last Played</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.map((row, i) => (
-                      <motion.tr key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                        style={{ borderBottom: `1px solid ${theme.color.border2}`, transition: 'background 0.15s' }}
-                        onMouseOver={e => (e.currentTarget.style.background = theme.color.surface2)}
-                        onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
-                      >
-                        <td style={{ padding: '16px 24px', fontSize: 13, fontWeight: 700, color: theme.color.text1 }}>{row.creative_title}</td>
-                        <td style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: theme.color.text2, fontFamily: 'monospace' }}>{row.booking_number}</td>
-                        <td style={{ padding: '16px 24px', fontSize: 13, fontWeight: 800, color: theme.color.success }}>{parseInt(row.play_count).toLocaleString()}</td>
-                        <td style={{ padding: '16px 24px', fontSize: 12, color: theme.color.text2, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <Clock size={12} />
-                          {row.last_played ? format(new Date(row.last_played), 'MMM d, h:mm a') : '—'}
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="responsive-table-wrapper" style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ borderBottom: `1px solid ${theme.color.border2}` }}>
+                        <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: theme.color.text2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Creative</th>
+                        <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: theme.color.text2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Booking Ref</th>
+                        <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: theme.color.text2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Play Count</th>
+                        <th style={{ padding: '14px 24px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: theme.color.text2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Last Played</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.map((row, i) => (
+                        <motion.tr key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                          style={{ borderBottom: `1px solid ${theme.color.border2}`, transition: 'background 0.15s' }}
+                          onMouseOver={e => (e.currentTarget.style.background = theme.color.surface2)}
+                          onMouseOut={e => (e.currentTarget.style.background = 'transparent')}
+                        >
+                          <td style={{ padding: '16px 24px', fontSize: 13, fontWeight: 700, color: theme.color.text1 }}>{row.creative_title}</td>
+                          <td style={{ padding: '16px 24px', fontSize: 12, fontWeight: 600, color: theme.color.text2, fontFamily: 'monospace' }}>{row.booking_number}</td>
+                          <td style={{ padding: '16px 24px', fontSize: 13, fontWeight: 800, color: theme.color.success }}>{parseInt(row.play_count).toLocaleString()}</td>
+                          <td style={{ padding: '16px 24px', fontSize: 12, color: theme.color.text2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Clock size={12} />
+                            {row.last_played ? format(new Date(row.last_played), 'MMM d, h:mm a') : '—'}
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           </>

@@ -81,10 +81,18 @@ export const reserveSlots: RequestHandler = async (req, res) => {
        res.status(400).json({ message: 'Approved creative not found' }); return;
     }
     
+    const adDuration = adRes.rows[0].duration_seconds || 60;
+    
     let totalSeconds = 0;
+    let minStart = new Date(slots[0].start);
+    let maxEnd = new Date(slots[0].end);
+
     for (const block of slots) {
       const startDt = new Date(block.start);
       const endDt = new Date(block.end);
+      
+      if (startDt < minStart) minStart = startDt;
+      if (endDt > maxEnd) maxEnd = endDt;
       
       const startHour = startDt.getHours();
       const endHour = endDt.getHours();
@@ -98,6 +106,7 @@ export const reserveSlots: RequestHandler = async (req, res) => {
       totalSeconds += (endDt.getTime() - startDt.getTime()) / 1000;
     }
     const totalCost = Math.round(totalSeconds * (1000 / 60));
+    const costPerSec = totalCost / totalSeconds;
 
     await client.query('BEGIN');
 
@@ -121,10 +130,10 @@ export const reserveSlots: RequestHandler = async (req, res) => {
 
     const bookingNumber = `#SA-${Date.now().toString().slice(-8)}`;
     const bookingRes = await client.query(`
-      INSERT INTO bookings (booking_number, user_id, screen_id, ad_id, total_cost, status)
-      VALUES ($1, $2, $3, $4, $5, 'pending_payment')
+      INSERT INTO bookings (booking_number, user_id, screen_id, ad_id, total_cost, status, start_time, end_time, interval_seconds, cost_per_sec)
+      VALUES ($1, $2, $3, $4, $5, 'pending_payment', $6, $7, $8, $9)
       RETURNING id
-    `, [bookingNumber, authReq.user?.id, screen_id, ad_id, totalCost]);
+    `, [bookingNumber, authReq.user?.id, screen_id, ad_id, totalCost, minStart.toISOString(), maxEnd.toISOString(), adDuration, costPerSec]);
     
     const bookingId = bookingRes.rows[0].id;
 

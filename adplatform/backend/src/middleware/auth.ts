@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 
 // AuthRequest gives controllers typed access to req.user
 export interface AuthRequest extends Request {
-  user?: { id: string; email: string; role: string };
+  user?: { id: string; email: string; role: string; name: string };
 }
 
 // Cast authenticate to RequestHandler so Express router accepts it
@@ -25,7 +25,7 @@ export const authenticate: RequestHandler = (
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET as string
-    ) as { id: string; email: string; role: string };
+    ) as { id: string; email: string; role: string; name: string };
 
     // Cast req to AuthRequest so we can attach our typed user object
     (req as AuthRequest).user = decoded;

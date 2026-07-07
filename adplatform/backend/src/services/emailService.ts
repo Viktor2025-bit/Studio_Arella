@@ -221,3 +221,18 @@ export async function sendCancellationEmail(to: string, name: string, booking: {
     `),
   });
 }
+
+// ── 9. Admin Alert: New Creative ──────────────────────────────────────────────
+export async function sendAdminNewCreativeAlert(to: string, advertiserName: string, creativeTitle: string) {
+  await transporter.sendMail({
+    from: FROM, to,
+    subject: `Action Required: Review new creative "${creativeTitle}"`,
+    html: wrap(`
+      ${h1('New creative awaiting review')}
+      ${p(`Hello Admin,`)}
+      ${p(`<strong>${advertiserName}</strong> just uploaded a new ad creative titled <strong>"${creativeTitle}"</strong>.`)}
+      ${p('It is currently marked as pending and requires your immediate approval or rejection before it can be used in any bookings.')}
+      ${btn('Review creative now', `${process.env.FRONTEND_URL}/admin/review`)}
+    `),
+  });
+}

@@ -40,8 +40,10 @@ export default function CalendarPage() {
             </div>
           </div>
 
-          <div style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: theme.radius.lg, padding: 24 }}>
-            <BookingCalendar />
+          <div style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: theme.radius.lg, padding: "clamp(12px, 3vw, 24px)", overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <div style={{ minWidth: 800 }}>
+              <BookingCalendar />
+            </div>
           </div>
 
         </div>

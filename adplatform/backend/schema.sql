@@ -77,9 +77,10 @@ CREATE TABLE IF NOT EXISTS bookings (
   interval_seconds INTEGER DEFAULT 5,
   cost_per_sec DECIMAL(10,2) DEFAULT 0.00,
   total_cost DECIMAL(10,2) DEFAULT 0.00,
-  start_time TIMESTAMP,
-  end_time TIMESTAMP,
-  status VARCHAR(50) DEFAULT 'active', -- 'active' | 'paused' | 'ended' | 'cancelled'
+  payment_reference VARCHAR(255),
+  start_time TIMESTAMPTZ NOT NULL,
+  end_time TIMESTAMPTZ NOT NULL,
+  status VARCHAR(50) DEFAULT 'locked', -- 'locked' | 'active' | 'completed' | 'cancelled'
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -220,7 +221,7 @@ CREATE TABLE IF NOT EXISTS email_verification_tokens (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   token VARCHAR(64) NOT NULL UNIQUE,
-  expires_at TIMESTAMP NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
   used BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -230,7 +231,7 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   token VARCHAR(64) NOT NULL UNIQUE,
-  expires_at TIMESTAMP NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
   used BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT NOW()
 );
@@ -252,14 +253,14 @@ ALTER TABLE ads ADD COLUMN IF NOT EXISTS duration_seconds INTEGER;
 ALTER TABLE ads ADD COLUMN IF NOT EXISTS resolution VARCHAR(20);
 ALTER TABLE ads ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
 ALTER TABLE ads ADD COLUMN IF NOT EXISTS reviewed_by UUID REFERENCES users(id);
-ALTER TABLE ads ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMP;
+ALTER TABLE ads ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
 
 -- ─── Slot blocks (admin can block time slots) ─────────────────────────────────
 CREATE TABLE IF NOT EXISTS slot_blocks (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   screen_id UUID REFERENCES screens(id) ON DELETE CASCADE,
-  start_time TIMESTAMP NOT NULL,
-  end_time TIMESTAMP NOT NULL,
+  start_time TIMESTAMPTZ NOT NULL,
+  end_time TIMESTAMPTZ NOT NULL,
   reason VARCHAR(255),
   created_by UUID REFERENCES users(id),
   created_at TIMESTAMP DEFAULT NOW()

@@ -78,7 +78,7 @@ export default function ListingsPage() {
 
           {/* Grid */}
           {loading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(100%, 280px),1fr))', gap: 14 }}>
               {Array.from({ length: 4 }).map((_, i) => <div key={i} style={{ ...card, padding: 20 }}><Skeleton height={42} width={42} radius={12} style={{ marginBottom: 14 }} /><Skeleton height={14} style={{ marginBottom: 8 }} /><Skeleton height={12} width="70%" /></div>)}
             </div>
           ) : screens.length === 0 ? (
@@ -95,7 +95,7 @@ export default function ListingsPage() {
               </div>
             </FadeCard>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(100%, 280px),1fr))', gap: 14 }}>
               {screens.map((s, i) => {
                 const tm = typeColors[s.type] || typeColors.digital;
                 return (

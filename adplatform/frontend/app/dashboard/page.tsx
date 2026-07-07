@@ -2,17 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
+import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import AdvertiserDashboard from '@/components/dashboard/AdvertiserDashboard';
 
 export default function DashboardPage() {
   const { user, loadFromStorage } = useAuthStore();
   const [ready, setReady] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     loadFromStorage();
     setReady(true);
   }, []);
+
+  useEffect(() => {
+    if (ready && user?.role === 'admin') {
+      router.push('/admin');
+    }
+  }, [ready, user, router]);
 
   if (!ready || !user) return (
     <DashboardLayout>

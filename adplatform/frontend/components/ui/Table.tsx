@@ -5,9 +5,11 @@ import { theme } from '@/lib/theme';
 
 export function Table({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: theme.font.body, ...style }}>
-      {children}
-    </table>
+    <div className="responsive-table-wrapper">
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: theme.font.body, ...style }}>
+        {children}
+      </table>
+    </div>
   );
 }
 

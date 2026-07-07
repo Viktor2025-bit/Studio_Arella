@@ -58,7 +58,7 @@ passport.use(
         }
 
         const token = jwt.sign(
-          { id: user.id, email: user.email, role: user.role },
+          { id: user.id, email: user.email, role: user.role, name: user.name },
           process.env.JWT_SECRET as string,
           { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as jwt.SignOptions
         );

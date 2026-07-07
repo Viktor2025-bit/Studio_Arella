@@ -13,7 +13,7 @@ export const getAvailability = async (req: Request, res: Response) => {
       `SELECT start_time, end_time, status 
        FROM podcast_bookings 
        WHERE start_time >= $1 AND end_time <= $2 
-       AND status IN ('pending', 'confirmed', 'completed')`,
+       AND (status IN ('confirmed', 'completed') OR (status = 'pending' AND created_at >= NOW() - INTERVAL '5 minutes'))`,
       [start_date, end_date]
     );
 
@@ -33,10 +33,9 @@ export const reserveSlot = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Missing required time fields' });
     }
 
-    // Check for conflicts
     const conflictCheck = await pool.query(
       `SELECT id FROM podcast_bookings 
-       WHERE status IN ('pending', 'confirmed', 'completed') 
+       WHERE (status IN ('confirmed', 'completed') OR (status = 'pending' AND created_at >= NOW() - INTERVAL '5 minutes')) 
        AND (start_time < $2 AND end_time > $1)`,
       [start_time, end_time]
     );

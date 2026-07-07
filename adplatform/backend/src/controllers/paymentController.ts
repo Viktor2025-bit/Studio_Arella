@@ -64,6 +64,9 @@ export const initializePayment: RequestHandler = async (req, res) => {
       const resQuery = await pool.query('SELECT * FROM podcast_bookings WHERE id = $1 AND user_id = $2 AND status = $3', [booking_id, authReq.user?.id, 'pending']);
       if (resQuery.rows.length === 0) { res.status(404).json({ message: 'Booking not found or already paid' }); return; }
       booking = resQuery.rows[0];
+      if (Date.now() - new Date(booking.created_at).getTime() > 5 * 60 * 1000) {
+        res.status(400).json({ message: 'Reservation expired (5 min limit). Please re-book your slot.' }); return;
+      }
     } else {
       const bookingRes = await pool.query('SELECT * FROM bookings WHERE id = $1 AND user_id = $2 AND status = $3', [booking_id, authReq.user?.id, 'pending_payment']);
       if (bookingRes.rows.length === 0) {
@@ -170,6 +173,10 @@ export const payFromWallet: RequestHandler = async (req, res) => {
         res.status(404).json({ message: 'Booking not found or already paid' }); return;
       }
       booking = resQuery.rows[0];
+      if (Date.now() - new Date(booking.created_at).getTime() > 5 * 60 * 1000) {
+        await client.query('ROLLBACK');
+        res.status(400).json({ message: 'Reservation expired (5 min limit). Please re-book your slot.' }); return;
+      }
     } else {
       const bookingRes = await client.query('SELECT * FROM bookings WHERE id = $1 AND user_id = $2 AND status = $3', [booking_id, authReq.user?.id, 'pending_payment']);
       if (bookingRes.rows.length === 0) {
@@ -494,7 +501,7 @@ async function processConfirmedPayment(reference: string, meta: any, amountPaid:
         type: 'booking_confirmed',
         title: 'Booking Confirmed!',
         body: `Your booking ${b.booking_number} is now active with ${ext.rows[0].total_runs} scheduled runs.`,
-        link: '/campaigns',
+        link: '/bookings',
       });
     }
     

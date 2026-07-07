@@ -68,7 +68,7 @@ export default function SupportPage() {
           </div>
 
           {/* Contact cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: 12 }}>
             {[
               { Icon: FaPhone,       color: theme.color.gold, bg: theme.color.goldLight, border: theme.color.goldMid, label: 'Call / WhatsApp', value: '08164523926',            sub: 'Diekolayomi Samuel Babatunde' },
               { Icon: FaEnvelope,    color: '#2563EB',        bg: '#EFF6FF',              border: '#BFDBFE',           label: 'Email Support',   value: 'Use the ticket form',    sub: 'Response within 24 hours' },
@@ -79,7 +79,7 @@ export default function SupportPage() {
                   <Icon size={16} color={color} />
                 </div>
                 <p style={{ fontSize: 11, fontWeight: 700, color: theme.color.text3, textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 4px' }}>{label}</p>
-                <p style={{ fontSize: 13, fontWeight: 800, color: theme.color.text1, margin: '0 0 2px' }}>{value}</p>
+                <p style={{ fontSize: 13, fontWeight: 800, color: theme.color.text1, margin: '0 0 2px', wordBreak: 'break-word' }}>{value}</p>
                 <p style={{ fontSize: 11, color: theme.color.text3, margin: 0 }}>{sub}</p>
               </FadeCard>
             ))}

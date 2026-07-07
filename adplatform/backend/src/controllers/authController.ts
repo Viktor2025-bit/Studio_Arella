@@ -56,7 +56,7 @@ export const register: RequestHandler = async (req, res) => {
     // Send verification email (non-blocking)
     sendVerificationEmail(email, first_name.trim(), token).catch(console.error);
 
-    const jwtToken = signToken({ id: user.id, email: user.email, role: user.role });
+    const jwtToken = signToken({ id: user.id, email: user.email, role: user.role, name: user.name });
     res.status(201).json({
       token: jwtToken,
       user: { ...user, email_verified: false },
@@ -145,7 +145,7 @@ export const login: RequestHandler = async (req, res) => {
     const match = await bcrypt.compare(password, user.password);
     if (!match) { res.status(401).json({ message: 'Incorrect email or password' }); return; }
 
-    const token = signToken({ id: user.id, email: user.email, role: user.role });
+    const token = signToken({ id: user.id, email: user.email, role: user.role, name: user.name });
     const { password: _, ...safeUser } = user;
     res.json({ token, user: safeUser });
   } catch (err) {

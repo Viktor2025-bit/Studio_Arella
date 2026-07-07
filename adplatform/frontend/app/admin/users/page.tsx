@@ -6,7 +6,7 @@ import api from '@/lib/api';
 import { useToast } from '@/components/ui/ToastProvider';
 import { PageTransition, Skeleton } from '@/components/ui/Animations';
 import { Table, TableHead, TableHeaderCell, TableBody, TableRow, TableCell } from '@/components/ui/Table';
-import { FaUsers, FaMagnifyingGlass } from 'react-icons/fa6';
+import { FaUsers, FaMagnifyingGlass, FaUser } from 'react-icons/fa6';
 import { theme } from '@/lib/theme';
 
 const F = theme.font.body;
@@ -14,7 +14,7 @@ const card: React.CSSProperties = { background: theme.color.surface, border: `1p
 
 const roleMeta: Record<string, { bg: string; text: string }> = {
   admin:      { bg: theme.color.goldLight, text: theme.color.goldDark },
-  advertiser: { bg: '#EFF6FF', text: '#1D4ED8' },
+  advertiser: { bg: theme.color.infoLight, text: theme.color.info },
 };
 
 export default function AdminUsersPage() {
@@ -90,8 +90,8 @@ export default function AdminUsersPage() {
                   <TableRow key={u.id}>
                     <TableCell>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                        <div style={{ width: 30, height: 30, borderRadius: '50%', background: `linear-gradient(135deg,${theme.color.gold},${theme.color.charcoal700})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#fff', flexShrink: 0 }}>
-                          {u.name?.[0]?.toUpperCase()}
+                        <div style={{ width: 30, height: 30, borderRadius: '50%', background: theme.color.surface2, border: `1px solid ${theme.color.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.color.text3, flexShrink: 0 }}>
+                          <FaUser size={13} />
                         </div>
                         <span style={{ fontWeight: 700, color: theme.color.text1 }}>{u.name}</span>
                       </div>

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Quicksand, Fraunces } from 'next/font/google';
+import { Quicksand, Outfit } from 'next/font/google';
 import './globals.css';
 import { ToastProvider } from '@/components/ui/ToastProvider';
 
@@ -10,11 +10,10 @@ const quicksand = Quicksand({
   display: 'swap',
 });
 
-const fraunces = Fraunces({
+const outfit = Outfit({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '900'],
-  style: ['normal', 'italic'],
-  variable: '--font-fraunces',
+  weight: ['400', '500', '600', '700', '800', '900'],
+  variable: '--font-outfit',
   display: 'swap',
 });
 
@@ -26,7 +25,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${quicksand.variable} ${fraunces.variable}`}>
+    <html lang="en" className={`${quicksand.variable} ${outfit.variable}`}>
       <body>
         <ToastProvider>
           {children}

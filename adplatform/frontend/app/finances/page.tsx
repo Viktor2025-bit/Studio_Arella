@@ -74,19 +74,19 @@ export default function FinancesPage() {
           </div>
 
           {/* Summary cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: 12 }}>
             {[
               { label: 'Available Credits', value: `₦${(balance?.credits || 0).toLocaleString()}`, icon: CreditCard, color: theme.color.gold, bg: theme.color.goldLight, border: theme.color.goldMid, loading },
-              { label: 'Total Ad Spend', value: `₦${(balance?.total_revenue || 0).toLocaleString()}`, icon: TrendingUp, color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE', loading },
+              { label: 'Total Spending', value: `₦${(balance?.total_revenue || 0).toLocaleString()}`, icon: TrendingUp, color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE', loading },
               { label: 'Transactions', value: transactions.length, icon: DollarSign, color: theme.color.success, bg: theme.color.successLight, border: '#C7E0BE', loading },
             ].map(({ label, value, icon: Icon, color, bg, border, loading: l }, i) => (
-              <FadeCard key={label} delay={i * 0.07} style={{ ...card, padding: '20px', position: 'relative', overflow: 'hidden' }}>
+              <FadeCard key={label} delay={i * 0.07} style={{ ...card, padding: 'clamp(16px, 4vw, 20px)', position: 'relative', overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', top: 0, right: 0, width: 80, height: 80, background: `radial-gradient(circle at top right, ${bg}, transparent)`, pointerEvents: 'none' }} />
                 <div style={{ width: 40, height: 40, borderRadius: 11, background: bg, border: `1px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
                   <Icon size={18} color={color} />
                 </div>
-                {l ? <Skeleton height={26} width={100} style={{ marginBottom: 6 }} /> : <p style={{ fontSize: 24, fontWeight: 900, color: theme.color.text1, margin: '0 0 3px', letterSpacing: '-0.5px' }}>{value}</p>}
-                <p style={{ fontSize: 11, color: theme.color.text3, margin: 0, fontWeight: 500 }}>{label}</p>
+                {l ? <Skeleton height={26} width={100} style={{ marginBottom: 6 }} /> : <p style={{ fontSize: "clamp(20px, 5vw, 24px)", fontWeight: 900, color: theme.color.text1, margin: '0 0 3px', letterSpacing: '-0.5px', wordBreak: "break-word" }}>{value}</p>}
+                <p style={{ fontSize: "clamp(11px, 3vw, 13px)", color: theme.color.text3, margin: 0, fontWeight: 500 }}>{label}</p>
               </FadeCard>
             ))}
           </div>
@@ -113,7 +113,7 @@ export default function FinancesPage() {
               <p style={{ fontSize: 14, fontWeight: 800, color: theme.color.text1, margin: 0 }}>Transaction History</p>
               <span style={{ fontSize: 12, color: theme.color.text3 }}>{transactions.length} records</span>
             </div>
-            <div style={{ overflowX: 'auto' }}>
+            <div className="responsive-table-wrapper" style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: theme.color.surface2 }}>

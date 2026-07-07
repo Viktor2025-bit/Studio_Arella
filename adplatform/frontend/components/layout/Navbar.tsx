@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
-import { FaArrowRightFromBracket, FaCalendarCheck, FaMoon, FaSun } from 'react-icons/fa6';
+import { FaArrowRightFromBracket, FaCalendarCheck, FaMoon, FaSun, FaUser } from 'react-icons/fa6';
 import NotificationBell from '@/components/ui/NotificationBell';
 import { Menu } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,16 +24,18 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   return (
     <header style={{ height: 72, background: theme.color.surface, borderBottom: `1px solid ${theme.color.border}`, padding: '0 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, fontFamily: F }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-
+        <button className="show-on-mobile-flex" onClick={onMenuClick} style={{ alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', color: theme.color.text1, cursor: 'pointer', padding: 4 }}>
+          <Menu size={24} />
+        </button>
         <img src="/logo.png" alt="Studio Arella Logo" style={{ height: 56, objectFit: 'contain' }} />
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <Link href="/book" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: theme.color.gold, color: '#1A1A1A', padding: '8px 16px', borderRadius: theme.radius.sm, fontSize: 12, fontWeight: 800, textDecoration: 'none', boxShadow: theme.shadow.gold }}>
+        <Link href="/book" className="hide-on-mobile" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: theme.color.gold, color: '#1A1A1A', padding: '8px 16px', borderRadius: theme.radius.sm, fontSize: 12, fontWeight: 800, textDecoration: 'none', boxShadow: theme.shadow.gold }}>
           <FaCalendarCheck size={12} /> Book Slot
         </Link>
 
-        <button onClick={toggleTheme} style={{ width: 38, height: 38, borderRadius: '50%', background: theme.color.surface2, border: `1px solid ${theme.color.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.15s', color: theme.color.text2 }}>
+        <button onClick={toggleTheme} className="hide-on-mobile" style={{ width: 38, height: 38, borderRadius: '50%', background: theme.color.surface2, border: `1px solid ${theme.color.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.15s', color: theme.color.text2 }}>
           {appTheme === 'dark' ? <FaSun size={15} /> : <FaMoon size={15} />}
         </button>
 
@@ -42,8 +44,8 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         <div style={{ position: 'relative' }}>
           <button onClick={() => setDropOpen(o => !o)}
             style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: `1px solid ${theme.color.border}`, borderRadius: theme.radius.pill, padding: '5px 12px 5px 5px', cursor: 'pointer', fontFamily: F }}>
-            <div style={{ width: 30, height: 30, borderRadius: '50%', background: `linear-gradient(135deg,${theme.color.gold},${theme.color.charcoal700})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 900, color: '#fff' }}>
-              {user?.name?.[0]?.toUpperCase() || 'U'}
+            <div style={{ width: 30, height: 30, borderRadius: '50%', background: theme.color.surface2, border: `1px solid ${theme.color.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.color.text3 }}>
+              <FaUser size={13} />
             </div>
             <span style={{ fontSize: 13, fontWeight: 700, color: theme.color.text1, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name?.split(' ')[0]}</span>
           </button>
@@ -56,6 +58,20 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                   <div style={{ padding: '10px 12px', borderBottom: `1px solid ${theme.color.border2}`, marginBottom: 6 }}>
                     <p style={{ fontSize: 13, fontWeight: 800, color: theme.color.text1, margin: '0 0 2px' }}>{user?.name}</p>
                     <p style={{ fontSize: 11, color: theme.color.text4, margin: 0, fontWeight: 500 }}>{user?.email}</p>
+                  </div>
+                  <div className="show-on-mobile" style={{ borderBottom: `1px solid ${theme.color.border2}`, marginBottom: 6, paddingBottom: 6 }}>
+                    <Link href="/book" onClick={() => setDropOpen(false)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', fontSize: 13, fontWeight: 800, color: theme.color.goldDark, textDecoration: 'none', borderRadius: theme.radius.sm, transition: 'background 0.1s' }}
+                      onMouseOver={e => (e.currentTarget.style.background = theme.color.goldLight)}
+                      onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
+                      <FaCalendarCheck size={13} /> Book Slot
+                    </Link>
+                    <button onClick={() => { toggleTheme(); setDropOpen(false); }}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', fontSize: 13, fontWeight: 700, color: theme.color.text2, background: 'none', border: 'none', cursor: 'pointer', borderRadius: theme.radius.sm, fontFamily: F, textAlign: 'left' }}
+                      onMouseOver={e => (e.currentTarget.style.background = theme.color.surface2)}
+                      onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
+                      {appTheme === 'dark' ? <FaSun size={13} /> : <FaMoon size={13} />} {appTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                    </button>
                   </div>
                   {[{ label: 'My Dashboard', href: '/dashboard' }, { label: 'Settings', href: '/settings' }, { label: 'Support', href: '/support' }].map(({ label, href }) => (
                     <Link key={href} href={href} onClick={() => setDropOpen(false)}

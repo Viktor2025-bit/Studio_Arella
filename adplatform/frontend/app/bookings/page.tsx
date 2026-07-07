@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Search, CalendarCheck } from 'lucide-react';
+import { Search, CalendarCheck, Mic, CreditCard, Wallet } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/ui/Animations';
 import StatusBadge from '@/components/ui/StatusBadge';
@@ -9,105 +9,221 @@ import EmptyState from '@/components/ui/EmptyState';
 import { Table, TableHead, TableHeaderCell, TableBody, TableRow, TableCell } from '@/components/ui/Table';
 import api from '@/lib/api';
 import { Booking } from '@/types';
+import { useToast } from '@/components/ui/ToastProvider';
+import { theme } from '@/lib/theme';
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [podcastBookings, setPodcastBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
+  const [activeTab, setActiveTab] = useState<'screens' | 'podcasts'>('screens');
+  const { toast } = useToast();
+
+  const fetchScreens = async () => {
+    try {
+      setLoading(true);
+      const params = filter !== 'all' ? `?status=${filter}` : '';
+      const res = await api.get(`/bookings${params}`);
+      setBookings(res.data.bookings || []);
+    } catch {
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPodcasts = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get(`/podcasts/my-bookings`);
+      let data = res.data.bookings || [];
+      if (filter !== 'all') data = data.filter((b: any) => b.status === filter);
+      setPodcastBookings(data);
+    } catch {
+      setPodcastBookings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetch = async () => {
-      try {
-        const params = filter !== 'all' ? `?status=${filter}` : '';
-        const res = await api.get(`/bookings${params}`);
-        setBookings(res.data.bookings || []);
-      } catch {
-        setBookings([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
-  }, [filter]);
+    if (activeTab === 'screens') fetchScreens();
+    else fetchPodcasts();
+  }, [filter, activeTab]);
 
-  const filtered = bookings.filter((b) =>
-    b.booking_number.toLowerCase().includes(search.toLowerCase())
-  );
+  const handlePay = async (bookingId: string, method: 'monnify' | 'wallet') => {
+    try {
+      if (method === 'monnify') {
+        const res = await api.post('/payments/initialize', { booking_id: bookingId, booking_type: 'podcast' });
+        window.location.href = res.data.checkout_url || res.data.authorization_url;
+      } else {
+        const res = await api.post('/payments/wallet', { booking_id: bookingId, booking_type: 'podcast' });
+        toast(res.data.message || 'Payment successful!', 'success');
+        fetchPodcasts();
+      }
+    } catch (err: any) {
+      toast(err?.response?.data?.message || 'Payment failed', 'error');
+    }
+  };
+
+  const filteredScreens = bookings.filter((b) => b.booking_number.toLowerCase().includes(search.toLowerCase()));
+  const filteredPodcasts = podcastBookings.filter((b) => b.booking_number.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <DashboardLayout>
       <PageTransition>
-        <div className="space-y-4 font-body">
-          <div className="flex items-center justify-between flex-wrap gap-3">
+        <div style={{ fontFamily: theme.font.body }}>
+          
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
             <div>
-              <h1 className="text-xl font-bold text-[#211D17]">My Bookings</h1>
-              <p className="text-sm text-[#A69C87] mt-0.5">{bookings.length} bookings total</p>
+              <h1 style={{ fontSize: 20, fontWeight: 800, color: theme.color.text1, margin: 0 }}>My Bookings</h1>
+              <p style={{ fontSize: 14, color: theme.color.text3, margin: '4px 0 0' }}>
+                {activeTab === 'screens' ? bookings.length : podcastBookings.length} {activeTab} bookings total
+              </p>
             </div>
-            <div className="flex items-center gap-3 flex-wrap">
-              {/* Filter buttons */}
-              {['all', 'active', 'paused', 'ended'].map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setFilter(f)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors ${
-                    filter === f ? 'bg-charcoal-900 text-white' : 'bg-cream-surface text-[#57503F] hover:bg-cream-2'
-                  }`}
-                >
+
+            <div style={{ display: 'flex', background: theme.color.surface2, border: `1px solid ${theme.color.border}`, padding: 4, borderRadius: 12 }}>
+              <button 
+                onClick={() => setActiveTab('screens')} 
+                style={{
+                  padding: '8px 16px', borderRadius: 8, fontSize: 14, fontWeight: 800, border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s',
+                  background: activeTab === 'screens' ? `linear-gradient(90deg, ${theme.color.gold}, #f6c04f)` : 'transparent',
+                  color: activeTab === 'screens' ? '#1a1a1a' : theme.color.text2,
+                  boxShadow: activeTab === 'screens' ? `0 2px 10px rgba(224,165,38,0.3)` : 'none'
+                }}>
+                <CalendarCheck size={16} /> Screen Ads
+              </button>
+              <button 
+                onClick={() => setActiveTab('podcasts')} 
+                style={{
+                  padding: '8px 16px', borderRadius: 8, fontSize: 14, fontWeight: 800, border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s',
+                  background: activeTab === 'podcasts' ? `linear-gradient(90deg, ${theme.color.gold}, #f6c04f)` : 'transparent',
+                  color: activeTab === 'podcasts' ? '#1a1a1a' : theme.color.text2,
+                  boxShadow: activeTab === 'podcasts' ? `0 2px 10px rgba(224,165,38,0.3)` : 'none'
+                }}>
+                <Mic size={16} /> Podcast Studio
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 24 }}>
+            <div style={{ position: 'relative', width: '100%', maxWidth: 280 }}>
+              <Search size={15} color={theme.color.text3} style={{ position: 'absolute', left: 12, top: 10 }} />
+              <input 
+                type="text" 
+                placeholder="Search by booking #..." 
+                value={search} 
+                onChange={(e) => setSearch(e.target.value)} 
+                style={{
+                  width: '100%', padding: '9px 16px 9px 36px', background: theme.color.surface2, 
+                  border: `1px solid ${theme.color.border}`, borderRadius: 12, fontSize: 14,
+                  color: theme.color.text1, outline: 'none'
+                }} 
+              />
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              {['all', 'pending', 'active', 'confirmed', 'ended', 'cancelled'].map((f) => (
+                <button 
+                  key={f} 
+                  onClick={() => setFilter(f)} 
+                  style={{
+                    padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, textTransform: 'capitalize', border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+                    background: filter === f ? theme.color.charcoal900 : theme.color.surface2,
+                    color: filter === f ? '#fff' : theme.color.text2
+                  }}>
                   {f}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Search */}
-          <div className="relative w-full sm:w-72">
-            <Search size={15} className="absolute left-3 top-2.5 text-[#A69C87]" />
-            <input
-              type="text"
-              placeholder="Search by booking #..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-cream-surface border border-[#E8DFC8] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gold/30"
-            />
-          </div>
-
-          <div className="bg-cream-surface border border-[#E8DFC8] rounded-2xl overflow-hidden">
-            <div className="overflow-x-auto">
-              {!loading && filtered.length === 0 ? (
-                <div className="p-6">
-                  <EmptyState icon={CalendarCheck} title="No bookings found" subtitle="Bookings you make will show up here." />
-                </div>
-              ) : (
-                <Table>
-                  <TableHead>
-                    {['Booking #', 'Start Time', 'Screens', 'Impression', 'View', 'Interval', 'Cost', 'Total', 'Status'].map((h) => (
-                      <TableHeaderCell key={h}>{h}</TableHeaderCell>
-                    ))}
-                  </TableHead>
-                  <TableBody>
-                    {loading ? (
-                      <tr><td colSpan={9} className="px-5 py-12 text-center text-[#A69C87]">Loading...</td></tr>
-                    ) : filtered.map((b) => (
-                      <TableRow key={b.id}>
-                        <TableCell>
-                          <span className="font-semibold text-[#211D17]">{b.booking_number}</span>
-                        </TableCell>
-                        <TableCell>
-                          {b.start_time ? new Date(b.start_time).toLocaleString('en', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
-                        </TableCell>
-                        <TableCell>{String(b.screen_count).padStart(2, '0')}</TableCell>
-                        <TableCell>{String(b.impressions).padStart(2, '0')}</TableCell>
-                        <TableCell>{b.views}</TableCell>
-                        <TableCell>{String(b.interval_seconds).padStart(2, '0')}</TableCell>
-                        <TableCell>₦{b.cost_per_sec}/Sec</TableCell>
-                        <TableCell>₦{Number(b.total_cost).toLocaleString()}</TableCell>
-                        <TableCell><StatusBadge status={b.status} /></TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+          <div style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: 16, overflow: 'hidden' }}>
+            <div style={{ overflowX: 'auto' }}>
+              
+              {/* SCREENS TABLE */}
+              {activeTab === 'screens' && (
+                !loading && filteredScreens.length === 0 ? (
+                  <div style={{ padding: 24 }}><EmptyState icon={CalendarCheck} title="No screen bookings found" subtitle="Bookings you make will show up here." /></div>
+                ) : (
+                  <Table>
+                    <TableHead>
+                      {['Booking #', 'Schedule', 'Screens', 'Impression', 'View', 'Interval', 'Cost', 'Total', 'Status'].map((h) => <TableHeaderCell key={h}>{h}</TableHeaderCell>)}
+                    </TableHead>
+                    <TableBody>
+                      {loading ? (
+                        <tr><td colSpan={9} style={{ padding: '48px 20px', textAlign: 'center', color: theme.color.text3 }}>Loading...</td></tr>
+                      ) : filteredScreens.map((b) => (
+                        <TableRow key={b.id}>
+                          <TableCell><span style={{ fontWeight: 600 }}>{b.booking_number}</span></TableCell>
+                          <TableCell>
+                            <div style={{ fontSize: 12, color: theme.color.text2 }}>
+                              {b.start_time ? new Date(b.start_time).toLocaleString('en', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'} <br/>
+                              {b.end_time ? `→ ${new Date(b.end_time).toLocaleString('en', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}` : ''}
+                            </div>
+                          </TableCell>
+                          <TableCell>{String(b.screen_count).padStart(2, '0')}</TableCell>
+                          <TableCell>{String(b.impressions).padStart(2, '0')}</TableCell>
+                          <TableCell>{b.views}</TableCell>
+                          <TableCell>{String(b.interval_seconds).padStart(2, '0')}</TableCell>
+                          <TableCell>₦{b.cost_per_sec}/Sec</TableCell>
+                          <TableCell>₦{Number(b.total_cost).toLocaleString()}</TableCell>
+                          <TableCell><StatusBadge status={b.status} /></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )
               )}
+
+              {/* PODCASTS TABLE */}
+              {activeTab === 'podcasts' && (
+                !loading && filteredPodcasts.length === 0 ? (
+                  <div style={{ padding: 24 }}><EmptyState icon={Mic} title="No podcast bookings found" subtitle="Your podcast reservations will show up here." /></div>
+                ) : (
+                  <Table>
+                    <TableHead>
+                      {['Booking #', 'Package', 'Time Slot', 'Duration', 'Total Cost', 'Status', 'Action'].map((h) => <TableHeaderCell key={h}>{h}</TableHeaderCell>)}
+                    </TableHead>
+                    <TableBody>
+                      {loading ? (
+                        <tr><td colSpan={7} style={{ padding: '48px 20px', textAlign: 'center', color: theme.color.text3 }}>Loading...</td></tr>
+                      ) : filteredPodcasts.map((b) => (
+                        <TableRow key={b.id}>
+                          <TableCell><span style={{ fontWeight: 600 }}>{b.booking_number}</span></TableCell>
+                          <TableCell>{b.package_type}</TableCell>
+                          <TableCell>
+                            <div style={{ fontSize: 12, color: theme.color.text2 }}>
+                              {new Date(b.start_time).toLocaleString('en', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })} <br/>
+                              → {new Date(b.end_time).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                          </TableCell>
+                          <TableCell>{b.duration_minutes / 60} hr{b.duration_minutes / 60 > 1 ? 's' : ''}</TableCell>
+                          <TableCell>₦{Number(b.total_cost).toLocaleString()}</TableCell>
+                          <TableCell><StatusBadge status={b.status} /></TableCell>
+                          <TableCell>
+                            {b.status === 'pending' && (
+                              <div style={{ display: 'flex', gap: 8 }}>
+                                <button onClick={() => handlePay(b.id, 'wallet')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: theme.color.charcoal900, color: '#fff', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer' }} title="Pay from Wallet">
+                                  <Wallet size={12} /> Wallet
+                                </button>
+                                <button onClick={() => handlePay(b.id, 'monnify')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'rgba(212,175,55,0.1)', color: theme.color.goldDark, border: `1px solid rgba(212,175,55,0.4)`, borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: 'pointer' }} title="Pay with Card">
+                                  <CreditCard size={12} /> Card
+                                </button>
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )
+              )}
+
             </div>
           </div>
         </div>

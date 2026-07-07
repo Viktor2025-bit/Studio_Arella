@@ -26,17 +26,17 @@ export default function AdminPage() {
 
   const topCards = [
     { label: 'Total Users',    value: stats?.users    || 0, icon: FaUsers,        color: theme.color.gold, bg: theme.color.goldLight, border: theme.color.goldMid, href: '/admin/users' },
-    { label: 'Total Revenue',  value: `₦${Number(stats?.revenue || 0).toLocaleString()}`, icon: DollarSign, color: theme.color.success, bg: theme.color.successLight, border: '#C7E0BE', href: '/admin/finances' },
-    { label: 'All Campaigns',  value: stats?.campaigns || 0, icon: Megaphone,      color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE', href: '/admin/campaigns' },
-    { label: 'All Bookings',   value: stats?.bookings  || 0, icon: CalendarCheck,  color: theme.color.goldDark, bg: '#F5F3FF', border: '#DDD6FE', href: '/admin/bookings' },
-    { label: 'Reg. Screens',   value: stats?.screens   || 0, icon: Monitor,        color: '#0891B2', bg: '#ECFEFF', border: '#A5F3FC', href: '/admin/screens' },
+    { label: 'Total Revenue',  value: `₦${Number(stats?.revenue || 0).toLocaleString()}`, icon: DollarSign, color: theme.color.success, bg: theme.color.successLight, border: theme.color.success, href: '/admin/finances' },
+    { label: 'All Campaigns',  value: stats?.campaigns || 0, icon: Megaphone,      color: theme.color.info, bg: theme.color.infoLight, border: theme.color.infoBorder, href: '/admin/campaigns' },
+    { label: 'All Bookings',   value: stats?.bookings  || 0, icon: CalendarCheck,  color: theme.color.warning, bg: theme.color.warningLight, border: theme.color.warning, href: '/admin/bookings' },
+    { label: 'Reg. Screens',   value: stats?.screens   || 0, icon: Monitor,        color: theme.color.glitchCyan, bg: 'rgba(6, 182, 212, 0.15)', border: 'rgba(6, 182, 212, 0.3)', href: '/admin/screens' },
   ];
 
   const adminActions = [
     { label: 'Manage Users',       href: '/admin/users',     Icon: FaUsers,        color: theme.color.gold, bg: theme.color.goldLight, border: theme.color.goldMid },
-    { label: 'All Campaigns',      href: '/admin/campaigns', Icon: Megaphone,      color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE' },
-    { label: 'All Screens',        href: '/admin/screens',   Icon: FaDisplay,      color: theme.color.success, bg: theme.color.successLight, border: '#C7E0BE' },
-    { label: 'Platform Finances',  href: '/admin/finances',  Icon: FaMoneyBillWave,color: theme.color.goldDark, bg: '#F5F3FF', border: '#DDD6FE' },
+    { label: 'All Campaigns',      href: '/admin/campaigns', Icon: Megaphone,      color: theme.color.info, bg: theme.color.infoLight, border: theme.color.infoBorder },
+    { label: 'All Screens',        href: '/admin/screens',   Icon: FaDisplay,      color: theme.color.success, bg: theme.color.successLight, border: theme.color.success },
+    { label: 'Platform Finances',  href: '/admin/finances',  Icon: FaMoneyBillWave,color: theme.color.warning, bg: theme.color.warningLight, border: theme.color.warning },
   ];
 
   return (
@@ -51,7 +51,7 @@ export default function AdminPage() {
         </div>
 
         {/* Stat cards */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', gap: 12, marginBottom: 18 }}>
+        <div className="stats-grid" style={{ marginBottom: 18 }}>
           {topCards.map(({ label, value, icon: Icon, color, bg, border, href }, i) => (
             <FadeCard key={label} delay={i * 0.06}>
               <Link href={href} style={{ ...card, padding: '18px 16px', display: 'flex', flexDirection: 'column', gap: 10, textDecoration: 'none', transition: 'box-shadow 0.15s' }}>
@@ -67,7 +67,7 @@ export default function AdminPage() {
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <div className="stats-grid" style={{ gap: 16 }}>
           {/* Recent bookings */}
           <FadeCard delay={0.2} style={{ ...card, padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
@@ -122,6 +122,7 @@ export default function AdminPage() {
             {!stats?.recent_users?.length ? (
               <div style={{ padding: '32px', textAlign: 'center', color: theme.color.text4, fontSize: 13 }}>No users signed up yet</div>
             ) : (
+              <div className="responsive-table-wrapper">
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: theme.color.surface2 }}>
@@ -145,6 +146,7 @@ export default function AdminPage() {
                   })}
                 </tbody>
               </table>
+              </div>
             )}
           </FadeCard>
         </div>

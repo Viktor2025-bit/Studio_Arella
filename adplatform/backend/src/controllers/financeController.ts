@@ -82,11 +82,16 @@ export const addCredits : RequestHandler = async (req, res) => {
 export const getTotalRevenue : RequestHandler = async (req, res) => {
     const authReq = req as AuthRequest;
   try {
-    const result = await pool.query(
-      `SELECT COALESCE(SUM(total_cost), 0) as total_revenue FROM bookings WHERE user_id = $1 AND status != 'cancelled'`,
+    const bookingsRes = await pool.query(
+      `SELECT COALESCE(SUM(total_cost), 0) as total FROM bookings WHERE user_id = $1 AND status IN ('active', 'completed')`,
       [authReq.user?.id]
     );
-    res.json({ total_revenue: parseFloat(result.rows[0].total_revenue) });
+    const podcastRes = await pool.query(
+      `SELECT COALESCE(SUM(total_cost), 0) as total FROM podcast_bookings WHERE user_id = $1 AND status IN ('confirmed', 'completed')`,
+      [authReq.user?.id]
+    );
+    const total_revenue = parseFloat(bookingsRes.rows[0].total) + parseFloat(podcastRes.rows[0].total);
+    res.json({ total_revenue });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }

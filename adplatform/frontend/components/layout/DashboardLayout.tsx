@@ -36,9 +36,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div style={{ display: 'flex', height: '100vh', background: theme.color.bg, fontFamily: F, overflow: 'hidden' }}>
       <ThemeProvider />
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, marginLeft: 240 }}>
+      <div className="main-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         <Navbar onMenuClick={() => setMobileOpen(o => !o)} />
-        <main style={{ flex: 1, overflowY: 'auto', padding: '28px 32px' }}>
+        <main style={{ flex: 1, overflowY: 'auto', padding: 'clamp(16px, 4vw, 28px) clamp(16px, 5vw, 32px)' }}>
           {children}
         </main>
       </div>

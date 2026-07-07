@@ -81,13 +81,13 @@ export default function AdvertiserDashboard() {
           </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 292px', gap: 16, alignItems: 'start' }}>
+        <div className="dashboard-layout">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
 
             {/* Stat cards */}
-            <div id="tour-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+            <div id="tour-stats" className="stats-grid">
               {[
-                { label: 'Total Ad Spend', value: `₦${(stats?.total_revenue || 0).toLocaleString()}`, icon: DollarSign, color: theme.color.gold, bg: theme.color.goldLight, border: theme.color.goldMid, change: '+12%' },
+                { label: 'Total Spending', value: `₦${(stats?.total_revenue || 0).toLocaleString()}`, icon: DollarSign, color: theme.color.gold, bg: theme.color.goldLight, border: theme.color.goldMid, change: '+12%' },
                 { label: 'Active Campaigns', value: stats?.active_campaigns || 0, icon: Megaphone, color: theme.color.success, bg: theme.color.successLight, border: theme.color.success, change: '' },
                 { label: 'Slots Booked', value: stats?.active_screens || 0, icon: Monitor, color: theme.color.info, bg: theme.color.infoLight, border: theme.color.infoBorder, change: '' },
               ].map(({ label, value, icon: Icon, color, bg, border, change }, i) => (

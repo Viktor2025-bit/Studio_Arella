@@ -21,8 +21,8 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (first_name: string, last_name: string, email: string, password: string, business_name?: string, phone?: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
+  register: (first_name: string, last_name: string, email: string, password: string, business_name?: string, phone?: string) => Promise<User>;
   logout: () => void;
   loadFromStorage: () => void;
   updateUser: (data: Partial<User>) => void;
@@ -49,6 +49,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       set({ token: data.token, user: data.user, isLoading: false });
+      return data.user;
     } catch (err) {
       set({ isLoading: false });
       throw err;
@@ -61,6 +62,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       set({ token: data.token, user: data.user, isLoading: false });
+      return data.user;
     } catch (err) {
       set({ isLoading: false });
       throw err;

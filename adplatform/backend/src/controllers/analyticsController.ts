@@ -7,11 +7,9 @@ export const getDashboardStats : RequestHandler = async (req, res) => {
   try {
     const userId = authReq.user?.id;
 
-    const [revenueRes, campaignRes, screenRes, analyticsRes] = await Promise.all([
-      pool.query(
-        `SELECT COALESCE(SUM(total_cost), 0) as total FROM bookings WHERE user_id = $1 AND status != 'cancelled'`,
-        [userId]
-      ),
+    const [revenueRes, podcastRes, campaignRes, screenRes, analyticsRes] = await Promise.all([
+      pool.query(`SELECT COALESCE(SUM(total_cost), 0) as total FROM bookings WHERE user_id = $1 AND status != 'cancelled'`, [userId]),
+      pool.query(`SELECT COALESCE(SUM(total_cost), 0) as total FROM podcast_bookings WHERE user_id = $1 AND status != 'cancelled'`, [userId]),
       pool.query(`SELECT COUNT(*) FROM campaigns WHERE user_id = $1 AND status = 'active'`, [userId]),
       pool.query(`SELECT COUNT(*) FROM screens WHERE owner_id = $1 AND status = 'active'`, [userId]),
       pool.query(
@@ -23,7 +21,7 @@ export const getDashboardStats : RequestHandler = async (req, res) => {
     ]);
 
     res.json({
-      total_revenue: parseFloat(revenueRes.rows[0].total),
+      total_revenue: parseFloat(revenueRes.rows[0].total) + parseFloat(podcastRes.rows[0].total),
       active_campaigns: parseInt(campaignRes.rows[0].count),
       active_screens: parseInt(screenRes.rows[0].count),
       hourly_analytics: analyticsRes.rows,

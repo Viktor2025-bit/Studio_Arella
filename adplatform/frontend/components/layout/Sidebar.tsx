@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, CalendarCheck, Megaphone, Film, DollarSign, Settings, HelpCircle, X, Shield, Calendar, Paintbrush, Monitor, BarChart2, Mic } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, Megaphone, Film, DollarSign, Settings, HelpCircle, X, Shield, Calendar, Paintbrush, Monitor, BarChart2, Mic, ClipboardList } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { theme } from '@/lib/theme';
 
@@ -11,13 +11,14 @@ const F = theme.font.body;
 const advertiserNav = [
   { href: '/dashboard',  label: 'Dashboard',        icon: LayoutDashboard },
   { href: '/analytics',  label: 'Analytics',        icon: BarChart2 },
-  { href: '/book',       label: 'Book Ad Slot',      icon: CalendarCheck, highlight: true },
-  { href: '/podcast',    label: 'Book Podcast',      icon: Mic },
-  { href: '/calendar',   label: 'My Calendar',       icon: Calendar },
-  { href: '/campaigns',  label: 'My Campaigns',      icon: Megaphone },
-  { href: '/ads',        label: 'My Ads',            icon: Film },
-  { href: '/creative',   label: 'Request Creative',  icon: Paintbrush },
-  { href: '/finances',   label: 'Finances',          icon: DollarSign },
+  { href: '/book',       label: 'Book Ad Slot',     icon: CalendarCheck, highlight: true },
+  { href: '/podcast',    label: 'Book Podcast',     icon: Mic },
+  { href: '/bookings',   label: 'My Bookings',      icon: ClipboardList },
+  { href: '/calendar',   label: 'My Calendar',      icon: Calendar },
+  { href: '/campaigns',  label: 'My Campaigns',     icon: Megaphone },
+  { href: '/ads',        label: 'My Ads',           icon: Film },
+  { href: '/creative',   label: 'Request Creative', icon: Paintbrush },
+  { href: '/finances',   label: 'Finances',         icon: DollarSign },
 ];
 
 const adminNav = [
@@ -40,7 +41,7 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean;
   const pathname = usePathname();
   const { user } = useAuthStore();
   const navItems = user?.role === 'admin' ? adminNav : advertiserNav;
-  const isActive = (href: string) => pathname === href || (href !== '/dashboard' && href !== '/admin' && pathname.startsWith(href));
+  const isActive = (href: string) => pathname === href || (href !== '/dashboard' && href !== '/admin' && pathname.startsWith(href + '/'));
 
   return (
     <>
@@ -48,7 +49,7 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean;
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(26,26,26,0.45)', zIndex: 20, backdropFilter: 'blur(2px)' }}
           onClick={onClose} />
       )}
-      <aside style={{ width: 240, background: theme.color.charcoal900, height: '100%', borderRight: 'none', display: 'flex', flexDirection: 'column', fontFamily: F, position: 'fixed', top: 0, left: 0, zIndex: 30 }}>
+      <aside className={`mobile-sidebar ${!mobileOpen ? 'closed' : ''}`} style={{ width: 240, background: theme.color.charcoal900, height: '100%', borderRight: 'none', display: 'flex', flexDirection: 'column', fontFamily: F, position: 'fixed', top: 0, left: 0, zIndex: 30 }}>
 
         {/* Logo */}
         <div style={{ padding: '24px 20px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
@@ -86,8 +87,20 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean;
                     boxShadow: active ? `0 4px 14px rgba(224,165,38,0.25)` : 'none',
                     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
                   }}
-                    onMouseOver={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
-                    onMouseOut={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                    onMouseOver={e => { 
+                      if (!active) {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                        e.currentTarget.style.color = '#fff';
+                        e.currentTarget.style.transform = 'translateX(4px)';
+                      }
+                    }}
+                    onMouseOut={e => { 
+                      if (!active) {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = highlight ? theme.color.goldMid : 'rgba(255,255,255,0.55)';
+                        e.currentTarget.style.transform = 'translateX(0px)';
+                      }
+                    }}>
                     <Icon size={16} strokeWidth={active ? 2.5 : 2} style={{ opacity: active ? 1 : 0.8 }} />
                     <span style={{ letterSpacing: '-0.1px' }}>{label}</span>
                     {highlight && !active && (
@@ -107,8 +120,20 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean;
                 return (
                   <li key={href}>
                     <Link href={href} onClick={onClose} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, textDecoration: 'none', fontSize: 13, fontWeight: active ? 800 : 600, color: active ? '#1a1a1a' : 'rgba(255,255,255,0.55)', background: active ? `linear-gradient(90deg, ${theme.color.gold}, #f6c04f)` : 'transparent', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)' }}
-                      onMouseOver={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
-                      onMouseOut={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                      onMouseOver={e => { 
+                        if (!active) {
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                          e.currentTarget.style.color = '#fff';
+                          e.currentTarget.style.transform = 'translateX(4px)';
+                        }
+                      }}
+                      onMouseOut={e => { 
+                        if (!active) {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.color = 'rgba(255,255,255,0.55)';
+                          e.currentTarget.style.transform = 'translateX(0px)';
+                        }
+                      }}>
                       <Icon size={16} strokeWidth={active ? 2.5 : 2} style={{ opacity: active ? 1 : 0.8 }} />
                       <span style={{ letterSpacing: '-0.1px' }}>{label}</span>
                     </Link>

@@ -4,9 +4,10 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { useToast } from '@/components/ui/ToastProvider';
 import {
   FaEye, FaEyeSlash, FaArrowRight, FaCheck,
-  FaLocationDot, FaChartLine, FaBolt, FaCreditCard, FaUser, FaBuilding, FaPhone,
+  FaLocationDot, FaChartLine, FaBolt, FaCreditCard, FaBuilding, FaPhone,
 } from 'react-icons/fa6';
 import GoogleButton from '@/components/ui/GoogleButton';
 import { motion } from 'framer-motion';
@@ -55,8 +56,8 @@ export default function RegisterPage() {
   });
   const [showPw, setShowPw] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
-  const [error, setError] = useState('');
   const { register, isLoading } = useAuthStore();
+  const { toast } = useToast();
   const router = useRouter();
 
   const inputStyle: React.CSSProperties = {
@@ -83,17 +84,16 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    if (!form.first_name.trim())    { setError('Please enter your first name'); return; }
-    if (!form.last_name.trim())     { setError('Please enter your last name'); return; }
-    if (!form.email.trim())         { setError('Please enter your email'); return; }
-    if (form.password.length < 6)   { setError('Password must be at least 6 characters'); return; }
-    if (form.password !== form.confirm_password) { setError('Passwords do not match'); return; }
+    if (!form.first_name.trim())    { toast('Please enter your first name', 'error'); return; }
+    if (!form.last_name.trim())     { toast('Please enter your last name', 'error'); return; }
+    if (!form.email.trim())         { toast('Please enter your email', 'error'); return; }
+    if (form.password.length < 6)   { toast('Password must be at least 6 characters', 'error'); return; }
+    if (form.password !== form.confirm_password) { toast('Passwords do not match', 'error'); return; }
     try {
       await register(form.first_name, form.last_name, form.email, form.password, form.business_name || undefined, form.phone || undefined);
       router.push('/onboarding');
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Registration failed. Please try again.');
+      toast(err?.response?.data?.message || 'Registration failed. Please try again.', 'error');
     }
   };
 
@@ -101,7 +101,7 @@ export default function RegisterPage() {
     <div style={{ fontFamily: F, minHeight: '100vh', display: 'grid', gridTemplateColumns: '1fr 1fr', background: 'linear-gradient(135deg, #0f172a 0%, #0a0a0a 100%)', color: '#F8FAFC' }}>
       
       {/* ── Left panel ── */}
-      <div style={{ background: '#050505', padding: 48, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden', borderRight: '1px solid rgba(255,255,255,0.15)' }}>
+      <div style={{ background: `linear-gradient(to right, rgba(5,5,5,0.95), rgba(5,5,5,0.6)), url("https://images.unsplash.com/photo-1511268559489-34b624fbfcf5?w=1200&q=85&auto=format&fit=crop")`, backgroundSize: 'cover', backgroundPosition: 'center', padding: 48, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden', borderRight: '1px solid rgba(255,255,255,0.15)' }}>
         <div style={{ position: 'absolute', bottom: -60, right: -60, width: 320, height: 320, background: 'radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(40px)' }} />
         <div style={{ position: 'absolute', top: -40, left: -40, width: 200, height: 200, background: 'radial-gradient(circle, rgba(6,182,212,0.1) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(40px)' }} />
 
@@ -173,12 +173,6 @@ export default function RegisterPage() {
             <span style={{ fontSize: 11, color: '#64748B', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>or register with email</span>
             <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
           </div>
-
-          {error && (
-            <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#FCA5A5', fontSize: 13, padding: '11px 14px', borderRadius: 10, marginBottom: 14 }}>
-              {error}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 

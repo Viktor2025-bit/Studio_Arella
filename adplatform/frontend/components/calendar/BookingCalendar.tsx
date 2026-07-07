@@ -95,7 +95,7 @@ const CustomEvent = ({ event }: { event: CalEvent }) => {
     <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 4px', height: '100%' }}>
       <Icon size={12} style={{ opacity: 0.85, flexShrink: 0 }} />
       <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', letterSpacing: '-0.2px' }}>
-        {event.resource.bookingNumber}
+        {event.title}
       </span>
     </div>
   );
@@ -121,7 +121,7 @@ export default function BookingCalendar({ screenId }: { screenId?: string }) {
         .filter((b: any) => b.start_time && b.end_time)
         .map((b: any) => ({
           id: b.id,
-          title: b.booking_number + (b.screen_name ? ` · ${b.screen_name}` : ''),
+          title: (b.creative_title || b.campaign_name || b.booking_number) + (b.screen_name ? ` · ${b.screen_name}` : ''),
           start: new Date(b.start_time),
           end: new Date(b.end_time),
           resource: { type: 'ad', status: b.status, screen: b.screen_name, cost: b.total_cost, bookingNumber: b.booking_number },
@@ -131,7 +131,7 @@ export default function BookingCalendar({ screenId }: { screenId?: string }) {
         .filter((b: any) => b.start_time && b.end_time)
         .map((b: any) => ({
           id: b.id,
-          title: b.booking_number + ' · Podcast Studio',
+          title: (b.package_type || 'Podcast Session') + ' · Podcast Studio',
           start: new Date(b.start_time),
           end: new Date(b.end_time),
           resource: { type: 'podcast', status: b.status, screen: 'Podcast Studio', cost: b.total_cost, bookingNumber: b.booking_number },
