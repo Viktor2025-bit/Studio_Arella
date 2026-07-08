@@ -283,15 +283,19 @@ function DoohScheduler() {
 
   function handleSpreadAdd() {
     if (!selectedCreative) { toast("Please select a creative first", "error"); return; }
-    if (!draft || draft.loops < 1) { toast("There isn't enough open room here to fit even one full play of your video.", "error"); return; }
+    if (!draft && selectedHours.length === 0) { toast("There isn't enough open room here to fit even one full play of your video.", "error"); return; }
     
-    const startDate = draft.date;
+    const startDate = draft ? draft.date : viewDate;
     let endDate = new Date(startDate);
     if (spreadDuration === "1week") endDate = addDays(startDate, 7);
     else if (spreadDuration === "4weeks") endDate = addDays(startDate, 28);
     else if (spreadDuration === "3months") endDate = addMonths(startDate, 3);
     else if (spreadDuration === "6months") endDate = addMonths(startDate, 6);
     else if (spreadDuration === "1year") endDate = addYears(startDate, 1);
+
+    const draftDurationSec = draftLoops * (videoSeconds || 60);
+    const draftPrice = calcCost(draftDurationSec, selectedCreative?.ppm_rate || PPM);
+    const draftDurationMin = Math.ceil(draftDurationSec / 60);
 
     let added = 0, skipped = 0;
     const newItems: any[] = [];
@@ -315,15 +319,30 @@ function DoohScheduler() {
           ...cart.filter((c) => localDateKey(c.date) === dateKey).map((c) => ({ startMin: c.startMin, durationMin: Math.round(c.durationSec / 60) })),
           ...newItems.filter((n) => localDateKey(n.date) === dateKey).map((n) => ({ startMin: n.startMin, durationMin: Math.round(n.durationSec / 60) })),
         ];
-        const requiredEnd = draft.startMin + draftDurationSec / 60;
-        const conflict = isStartInsideBooking(draft.startMin, existing) || existing.some((b) => draft.startMin < b.startMin + (b.durationMin || 0) && requiredEnd > b.startMin);
-        
-        if (conflict) { 
-          skipped++; 
-        } else {
-          newItems.push({ id: crypto.randomUUID(), creative: selectedCreative, date: new Date(curDate), startMin: draft.startMin, durationSec: draftDurationSec, videoSeconds, loops: draft.loops, priceInfo: draftPrice });
-          added++;
-        }
+
+        selectedHours.forEach(h => {
+          let startMin = h * 60;
+          if (selectedHours.length === 1 && draft) startMin = draft.startMin;
+          else {
+            while(startMin < (h + 1) * 60 && isStartInsideBooking(startMin, existing)) startMin++;
+          }
+          
+          if (startMin >= (h + 1) * 60) {
+             skipped++;
+          } else {
+             const requiredEnd = startMin + draftDurationSec / 60;
+             const conflict = isStartInsideBooking(startMin, existing) || existing.some((b) => startMin < b.startMin + (b.durationMin || 0) && requiredEnd > b.startMin);
+             
+             if (conflict) { 
+               skipped++; 
+             } else {
+               newItems.push({ id: crypto.randomUUID(), creative: selectedCreative, date: new Date(curDate), startMin, durationSec: draftDurationSec, videoSeconds, loops: draftLoops, priceInfo: draftPrice });
+               added++;
+               // We add it to existing so subsequent hours in the same day check against it
+               existing.push({ startMin, durationMin: draftDurationMin, type: "other" } as any);
+             }
+          }
+        });
       }
       
       curDate = addDays(curDate, 1);
@@ -333,6 +352,7 @@ function DoohScheduler() {
     if (newItems.length > 0) addMultipleToCart(newItems);
     setSpreadModal(false);
     setDraft(null);
+    setSelectedHours([]);
     setMessage(skipped > 0 ? `Added ${added} bookings. Skipped ${skipped} due to conflicts.` : `Successfully spread ${added} bookings.`);
     toast(`Added ${added} slots`, "success");
   }
@@ -659,8 +679,7 @@ function DoohScheduler() {
                     const bookings = bookingsForDate(localDateKey(viewDate));
                     let hasConflict = false;
                     
-                    // If 1 hour selected and draft is set, check specific minute. Else check if any room in the hour.
-                    if (selectedHours.length === 1 && draft) {
+                    if (selectedHours.length === 1 && draft && isSameDate(draft.date, viewDate)) {
                         for(let m = 0; m < draftDurationMin; m++) {
                             if (isStartInsideBooking(draft.startMin + m, bookings)) hasConflict = true;
                         }
@@ -670,7 +689,7 @@ function DoohScheduler() {
                             while(firstAvailMin < (h + 1) * 60 && isStartInsideBooking(firstAvailMin, bookings)) {
                               firstAvailMin++;
                             }
-                            if (firstAvailMin >= (h + 1) * 60) hasConflict = true; // No room in this hour
+                            if (firstAvailMin >= (h + 1) * 60) hasConflict = true;
                             else {
                                for(let m = 0; m < draftDurationMin; m++) {
                                   if (isStartInsideBooking(firstAvailMin + m, bookings)) hasConflict = true;
@@ -727,8 +746,7 @@ function DoohScheduler() {
                              
                              <div className="flex flex-wrap items-center gap-3 md:gap-4 w-full">
                                <button onClick={() => {
-                                  // Add to Cart multiple hours
-                                  const newItems = [];
+                                  const newItems: any[] = [];
                                   selectedHours.forEach(h => {
                                      let startMin = h * 60;
                                      if (selectedHours.length === 1 && draft) startMin = draft.startMin;
@@ -770,7 +788,7 @@ function DoohScheduler() {
                     );
                   })()}
 
-                  {/* Minute Grid (Only show for single hour selection) */}
+                  {/* Minute Grid */}
                   {selectedHours.length === 1 ? (
                     <div style={{ background: theme.color.surface2, borderRadius: 20, padding: "28px", border: `1px solid ${theme.color.border2}`, marginTop: 28, boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
@@ -794,7 +812,6 @@ function DoohScheduler() {
                           const isBooked = isStartInsideBooking(minOfDay, bookings);
                           
                           let isSelected = false;
-                          const draftDurationSec = draftLoops * (videoSeconds || 60);
                           if (draft && isSameDate(draft.date, viewDate)) {
                             const draftEnd = draft.startMin + draftDurationSec / 60;
                             if (minOfDay >= draft.startMin && minOfDay < draftEnd) {
@@ -826,10 +843,10 @@ function DoohScheduler() {
                       </div>
                     </div>
                   ) : selectedHours.length > 1 ? (
-                    <div style={{ background: theme.color.surface2, borderRadius: 20, padding: "28px", border: `1px solid ${theme.color.border2}`, marginTop: 28, boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)", textAlign: "center", color: theme.color.text3 }}>
-                      <Info size={24} style={{ margin: "0 auto 12px", color: theme.color.gold }} />
-                      <div style={{ fontSize: 15, fontWeight: 600, color: theme.color.text1, marginBottom: 8 }}>Minute-Level Precision Disabled</div>
-                      <div style={{ fontSize: 14 }}>Because you have selected multiple hours, specific minute selection is disabled. Slots will automatically be placed at the first available minute within each chosen hour.</div>
+                    <div style={{ background: theme.color.surface2, borderRadius: 20, padding: "28px", border: `1px solid ${theme.color.border2}`, marginTop: 28, textAlign: "center" }}>
+                      <Info size={24} color={theme.color.text3} style={{ marginBottom: 12, display: "inline-block" }} />
+                      <div style={{ color: theme.color.text2, fontWeight: 600 }}>Minute-level selection is disabled when multiple hours are selected.</div>
+                      <div style={{ color: theme.color.text3, fontSize: 13, marginTop: 4 }}>The system will automatically find the earliest available start time in each selected hour.</div>
                     </div>
                   ) : null}
 
@@ -846,7 +863,7 @@ function DoohScheduler() {
                     <X size={18} />
                   </button>
                   <div style={{ fontWeight: 800, fontSize: 24, marginBottom: 8, color: theme.color.text1 }}>Spread Booking</div>
-                  <div style={{ fontSize: 14, color: theme.color.text3, marginBottom: 24 }}>Select how you want to duplicate your {selectedHours.length} selected slot(s).</div>
+                  <div style={{ fontSize: 14, color: theme.color.text3, marginBottom: 24 }}>Select how you want to duplicate your {formatMin(draft.startMin)} slot.</div>
                   
                   <div style={{ marginBottom: 20 }}>
                     <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: theme.color.text2 }}>1. Duration (How long?)</label>
@@ -913,7 +930,8 @@ function DoohScheduler() {
                     <AnimatedButton onClick={() => {
                       setMessage("");
                       setShowSlotModal(false);
-                      router.push('/cart');
+                      setCurrentStep(3);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
                     }} style={{ width: "100%", padding: "16px", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontWeight: 800, fontSize: 16, cursor: "pointer", boxShadow: theme.shadow.gold, display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
                       View Cart & Checkout <ChevronRight size={18} />
                     </AnimatedButton>
