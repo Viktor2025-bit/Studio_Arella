@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Trash2 } from 'lucide-react';
+import { ChevronLeft, Trash2, Clock, Calendar, Edit2 } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useToast } from '@/components/ui/ToastProvider';
 import { useCartStore } from '@/store/cartStore';
@@ -113,19 +113,26 @@ export default function CartPage() {
                   const d = new Date(c.date);
                   return (
                     <div key={c.id} style={{ background: theme.color.surface2, borderRadius: 14, padding: "clamp(14px, 4vw, 20px) clamp(16px, 4vw, 24px)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "clamp(12px, 3vw, 20px)", border: `1px solid ${theme.color.border}`, flexWrap: "wrap" }}>
-                      <div className="mono" style={{ color: theme.color.text3, fontSize: "clamp(12px, 3vw, 14px)" }}>
-                        <div style={{ color: theme.color.text1, fontWeight: 800, marginBottom: 6, fontSize: "clamp(13px, 4vw, 16px)" }}>
+                      <div className="mono" style={{ color: theme.color.text3, fontSize: "clamp(12px, 3vw, 14px)", flex: 1 }}>
+                        <div style={{ color: theme.color.text1, fontWeight: 800, marginBottom: 8, fontSize: "clamp(15px, 4vw, 18px)", fontFamily: theme.font.display }}>
+                          {c.creative?.title || 'Unknown Ad'}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, color: theme.color.text2, fontWeight: 600 }}>
+                          <Calendar size={14} />
                           {d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                         </div>
-                        <div>
-                          {formatMin(c.startMin)} – {formatMin(c.startMin + Math.round(c.durationSec / 60))} · {formatDurationSec(c.durationSec)} airtime
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Clock size={14} />
+                          {formatMin(c.startMin)} – {formatMin(c.startMin + Math.max(1, Math.ceil(c.durationSec / 60)))} · {formatDurationSec(c.durationSec)} airtime
                         </div>
-                        <div style={{ fontSize: 11, color: theme.color.text4, marginTop: 4 }}>Ad: {c.creative?.title || 'Unknown'}</div>
                       </div>
                       <div className="w-full md:w-auto flex justify-between md:justify-end items-center" style={{ gap: "clamp(10px, 3vw, 14px)" }}>
                         <span className="mono" style={{ color: theme.color.success, fontWeight: 800, fontSize: "clamp(15px, 4.5vw, 18px)" }}>{naira(c.priceInfo.cost)}</span>
                         <div style={{ display: "flex", gap: "clamp(10px, 3vw, 14px)" }}>
-                          <button onClick={() => removeFromCart(c.id)} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: "clamp(6px, 2vw, 10px)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <button onClick={() => { removeFromCart(c.id); router.push('/book'); }} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: "clamp(6px, 2vw, 10px)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: theme.color.text2 }} title="Edit">
+                            <Edit2 size={16} />
+                          </button>
+                          <button onClick={() => removeFromCart(c.id)} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: "clamp(6px, 2vw, 10px)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }} title="Delete">
                             <Trash2 size={16} color={theme.color.error} />
                           </button>
                         </div>
