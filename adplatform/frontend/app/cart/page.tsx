@@ -36,7 +36,7 @@ function formatDurationSec(sec: number) {
 export default function CartPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { cart, removeFromCart, getCartTotal, clearCart, cartExpiresAt } = useCartStore() as any;
+  const { cart, removeFromCart, getCartTotal, clearCart, cartExpiresAt } = useCartStore();
   
   const [reserving, setReserving] = useState(false);
   const [paying, setPaying] = useState(false);
