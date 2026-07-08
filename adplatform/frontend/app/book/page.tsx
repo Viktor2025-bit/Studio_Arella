@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Clock, Info, X, Check, Ticket, AlertTriangle
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useToast } from '@/components/ui/ToastProvider';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useCartStore } from '@/store/cartStore';
 import api from '@/lib/api';
 import { FaImage, FaFilm, FaWallet, FaCreditCard } from 'react-icons/fa6';
 import { AnimatedButton, PageTransition } from '@/components/ui/Animations';
@@ -102,19 +103,12 @@ function DoohScheduler() {
   const [selectedCreative, setSelectedCreative] = useState<any | null>(null);
   const videoSeconds = selectedCreative?.duration_seconds || 60;
   
-  const [cart, setCart] = useState<any[]>([]);
+  const { cart, addToCart, addMultipleToCart, updateCartItem, getCartTotal } = useCartStore();
   const [liveBookings, setLiveBookings] = useState<any[]>([]);
   
   const [draft, setDraft] = useState<any>(null);
   const [dragging, setDragging] = useState(false);
   const [message, setMessage] = useState("");
-  const [showCheckout, setShowCheckout] = useState(false);
-  const [reserving, setReserving] = useState(false);
-  const [paying, setPaying] = useState(false);
-  const [bookingId, setBookingId] = useState<string | null>(null);
-  
-  const [checkoutItems, setCheckoutItems] = useState<any[]>([]);
-  const [checkoutTotal, setCheckoutTotal] = useState(0);
   const [spreadModal, setSpreadModal] = useState(false);
   const [spreadDuration, setSpreadDuration] = useState("4weeks");
   const [spreadPattern, setSpreadPattern] = useState("weekdays");
@@ -271,7 +265,7 @@ function DoohScheduler() {
       setMessage("That overlaps a booking already on this day — adjust the time.");
       return;
     }
-    setCart((prev) => [...prev, {
+    addToCart({
       id: crypto.randomUUID(),
       creative: selectedCreative,
       date: draft.date,
@@ -279,7 +273,7 @@ function DoohScheduler() {
       loops: draft.loops,
       durationSec: draftDurationSec,
       priceInfo: draftPrice
-    }]);
+    });
     setDraft(null);
     setMessage("");
     toast("Added to cart", "success");
@@ -334,7 +328,7 @@ function DoohScheduler() {
       dayIndex++;
     }
     
-    if (newItems.length > 0) setCart((prev) => [...prev, ...newItems]);
+    if (newItems.length > 0) addMultipleToCart(newItems);
     setSpreadModal(false);
     setDraft(null);
     setMessage(skipped > 0 ? `Added ${added} bookings. Skipped ${skipped} due to conflicts.` : `Successfully spread ${added} bookings.`);
@@ -366,61 +360,12 @@ function DoohScheduler() {
        toast("This time slot is already booked on this day. Choose another time.", "error"); return;
     }
     
-    setCart(prev => prev.map(c => c.id === editCartItem.id ? { ...c, startMin: newStartMin } : c));
+    updateCartItem(editCartItem.id, { startMin: newStartMin });
     setEditCartItem(null);
     toast("Time updated successfully", "success");
   }
 
-  function removeFromCart(id: any) { setCart((prev) => prev.filter((c) => c.id !== id)); }
-
-  const cartTotal = cart.reduce((s, c) => s + c.priceInfo.cost, 0);
-
-  const handleReserve = async () => {
-    if (cart.length === 0 || !selectedCreative) return;
-    setReserving(true);
-    try {
-      const slots = cart.map(c => {
-         const d = c.date;
-         const startDt = new Date(d.getFullYear(), d.getMonth(), d.getDate(), Math.floor(c.startMin / 60), c.startMin % 60);
-         const endDt = new Date(startDt.getTime() + c.durationSec * 1000);
-         return { start: startDt.toISOString(), end: endDt.toISOString(), mins: c.durationSec / 60 };
-      });
-
-      const res = await api.post('/bookings/reserve', {
-        screen_id: SCREEN_ID,
-        ad_id: selectedCreative.id,
-        slots: slots
-      });
-      setBookingId(res.data.booking_id);
-      setCheckoutItems(cart);
-      setCheckoutTotal(cartTotal);
-      setShowCheckout(true);
-    } catch (err: any) {
-      toast(err?.response?.data?.message || 'Failed to reserve slots', 'error');
-    } finally {
-      setReserving(false);
-    }
-  };
-
-  const handlePay = async (method: 'monnify' | 'wallet') => {
-    if (!bookingId) return;
-    setPaying(true);
-    try {
-      if (method === 'monnify') {
-        const res = await api.post('/payments/initialize', { booking_id: bookingId });
-        window.location.href = res.data.checkout_url || res.data.authorization_url;
-      } else {
-        const res = await api.post('/payments/wallet', { booking_id: bookingId });
-        toast(res.data.message || 'Payment successful!', 'success');
-        router.push('/bookings');
-      }
-    } catch (err: any) {
-      toast(err?.response?.data?.message || 'Payment failed', 'error');
-      setPaying(false);
-    }
-  };
-
-  function closeCheckout() { setShowCheckout(false); }
+  const cartTotal = getCartTotal();
 
   // ---- month calendar cells ----
   const monthCells = useMemo(() => {
@@ -482,7 +427,7 @@ function DoohScheduler() {
                 {[
                   { step: 1, label: "Choose Ad" },
                   { step: 2, label: "Schedule" },
-                  { step: 3, label: "Checkout" }
+                  
                 ].map((s) => (
                   <div key={s.step} style={{ display: "flex", alignItems: "center", gap: 8, opacity: currentStep === s.step ? 1 : 0.5 }}>
                     <div style={{
@@ -641,157 +586,17 @@ function DoohScheduler() {
                 </div>
               </div>
 
-              {/* RIGHT COLUMN: Cart / Summary Panel */}
+                            {/* RIGHT COLUMN: Cart Status */}
               <div style={{ background: theme.color.surface, borderRadius: 24, border: `1px solid ${theme.color.border2}`, padding: "28px 24px", position: "sticky", top: 24, boxShadow: theme.shadow.md, transition: "all 0.3s ease" }}>
-                 <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 24, color: theme.color.text1, letterSpacing: "-0.3px" }}>Booking Summary</div>
-                 
-                 {/* Selected Creative Summary */}
-                 <div style={{ marginBottom: 24 }}>
-                    <div style={{ fontSize: 12, fontWeight: 800, color: theme.color.text3, textTransform: "uppercase", letterSpacing: '0.05em', marginBottom: 10 }}>Selected Ad</div>
-                    <div style={{ background: theme.color.surface2, padding: 16, borderRadius: 14, display: "flex", flexDirection: "column", gap: 16, border: `1px solid ${theme.color.border}` }}>
-                       <div style={{ width: '100%', height: 160, borderRadius: 12, background: theme.color.surface, border: `1px solid ${theme.color.border}`, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
-                         {selectedCreative?.file_url ? (
-                           (selectedCreative.file_type || selectedCreative.media_type || '').includes('video') ? (
-                             <video 
-                               src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${selectedCreative.file_url}`} 
-                               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                               autoPlay muted loop playsInline 
-                             />
-                           ) : (
-                             <img 
-                               src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${selectedCreative.file_url}`} 
-                               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                               alt="Ad preview" 
-                             />
-                           )
-                         ) : (
-                           <FaFilm color={theme.color.text3} size={40} />
-                         )}
-                       </div>
-                       <div style={{ width: '100%', textAlign: 'center' }}>
-                         <p style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 800, color: theme.color.text1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{selectedCreative?.title || "No Ad Selected"}</p>
-                         <p className="mono" style={{ margin: 0, fontSize: 14, color: theme.color.text3, fontWeight: 500 }}>{videoSeconds} sec</p>
-                       </div>
-                    </div>
+                 <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 24, color: theme.color.text1, letterSpacing: "-0.3px" }}>Your Cart</div>
+                 <div style={{ textAlign: "center", padding: "20px 0" }}>
+                   <p style={{ fontSize: 16, fontWeight: 700, color: theme.color.text1 }}>{cart.length} slot(s) selected</p>
+                   <p className="mono" style={{ fontSize: 22, fontWeight: 900, color: theme.color.gold, margin: "10px 0 24px" }}>{naira(cartTotal)}</p>
+                   <AnimatedButton onClick={() => router.push('/cart')} disabled={cart.length === 0} style={{ width: "100%", background: cart.length > 0 ? theme.color.gold : theme.color.surface2, color: cart.length > 0 ? theme.color.charcoal900 : theme.color.text3, border: "none", padding: "16px", borderRadius: 12, fontSize: 15, fontWeight: 800, cursor: cart.length > 0 ? "pointer" : "not-allowed", display: "flex", justifyContent: "center", alignItems: "center", gap: 8, boxShadow: cart.length > 0 ? theme.shadow.gold : 'none' }}>
+                     Go to Cart <ChevronRight size={18} />
+                   </AnimatedButton>
                  </div>
-
-                 {/* Cart Items */}
-                 {cart.length > 0 ? (
-                   <>
-                     <div style={{ fontSize: 12, fontWeight: 800, color: theme.color.text3, textTransform: "uppercase", letterSpacing: '0.05em', marginBottom: 10 }}>Cart Items ({cart.length})</div>
-                     <div style={{ display: "flex", flexDirection: "column", gap: 10, maxHeight: 320, overflowY: "auto", marginBottom: 24, paddingRight: 4 }}>
-                       {cart.map(c => (
-                         <div key={c.id} style={{ background: theme.color.surface2, padding: "clamp(10px, 3vw, 12px) clamp(10px, 3vw, 14px)", borderRadius: 10, display: "flex", justifyContent: "space-between", alignItems: "center", border: `1px solid ${theme.color.border}`, flexWrap: "wrap", gap: 10 }}>
-                           <div>
-                             <div style={{ fontWeight: 800, color: theme.color.text1, marginBottom: 2, fontSize: "clamp(12px, 3.5vw, 14px)" }}>{c.date.toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
-                             <div className="mono" style={{ color: theme.color.text3, fontSize: "clamp(10px, 3vw, 11px)" }}>{formatMin(c.startMin)} - {formatDurationSec(c.durationSec)}</div>
-                           </div>
-                           <div className="w-full md:w-auto flex justify-between md:justify-end items-center" style={{ gap: "clamp(8px, 2vw, 12px)" }}>
-                             <span className="mono" style={{ fontWeight: 800, color: theme.color.success, fontSize: "clamp(13px, 4vw, 14px)" }}>{naira(c.priceInfo.cost)}</span>
-                             <div style={{ display: "flex", gap: "clamp(8px, 2vw, 12px)" }}>
-                               <button onClick={() => openCartEdit(c)} style={{ background: "none", border: "none", color: theme.color.text3, cursor: "pointer", padding: 4 }}><Clock size={15} /></button>
-                               <button onClick={() => removeFromCart(c.id)} style={{ background: "none", border: "none", color: theme.color.error, cursor: "pointer", padding: 4 }}><Trash2 size={15} /></button>
-                             </div>
-                           </div>
-                         </div>
-                       ))}
-                     </div>
-                     
-                     <div style={{ borderTop: `1px dashed ${theme.color.border}`, paddingTop: 20, marginBottom: 24 }}>
-                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                         <span style={{ fontSize: 15, color: theme.color.text2, fontWeight: 700 }}>Total Cost</span>
-                         <span className="mono" style={{ fontSize: 22, fontWeight: 900, color: theme.color.gold }}>{naira(cartTotal)}</span>
-                       </div>
-                     </div>
-
-                     <AnimatedButton onClick={() => setCurrentStep(3)} style={{ width: "100%", background: theme.color.gold, color: theme.color.charcoal900, border: "none", padding: "16px", borderRadius: 12, fontSize: 15, fontWeight: 800, cursor: "pointer", display: "flex", justifyContent: "center", alignItems: "center", gap: 8, boxShadow: theme.shadow.gold }}>
-                       Proceed to Checkout <ChevronRight size={18} />
-                     </AnimatedButton>
-                   </>
-                 ) : (
-                   <div style={{ textAlign: "center", padding: "40px 0", color: theme.color.text3, fontSize: 14 }}>
-                     <p style={{ margin: 0, fontWeight: 600 }}>Select a date to add slots to your cart.</p>
-                   </div>
-                 )}
               </div>
-            </div>
-          )}
-
-          {/* STEP 3: REVIEW & CHECKOUT */}
-          {currentStep === 3 && (
-            <div style={{ maxWidth: 750, margin: "0 auto", background: theme.color.surface, borderRadius: 16, border: `1px solid ${theme.color.border}`, padding: "40px 32px", boxShadow: theme.shadow.sm }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-                <button onClick={() => {
-                  setCurrentStep(2);
-                  if (bookingId) setBookingId(null);
-                }} style={{ background: theme.color.surface2, border: `1px solid ${theme.color.border}`, color: theme.color.text1, padding: "8px 16px", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 800, transition: "all 0.2s" }}>
-                  <ChevronLeft size={16} /> Back to Edit Cart
-                </button>
-                <div style={{ fontWeight: 800, fontSize: "clamp(18px, 5vw, 22px)", color: theme.color.text1 }}>Checkout</div>
-              </div>
-
-              {cart.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "80px 0", background: theme.color.surface2, borderRadius: 16, border: `1px dashed ${theme.color.border}` }}>
-                  <p style={{ fontSize: 16, color: theme.color.text3, fontWeight: 500 }}>Your cart is empty.</p>
-                  <AnimatedButton onClick={() => setCurrentStep(2)} style={{ marginTop: 24, background: theme.color.charcoal900, color: theme.color.surface, border: "none", padding: "12px 24px", borderRadius: 10, fontSize: 15, fontWeight: 800, cursor: "pointer" }}>
-                    Go Schedule Slots
-                  </AnimatedButton>
-                </div>
-              ) : (
-                <>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 32 }}>
-                    {[...cart].sort((a, b) => a.date.getTime() - b.date.getTime() || a.startMin - b.startMin).map((c) => (
-                      <div key={c.id} style={{ background: theme.color.surface2, borderRadius: 14, padding: "clamp(14px, 4vw, 20px) clamp(16px, 4vw, 24px)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "clamp(12px, 3vw, 20px)", border: `1px solid ${theme.color.border}`, flexWrap: "wrap" }}>
-                        <div className="mono" style={{ color: theme.color.text3, fontSize: "clamp(12px, 3vw, 14px)" }}>
-                          <div style={{ color: theme.color.text1, fontWeight: 800, marginBottom: 6, fontSize: "clamp(13px, 4vw, 16px)" }}>{c.date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}</div>
-                          <div>{formatMin(c.startMin)} – {formatMin(c.startMin + Math.round(c.durationSec / 60))} · {formatDurationSec(c.durationSec)} airtime</div>
-                        </div>
-                        <div className="w-full md:w-auto flex justify-between md:justify-end items-center" style={{ gap: "clamp(10px, 3vw, 14px)" }}>
-                          <span className="mono" style={{ color: theme.color.success, fontWeight: 800, fontSize: "clamp(15px, 4.5vw, 18px)" }}>{naira(c.priceInfo.cost)}</span>
-                          <div style={{ display: "flex", gap: "clamp(10px, 3vw, 14px)" }}>
-                            <button onClick={() => openCartEdit(c)} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: "clamp(6px, 2vw, 10px)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: theme.color.text3 }}>
-                              <Clock size={16} />
-                            </button>
-                            <button onClick={() => removeFromCart(c.id)} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: "clamp(6px, 2vw, 10px)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                              <Trash2 size={16} color={theme.color.error} />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div style={{ background: theme.color.charcoal900, borderRadius: 16, padding: "clamp(16px, 4vw, 24px) clamp(20px, 5vw, 32px)", marginBottom: 32, color: '#fff', boxShadow: theme.shadow.md }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                      <span style={{ fontWeight: 700, fontSize: "clamp(14px, 3.5vw, 16px)", color: theme.color.text4 }}>Total Airtime</span>
-                      <span className="mono" style={{ fontWeight: 700, fontSize: "clamp(14px, 3.5vw, 16px)" }}>{cart.length} block(s)</span>
-                    </div>
-                    <div style={{ height: 1, background: "rgba(255,255,255,0.1)", marginBottom: 20 }} />
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontWeight: 800, fontSize: "clamp(16px, 4vw, 20px)" }}>Total Amount</span>
-                      <span className="mono" style={{ color: theme.color.gold, fontWeight: 900, fontSize: "clamp(20px, 6vw, 28px)" }}>{naira(cartTotal)}</span>
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", gap: 20, flexDirection: "column" }}>
-                    {bookingId ? (
-                       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                         <div style={{ textAlign: "center", color: theme.color.success, fontWeight: 800, marginBottom: 8, fontSize: 16 }}>Slots reserved successfully! Choose a payment method:</div>
-                         <AnimatedButton onClick={() => handlePay('wallet')} disabled={paying} style={{ background: theme.color.charcoal900, color: '#fff', border: 'none', padding: '18px', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                           <FaWallet size={20} /> Pay from Wallet
-                         </AnimatedButton>
-                         <AnimatedButton onClick={() => handlePay('monnify')} disabled={paying} style={{ background: theme.color.goldLight, color: theme.color.goldDark, border: `2px solid ${theme.color.goldMid}`, padding: '18px', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                           <FaCreditCard size={20} /> Pay with Card / Bank
-                         </AnimatedButton>
-                       </div>
-                    ) : (
-                      <AnimatedButton onClick={handleReserve} disabled={reserving} style={{ width: "100%", padding: "18px 0", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontWeight: 800, fontSize: 18, cursor: reserving ? 'not-allowed' : 'pointer', opacity: reserving ? 0.7 : 1, display: "flex", gap: 10, alignItems: "center", justifyContent: "center", boxShadow: theme.shadow.gold }}>
-                        {reserving ? 'Reserving Slots...' : <>Reserve & Proceed to Payment</>}
-                      </AnimatedButton>
-                    )}
-                  </div>
-                </>
-              )}
             </div>
           )}
 

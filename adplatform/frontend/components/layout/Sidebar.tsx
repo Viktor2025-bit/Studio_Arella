@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, CalendarCheck, Megaphone, Film, DollarSign, Settings, HelpCircle, X, Shield, Calendar, Paintbrush, Monitor, BarChart2, Mic, ClipboardList } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, Megaphone, Film, DollarSign, Settings, HelpCircle, X, Shield, Calendar, Paintbrush, Monitor, BarChart2, Mic, ClipboardList, ShoppingCart } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { theme } from '@/lib/theme';
 
@@ -19,6 +19,7 @@ const advertiserNav = [
   { href: '/campaigns',  label: 'My Campaigns',     icon: Megaphone },
   { href: '/creative',   label: 'Request Creative', icon: Paintbrush },
   { href: '/finances',   label: 'Finances',         icon: DollarSign },
+  { href: '/cart',       label: 'Cart',             icon: ShoppingCart },
 ];
 
 const adminNav = [
