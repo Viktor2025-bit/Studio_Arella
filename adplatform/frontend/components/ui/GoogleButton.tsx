@@ -8,7 +8,7 @@ const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 interface GoogleButtonProps { label?: string; }
 
 export default function GoogleButton({ label = 'Continue with Google' }: GoogleButtonProps) {
-  const handleClick = () => { window.location.href = `${API}/auth/google`; };
+  const handleClick = () => { window.location.href = `${API}/auth/google?t=${Date.now()}`; };
   return (
     <button onClick={handleClick} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 11, padding: '12px 16px', background: theme.color.surface, border: `1.5px solid ${theme.color.border}`, borderRadius: theme.radius.sm, color: theme.color.text2, fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: F, transition: 'border-color 0.15s, box-shadow 0.15s' }}
       onMouseOver={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = theme.color.text4; (e.currentTarget as HTMLButtonElement).style.boxShadow = theme.shadow.sm; }}

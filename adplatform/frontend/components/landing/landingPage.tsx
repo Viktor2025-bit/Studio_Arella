@@ -270,22 +270,29 @@ export default function LandingPage() {
 
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-            style={{ position: 'fixed', top: 68, left: 0, right: 0, zIndex: 99, background: '#ffffff', borderBottom: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {[['#services', 'Services'], ['#how', 'How it works'], ['#pricing', 'Pricing'], ['#faq', 'FAQ'], ['#podcast-studio', 'Podcast Studio']].map(([h, l]) => (
-              <a key={h} href={h} onClick={() => setMobileMenuOpen(false)} style={{ color: '#0f172a', textDecoration: 'none', fontSize: 16, fontWeight: 700, padding: '12px 0', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>{l}</a>
-            ))}
-            <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-              <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)} style={{ flex: 1, textAlign: 'center', padding: '12px', border: '2px solid rgba(0,0,0,0.1)', borderRadius: 12, color: '#475569', textDecoration: 'none', fontSize: 14, fontWeight: 700 }}>Sign in</Link>
-              <Link href="/auth/register" onClick={() => setMobileMenuOpen(false)} style={{ flex: 1, textAlign: 'center', padding: '12px', background: '#D4AF37', borderRadius: 12, color: '#ffffff', textDecoration: 'none', fontSize: 14, fontWeight: 800 }}>Get started</Link>
-            </div>
-          </motion.div>
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ position: 'fixed', top: 68, bottom: 0, left: 0, right: 0, zIndex: 98, background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(2px)' }}
+            />
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+              style={{ position: 'fixed', top: 68, left: 0, right: 0, zIndex: 99, background: '#ffffff', borderBottom: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {[['#services', 'Services'], ['#how', 'How it works'], ['#pricing', 'Pricing'], ['#faq', 'FAQ'], ['#podcast-studio', 'Podcast Studio']].map(([h, l]) => (
+                <a key={h} href={h} onClick={() => setMobileMenuOpen(false)} style={{ color: '#0f172a', textDecoration: 'none', fontSize: 16, fontWeight: 700, padding: '12px 0', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>{l}</a>
+              ))}
+              <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+                <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)} style={{ flex: 1, textAlign: 'center', padding: '12px', border: '2px solid rgba(0,0,0,0.1)', borderRadius: 12, color: '#475569', textDecoration: 'none', fontSize: 14, fontWeight: 700 }}>Sign in</Link>
+                <Link href="/auth/register" onClick={() => setMobileMenuOpen(false)} style={{ flex: 1, textAlign: 'center', padding: '12px', background: '#D4AF37', borderRadius: 12, color: '#ffffff', textDecoration: 'none', fontSize: 14, fontWeight: 800 }}>Get started</Link>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
       {/* HERO */}
       <section style={{ minHeight: '100vh', paddingTop: 68, display: 'flex', alignItems: 'center', position: 'relative', zIndex: 2 }}>
-        <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto', padding: '80px 24px' }}>
+        <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto', padding: 'var(--landing-py-sm, 80px) 24px' }}>
           <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 64, alignItems: 'center' }}>
             <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 100, padding: '6px 16px', marginBottom: 28, boxShadow: '0 4px 12px rgba(0,0,0,0.2)', backdropFilter: 'blur(8px)' }}>
@@ -350,7 +357,7 @@ export default function LandingPage() {
       <section style={{ background: 'rgba(0,0,0,0.02)', borderTop: '1px solid rgba(0,0,0,0.05)', borderBottom: '1px solid rgba(0,0,0,0.05)', padding: '32px 24px', position: 'relative', zIndex: 2, backdropFilter: 'blur(10px)' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', gap: 48, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
           {[['WITHOUT US', 'Cold-call billboard companies. Rent mediocre podcast gear. Wait weeks. Opaque pricing. Middlemen.', '#94A3B8', 'rgba(0,0,0,0.05)'], ['WITH STUDIO ARELLA', 'Book screens or studios online in minutes. Pay securely. Ad goes live instantly. Premium gear ready.', '#D4AF37', 'rgba(212,175,55,0.1)']].map(([l, t, c, bg]) => (
-            <div key={l as string} style={{ display: 'flex', gap: 16, alignItems: 'flex-start', maxWidth: 440 }}>
+            <div key={l as string} className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start max-w-[440px]">
               <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.1em', color: c as string, background: bg as string, padding: '6px 12px', borderRadius: 100, flexShrink: 0, marginTop: 2, textTransform: 'uppercase', whiteSpace: 'nowrap', border: `1px solid ${bg === 'rgba(212,175,55,0.1)' ? 'rgba(212,175,55,0.2)' : 'rgba(0,0,0,0.1)'}` }}>{l as string}</span>
               <p style={{ fontSize: 15, color: '#475569', lineHeight: 1.7, margin: 0, fontWeight: 600 }}>{t as string}</p>
             </div>
@@ -359,14 +366,14 @@ export default function LandingPage() {
       </section>
 
       {/* SERVICES */}
-      <section id="services" style={{ padding: '120px 24px', position: 'relative', zIndex: 2 }}>
+      <section id="services" style={{ padding: 'var(--landing-py, 120px) 24px', position: 'relative', zIndex: 2 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }} ref={servicesReveal.ref}>
           <motion.div initial={{ opacity: 0, y: 24 }} animate={servicesReveal.visible ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5 }} style={{ textAlign: 'center', marginBottom: 64 }}>
             <p style={{ fontSize: 13, fontWeight: 800, color: '#D4AF37', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12, textShadow: '0 0 20px rgba(212,175,55,0.5)' }}>What we offer</p>
             <h2 style={{ fontSize: 'clamp(32px,4vw,52px)', fontWeight: 900, letterSpacing: '-1.5px', color: '#0f172a', margin: '0 0 16px', lineHeight: 1.1 }}>Everything your brand needs<br />to get seen in Umuahia</h2>
             <p style={{ fontSize: 18, color: '#475569', maxWidth: 600, margin: '0 auto', lineHeight: 1.7, fontWeight: 500 }}>From digital screen bookings to professional creative production — we handle every part of your advertising journey.</p>
           </motion.div>
-          <div className="services-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 24 }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {SERVICES.map((s, i) => (
               <motion.div key={s.title} className="service-card" initial={{ opacity: 0, y: 24 }} animate={servicesReveal.visible ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: i * 0.1 }}
                 style={{ border: '1px solid rgba(0,0,0,0.08)', borderRadius: 24, padding: '40px 32px' }}>
@@ -383,13 +390,13 @@ export default function LandingPage() {
       </section>
 
       {/* HOW */}
-      <section id="how" style={{ padding: '120px 24px', background: 'rgba(0,0,0,0.02)', borderTop: '1px solid rgba(0,0,0,0.05)', borderBottom: '1px solid rgba(0,0,0,0.05)', position: 'relative', zIndex: 2, backdropFilter: 'blur(10px)' }}>
+      <section id="how" style={{ padding: 'var(--landing-py, 120px) 24px', background: 'rgba(0,0,0,0.02)', borderTop: '1px solid rgba(0,0,0,0.05)', borderBottom: '1px solid rgba(0,0,0,0.05)', position: 'relative', zIndex: 2, backdropFilter: 'blur(10px)' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }} ref={howReveal.ref}>
           <motion.div initial={{ opacity: 0, y: 24 }} animate={howReveal.visible ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5 }} style={{ textAlign: 'center', marginBottom: 80 }}>
             <p style={{ fontSize: 13, fontWeight: 800, color: '#06B6D4', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12, textShadow: '0 0 20px rgba(6,182,212,0.5)' }}>The process</p>
             <h2 style={{ fontSize: 'clamp(32px,4vw,52px)', fontWeight: 900, letterSpacing: '-1.5px', color: '#0f172a', margin: 0, lineHeight: 1.1 }}>From sign-up to screen<br />in four simple steps</h2>
           </motion.div>
-          <div className="how-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 20, position: 'relative' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 relative">
             <div style={{ position: 'absolute', top: 32, left: '12.5%', right: '12.5%', height: 2, background: 'rgba(0,0,0,0.1)', zIndex: 0 }} />
             {HOW.map((s, i) => (
               <motion.div key={s.n} initial={{ opacity: 0, y: 24 }} animate={howReveal.visible ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: i * 0.12 }}
@@ -411,7 +418,7 @@ export default function LandingPage() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" style={{ padding: '120px 24px', position: 'relative', zIndex: 2 }}>
+      <section id="pricing" style={{ padding: 'var(--landing-py, 120px) 24px', position: 'relative', zIndex: 2 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }} ref={plansReveal.ref}>
           <motion.div initial={{ opacity: 0, y: 24 }} animate={plansReveal.visible ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5 }} style={{ textAlign: 'center', marginBottom: 72 }}>
             <p style={{ fontSize: 13, fontWeight: 800, color: '#EAB308', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12, textShadow: '0 0 20px rgba(234,179,8,0.5)' }}>Pricing</p>
@@ -420,7 +427,7 @@ export default function LandingPage() {
           </motion.div>
 
           <h3 style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', margin: '0 0 32px', textAlign: 'center', letterSpacing: '-0.5px' }}>Digital Screen Packages</h3>
-          <div className="plans-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24, marginBottom: 80 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-20">
             {PLANS.map((p, i) => (
               <motion.div key={p.name} className="plan-card" initial={{ opacity: 0, y: 24 }} animate={plansReveal.visible ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5, delay: i * 0.08 }}
                 style={{ border: `2px solid ${p.popular ? '#EAB308' : 'rgba(0,0,0,0.08)'}`, borderRadius: 24, padding: '36px 32px', position: 'relative', boxShadow: p.popular ? '0 0 40px rgba(234,179,8,0.2)' : 'none' }}>
@@ -455,9 +462,9 @@ export default function LandingPage() {
         </div>
       </section>
       {/* STATS */}
-      <section style={{ padding: '80px 24px', position: 'relative', zIndex: 2 }}>
+      <section style={{ padding: 'var(--landing-py-sm, 80px) 24px', position: 'relative', zIndex: 2 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }} ref={statsReveal.ref}>
-          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 32 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             <StatCard value={15000} suffix="+" label="Daily road users at Bems Junction" start={statsReveal.visible} />
             <StatCard value={1000} suffix="" label="₦ to get started today" start={statsReveal.visible} />
             <StatCard value={3} suffix="+" label="Podcast mics & pro cameras ready" start={statsReveal.visible} />
@@ -467,8 +474,8 @@ export default function LandingPage() {
       </section>
 
       {/* ABOUT */}
-      <section style={{ padding: '120px 24px', background: 'rgba(0,0,0,0.02)', borderTop: '1px solid rgba(0,0,0,0.05)', borderBottom: '1px solid rgba(0,0,0,0.05)', position: 'relative', zIndex: 2, backdropFilter: 'blur(10px)' }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }}>
+      <section style={{ padding: 'var(--landing-py, 120px) 24px', background: 'rgba(0,0,0,0.02)', borderTop: '1px solid rgba(0,0,0,0.05)', borderBottom: '1px solid rgba(0,0,0,0.05)', position: 'relative', zIndex: 2, backdropFilter: 'blur(10px)' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center max-w-[1200px] mx-auto">
           <div>
             <p style={{ fontSize: 13, fontWeight: 800, color: '#D4AF37', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16, textShadow: '0 0 20px rgba(212,175,55,0.5)' }}>About Studio Arella</p>
             <h2 style={{ fontSize: 'clamp(30px,3.5vw,46px)', fontWeight: 900, letterSpacing: '-1.5px', color: '#0f172a', margin: '0 0 24px', lineHeight: 1.15 }}>Umuahia's premier media and advertising hub</h2>
@@ -500,7 +507,7 @@ export default function LandingPage() {
       </section>
 
       {/* TESTIMONIALS */}
-      <section style={{ padding: '120px 24px', position: 'relative', zIndex: 2 }}>
+      <section style={{ padding: 'var(--landing-py, 120px) 24px', position: 'relative', zIndex: 2 }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 64 }}>
             <p style={{ fontSize: 13, fontWeight: 800, color: '#EAB308', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12, textShadow: '0 0 20px rgba(234,179,8,0.5)' }}>What people say</p>
@@ -522,7 +529,7 @@ export default function LandingPage() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" style={{ padding: '120px 24px', background: 'rgba(0,0,0,0.02)', borderTop: '1px solid rgba(0,0,0,0.05)', position: 'relative', zIndex: 2, backdropFilter: 'blur(10px)' }}>
+      <section id="faq" style={{ padding: 'var(--landing-py, 120px) 24px', background: 'rgba(0,0,0,0.02)', borderTop: '1px solid rgba(0,0,0,0.05)', position: 'relative', zIndex: 2, backdropFilter: 'blur(10px)' }}>
         <div style={{ maxWidth: 800, margin: '0 auto' }} ref={faqReveal.ref}>
           <motion.div initial={{ opacity: 0, y: 24 }} animate={faqReveal.visible ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.5 }} style={{ textAlign: 'center', marginBottom: 56 }}>
             <h2 style={{ fontSize: 'clamp(32px,3.5vw,46px)', fontWeight: 900, letterSpacing: '-1.5px', color: '#0f172a', margin: '0 0 16px' }}>Frequently Asked Questions</h2>
@@ -539,8 +546,8 @@ export default function LandingPage() {
       </section>
 
       {/* PODCAST STUDIO */}
-      <section id="podcast-studio" style={{ padding: '120px 24px', position: 'relative', zIndex: 2 }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 80, alignItems: 'center' }}>
+      <section id="podcast-studio" style={{ padding: 'var(--landing-py, 120px) 24px', position: 'relative', zIndex: 2 }}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center max-w-[1200px] mx-auto">
           <div style={{ position: 'relative', perspective: 1000, height: 500 }}>
             <div style={{ borderRadius: 32, overflow: 'hidden', boxShadow: '0 30px 60px rgba(0,0,0,0.5), 0 0 40px rgba(139,92,246,0.15)', transform: 'rotateY(-5deg) rotateX(2deg)', height: '100%', border: '1px solid rgba(139,92,246,0.2)' }}>
               <PodcastCarousel />
@@ -567,7 +574,7 @@ export default function LandingPage() {
       </section>
 
       {/* DUAL CTA */}
-      <section style={{ padding: '60px 24px 120px', background: '#ffffff', position: 'relative', zIndex: 2 }}>
+      <section style={{ padding: 'var(--landing-py-half, 60px) 24px var(--landing-py, 120px)', background: '#ffffff', position: 'relative', zIndex: 2 }}>
         <div className="dual-cta-grid" style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 24 }}>
           <div style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.2) 0%, rgba(6,182,212,0.2) 100%)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 32, padding: '48px 40px', position: 'relative', overflow: 'hidden', color: '#0f172a', boxShadow: '0 20px 60px rgba(212,175,55,0.15)', backdropFilter: 'blur(20px)' }}>
             <div style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, background: 'rgba(0,0,0,0.1)', borderRadius: '50%', filter: 'blur(40px)' }} />

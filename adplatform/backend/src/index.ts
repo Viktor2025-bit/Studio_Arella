@@ -1,11 +1,9 @@
+import 'dotenv/config'; // MUST be at the top before other imports that use process.env
 import express from 'express'; // nodemon restart trigger 2
 import cors from 'cors';
-import dotenv from 'dotenv';
 import path from 'path';
 import router from './routes';
 import { startBookingLifecycleCron } from './cron/bookingLifecycle';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;

@@ -145,6 +145,20 @@ a {
 .show-on-mobile { display: none; }
 .show-on-mobile-flex { display: none; }
 
+:root {
+  --landing-py: 120px;
+  --landing-py-sm: 80px;
+  --landing-py-half: 60px;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --landing-py: 64px;
+    --landing-py-sm: 48px;
+    --landing-py-half: 32px;
+  }
+}
+
 .main-wrapper {
   margin-left: 240px;
   transition: margin-left 0.3s ease;

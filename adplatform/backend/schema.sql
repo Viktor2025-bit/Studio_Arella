@@ -7,8 +7,13 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(255) NOT NULL,
+  first_name VARCHAR(255),
+  last_name VARCHAR(255),
   email VARCHAR(255) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL DEFAULT '',
+  business_name VARCHAR(255),
+  phone VARCHAR(50),
+  email_verified BOOLEAN DEFAULT false,
   avatar VARCHAR(500),
   google_id VARCHAR(255),
   role VARCHAR(50) DEFAULT 'advertiser', -- 'advertiser' | 'admin'
@@ -16,6 +21,15 @@ CREATE TABLE IF NOT EXISTS users (
   language VARCHAR(10) DEFAULT 'en',
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Email Verification Tokens
+CREATE TABLE IF NOT EXISTS email_verification_tokens (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  token VARCHAR(255) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Campaigns table

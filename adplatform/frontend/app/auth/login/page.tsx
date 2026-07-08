@@ -55,10 +55,10 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ fontFamily: F, minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #0a0a0a 100%)', display: 'grid', gridTemplateColumns: '1fr 1fr', color: '#F8FAFC' }}>
+    <div className="grid grid-cols-1 lg:grid-cols-2" style={{ fontFamily: F, minHeight: '100vh', background: 'linear-gradient(135deg, #0f172a 0%, #0a0a0a 100%)', color: '#F8FAFC' }}>
 
       {/* Left panel */}
-      <div style={{ background: `linear-gradient(to right, rgba(5,5,5,0.95), rgba(5,5,5,0.6)), url("https://images.unsplash.com/photo-1511268559489-34b624fbfcf5?w=1200&q=85&auto=format&fit=crop")`, backgroundSize: 'cover', backgroundPosition: 'center', padding: 48, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', position: 'relative', overflow: 'hidden', borderRight: '1px solid rgba(255,255,255,0.15)' }}>
+      <div className="hidden lg:flex flex-col justify-between" style={{ background: `linear-gradient(to right, rgba(5,5,5,0.95), rgba(5,5,5,0.6)), url("https://images.unsplash.com/photo-1511268559489-34b624fbfcf5?w=1200&q=85&auto=format&fit=crop")`, backgroundSize: 'cover', backgroundPosition: 'center', padding: 48, position: 'relative', overflow: 'hidden', borderRight: '1px solid rgba(255,255,255,0.15)' }}>
         <div style={{ position: 'absolute', bottom: -60, right: -60, width: 320, height: 320, background: 'radial-gradient(circle, rgba(212,175,55,0.15) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(40px)' }} />
         <div style={{ position: 'absolute', top: -40, left: -40, width: 200, height: 200, background: 'radial-gradient(circle, rgba(6,182,212,0.1) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(40px)' }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
@@ -93,12 +93,13 @@ export default function LoginPage() {
       </div>
 
       {/* Right — form */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 56px', background: '#0a0a0a', position: 'relative' }}>
+      <div className="flex items-center justify-center p-6 md:p-12 lg:p-14" style={{ background: '#0a0a0a', position: 'relative' }}>
         
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 400, height: 400, background: 'radial-gradient(circle, rgba(212,175,55,0.05) 0%, transparent 60%)', filter: 'blur(50px)', pointerEvents: 'none' }} />
 
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} 
-          style={{ width: '100%', maxWidth: 420, position: 'relative', zIndex: 1, background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 24, padding: '40px', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)' }}>
+          className="w-full max-w-[420px] p-6 md:p-10"
+          style={{ position: 'relative', zIndex: 1, background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)' }}>
           
           <h1 style={{ fontSize: 26, fontWeight: 900, color: '#F8FAFC', margin: '0 0 4px', letterSpacing: '-0.5px' }}>Sign in</h1>
           <p style={{ fontSize: 14, color: '#94A3B8', margin: '0 0 28px', fontWeight: 500 }}>
