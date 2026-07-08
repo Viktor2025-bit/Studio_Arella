@@ -16,14 +16,14 @@ const SCREEN_ID = '00000000-0000-0000-0000-000000000001';
 const START_HOUR = 7;
 const END_HOUR = 20; // 8 PM
 const DAY_MIN = (END_HOUR - START_HOUR) * 60;
-const PPM = 1.4; 
+const PPM = 1000; 
 
 function calcCost(totalSeconds: number, rate: number) {
   if (totalSeconds <= 0) return { cost: 0, base: 0, extra: 0, extraSeconds: 0 };
-  if (totalSeconds <= 60) return { cost: rate, base: rate, extra: 0, extraSeconds: 0 };
-  const extraSeconds = totalSeconds - 60;
-  const extra = Math.round(extraSeconds * (rate / 60) * 100) / 100;
-  const cost = Math.round((rate + extra) * 100) / 100;
+  const totalMinutes = Math.ceil(totalSeconds / 60);
+  const cost = totalMinutes * rate;
+  const extra = totalMinutes > 1 ? cost - rate : 0;
+  const extraSeconds = totalSeconds > 60 ? totalSeconds - 60 : 0;
   return { cost, base: rate, extra, extraSeconds };
 }
 
@@ -836,7 +836,7 @@ function DoohScheduler() {
                                 boxShadow: isSelected ? theme.shadow.gold : "0 1px 2px rgba(0,0,0,0.03)"
                               }}
                               className="mono">
-                              1m
+                              :{String(m).padStart(2, '0')}
                             </button>
                           );
                         })}
