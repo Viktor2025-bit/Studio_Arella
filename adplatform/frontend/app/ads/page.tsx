@@ -422,7 +422,12 @@ export default function AdsPage() {
                         File <span style={{ color: theme.color.text3, fontWeight: 400, textTransform: 'none' }}>— MP4, MOV (video) or JPG, PNG, GIF (image)</span>
                       </label>
                       {!selectedFile ? (
-                        <FileDropZone onFile={f => setSelectedFile(f)} />
+                        <FileDropZone onFile={f => {
+                          setSelectedFile(f);
+                          if (!title.trim()) {
+                            setTitle(f.name.replace(/\.[^/.]+$/, ""));
+                          }
+                        }} />
                       ) : (
                         <div>
                           <FilePreview file={selectedFile} onDurationChange={setVideoDuration} />
@@ -437,13 +442,6 @@ export default function AdsPage() {
                       )}
                     </div>
 
-                    {!uploading && (
-                      <div style={{ background: theme.color.goldLight, border: `1px solid ${theme.color.goldMid}`, borderRadius: 10, padding: '10px 14px' }}>
-                        <p style={{ fontSize: 12, color: theme.color.goldDark, margin: 0, lineHeight: 1.55 }}>
-                          After uploading, your creative enters our <strong>review queue</strong>. You'll receive an email once approved. Only approved creatives can be used in bookings.
-                        </p>
-                      </div>
-                    )}
                   </div>
 
                   {!uploading ? (
