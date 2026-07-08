@@ -524,7 +524,7 @@ function DoohScheduler() {
 
           {/* STEP 2: SCHEDULE */}
           {currentStep === 2 && (
-            <div className="booking-layout">
+            <div style={{ maxWidth: 900, margin: "0 auto", width: "100%" }}>
               
               {/* LEFT COLUMN: Calendar */}
               <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%" }}>
@@ -586,17 +586,7 @@ function DoohScheduler() {
                 </div>
               </div>
 
-                            {/* RIGHT COLUMN: Cart Status */}
-              <div style={{ background: theme.color.surface, borderRadius: 24, border: `1px solid ${theme.color.border2}`, padding: "28px 24px", position: "sticky", top: 24, boxShadow: theme.shadow.md, transition: "all 0.3s ease" }}>
-                 <div style={{ fontWeight: 800, fontSize: 20, marginBottom: 24, color: theme.color.text1, letterSpacing: "-0.3px" }}>Your Cart</div>
-                 <div style={{ textAlign: "center", padding: "20px 0" }}>
-                   <p style={{ fontSize: 16, fontWeight: 700, color: theme.color.text1 }}>{cart.length} slot(s) selected</p>
-                   <p className="mono" style={{ fontSize: 22, fontWeight: 900, color: theme.color.gold, margin: "10px 0 24px" }}>{naira(cartTotal)}</p>
-                   <AnimatedButton onClick={() => router.push('/cart')} disabled={cart.length === 0} style={{ width: "100%", background: cart.length > 0 ? theme.color.gold : theme.color.surface2, color: cart.length > 0 ? theme.color.charcoal900 : theme.color.text3, border: "none", padding: "16px", borderRadius: 12, fontSize: 15, fontWeight: 800, cursor: cart.length > 0 ? "pointer" : "not-allowed", display: "flex", justifyContent: "center", alignItems: "center", gap: 8, boxShadow: cart.length > 0 ? theme.shadow.gold : 'none' }}>
-                     Go to Cart <ChevronRight size={18} />
-                   </AnimatedButton>
-                 </div>
-              </div>
+
             </div>
           )}
 
