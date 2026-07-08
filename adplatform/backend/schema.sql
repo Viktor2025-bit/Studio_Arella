@@ -161,7 +161,7 @@ CREATE TRIGGER update_bookings_updated_at BEFORE UPDATE ON bookings FOR EACH ROW
 
 -- Seed sample data (optional)
 INSERT INTO users (name, email, password, role, credits) VALUES
-  ('Admin User', 'admin@adplatform.com', '$2a$10$placeholder_hashed_password', 'admin', 5000.00)
+  ('Admin User', 'admin@adplatform.com', '$2a$10$5BCerMbhZVSkp4kwhjtHNO34SGkTC2jYmwf.jGj0p2g130hsdHtca', 'admin', 5000.00)
 ON CONFLICT (email) DO NOTHING;
 
 -- Migration: add google_id column if it doesn't exist (run this if you already created the DB)
