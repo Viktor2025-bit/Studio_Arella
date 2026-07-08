@@ -10,6 +10,8 @@ import api from '@/lib/api';
 import { FaWallet, FaCreditCard } from 'react-icons/fa6';
 import { AnimatedButton, PageTransition } from '@/components/ui/Animations';
 import { theme } from '@/lib/theme';
+import EditCartModal from '@/components/ui/EditCartModal';
+import { CartItem } from '@/store/cartStore';
 
 const SCREEN_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -39,6 +41,8 @@ export default function CartPage() {
   const [reserving, setReserving] = useState(false);
   const [paying, setPaying] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
+  const [editingItem, setEditingItem] = useState<CartItem | null>(null);
+  const [initialTab, setInitialTab] = useState<'time' | 'period'>('time');
 
   const cartTotal = getCartTotal();
 
@@ -89,8 +93,9 @@ export default function CartPage() {
   };
 
   return (
-    <DashboardLayout>
-      <PageTransition>
+    <>
+      <DashboardLayout>
+        <PageTransition>
         <div style={{ maxWidth: 750, margin: "0 auto", padding: "40px 20px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
             <button onClick={() => router.push('/book')} style={{ background: theme.color.surface2, border: `1px solid ${theme.color.border}`, color: theme.color.text1, padding: "8px 16px", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 800, transition: "all 0.2s" }}>
@@ -129,7 +134,10 @@ export default function CartPage() {
                       <div className="w-full md:w-auto flex justify-between md:justify-end items-center" style={{ gap: "clamp(10px, 3vw, 14px)" }}>
                         <span className="mono" style={{ color: theme.color.success, fontWeight: 800, fontSize: "clamp(15px, 4.5vw, 18px)" }}>{naira(c.priceInfo.cost)}</span>
                         <div style={{ display: "flex", gap: "clamp(10px, 3vw, 14px)" }}>
-                          <button onClick={() => { removeFromCart(c.id); router.push('/book'); }} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: "clamp(6px, 2vw, 10px)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: theme.color.text2 }} title="Edit">
+                          <button onClick={() => { setEditingItem(c); setInitialTab('period'); }} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: "clamp(6px, 2vw, 10px)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: theme.color.text2 }} title="Change Period">
+                            <Clock size={16} />
+                          </button>
+                          <button onClick={() => { setEditingItem(c); setInitialTab('time'); }} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: "clamp(6px, 2vw, 10px)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: theme.color.text2 }} title="Edit Loops & Time">
                             <Edit2 size={16} />
                           </button>
                           <button onClick={() => removeFromCart(c.id)} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: "clamp(6px, 2vw, 10px)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }} title="Delete">
@@ -176,5 +184,13 @@ export default function CartPage() {
         </div>
       </PageTransition>
     </DashboardLayout>
+      {editingItem && (
+        <EditCartModal 
+          item={editingItem} 
+          onClose={() => setEditingItem(null)} 
+          initialTab={initialTab} 
+        />
+      )}
+    </>
   );
 }
