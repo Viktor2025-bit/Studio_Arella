@@ -15,6 +15,7 @@ interface User {
   phone?: string;
   logo_url?: string;
   email_verified?: boolean;
+  terms_accepted?: boolean;
 }
 
 interface AuthState {
@@ -26,6 +27,7 @@ interface AuthState {
   logout: () => void;
   loadFromStorage: () => void;
   updateUser: (data: Partial<User>) => void;
+  checkAuth: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -82,5 +84,15 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (updated) localStorage.setItem('user', JSON.stringify(updated));
       return { user: updated };
     });
+  },
+
+  checkAuth: async () => {
+    try {
+      const { data } = await api.get('/auth/me');
+      set({ user: data });
+      localStorage.setItem('user', JSON.stringify(data));
+    } catch (err) {
+      console.error('Failed to fetch user:', err);
+    }
   },
 }));

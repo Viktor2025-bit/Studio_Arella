@@ -46,7 +46,7 @@ export default function TermsModal({ onAccept }: TermsModalProps) {
         maxHeight: '90vh',
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: theme.shadow.xl,
+        boxShadow: theme.shadow.lg,
         overflow: 'hidden',
         border: `1px solid ${theme.color.border}`
       }}>
