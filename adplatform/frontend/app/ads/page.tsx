@@ -218,7 +218,7 @@ export default function AdsPage() {
   };
 
   const statusInfo: Record<string, { text: string; bg: string; color: string }> = {
-    pending:  { text: 'Awaiting admin review before you can use this creative in a booking.', bg: theme.color.goldLight, color: theme.color.goldDark },
+    pending:  { text: 'This creative is currently pending and cannot be used yet.', bg: theme.color.goldLight, color: theme.color.goldDark },
     approved: { text: 'Approved! You can now attach this creative to a booking.', bg: theme.color.successLight, color: '#2F6A3B' },
     rejected: { text: 'Rejected by admin — see reason below. Please re-upload a corrected version.', bg: theme.color.errorLight, color: '#8F3226' },
   };
@@ -231,12 +231,11 @@ export default function AdsPage() {
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 4 }}>
-                <FaFilm size={17} color={theme.color.gold} />
-                <h1 style={{ fontFamily: theme.font.display, fontSize: 24, fontWeight: 600, color: theme.color.text1, margin: 0 }}>My Ad Creatives</h1>
-              </div>
-              <p style={{ fontSize: 13, color: theme.color.text3, margin: 0 }}>
-                Upload your videos and images here. All creatives are reviewed by our team before going live.
+              <h2 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: theme.color.text1, letterSpacing: '-0.5px', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <FaFilm size={24} color={theme.color.gold} /> My Ad Creatives
+              </h2>
+              <p style={{ fontSize: 13, color: theme.color.text3, margin: '4px 0 0' }}>
+                Upload your videos and images here. All creatives are instantly available for your bookings.
               </p>
             </div>
             <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
@@ -252,7 +251,7 @@ export default function AdsPage() {
             <div>
               <p style={{ fontSize: 13, fontWeight: 700, color: theme.color.goldDark, margin: '0 0 2px' }}>How creatives work</p>
               <p style={{ fontSize: 12, color: theme.color.text3, margin: 0, lineHeight: 1.6 }}>
-                Upload your image or video → our team reviews it → once <strong style={{ color: theme.color.success }}>Approved</strong> you can attach it to any booking.
+                Upload your image or video → you can instantly attach it to any booking.
                 Don't have a creative? <Link href="/creative" style={{ color: theme.color.gold, fontWeight: 700, textDecoration: 'none' }}>Request our design team →</Link>
               </p>
             </div>
@@ -331,9 +330,11 @@ export default function AdsPage() {
                         </div>
                       )}
                       {/* Status overlay badge */}
-                      <div style={{ position: 'absolute', top: 8, right: 8 }}>
-                        <StatusBadge status={ad.status} />
-                      </div>
+                      {ad.status !== 'pending' && ad.status !== 'approved' && (
+                        <div style={{ position: 'absolute', top: 8, right: 8 }}>
+                          <StatusBadge status={ad.status} />
+                        </div>
+                      )}
                       {/* Type badge */}
                       <div style={{ position: 'absolute', bottom: 8, left: 8, background: 'rgba(10,10,10,0.7)', borderRadius: 6, padding: '2px 8px' }}>
                         <span style={{ fontSize: 10, fontWeight: 700, color: '#fff', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{ad.file_type || 'image'}</span>
@@ -348,16 +349,17 @@ export default function AdsPage() {
                       </p>
 
                       {/* Status message */}
-                      <div style={{ background: info.bg, borderRadius: 8, padding: '8px 10px', marginBottom: 12 }}>
-                        <p style={{ fontSize: 11, color: info.color, margin: 0, lineHeight: 1.5, fontWeight: 600 }}>
-                          {ad.status === 'rejected' && ad.rejection_reason
-                            ? `Rejected: ${ad.rejection_reason}`
-                            : info.text}
-                        </p>
-                      </div>
+                      {ad.status === 'rejected' && (
+                        <div style={{ background: info.bg, borderRadius: 8, padding: '8px 10px', marginBottom: 12 }}>
+                          <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: info.color, lineHeight: 1.5 }}>
+                            {info.text}
+                            {ad.rejection_reason && <span style={{ display: 'block', marginTop: 4, opacity: 0.8 }}>"{ad.rejection_reason}"</span>}
+                          </p>
+                        </div>
+                      )}
 
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                        {ad.status === 'approved' && (
+                        {ad.status !== 'rejected' && (
                           <Link href="/book" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: theme.color.success, textDecoration: 'none', background: theme.color.successLight, border: '1px solid #C7E0BE', padding: '5px 10px', borderRadius: 7 }}>
                             Use in booking <FaArrowRight size={9} />
                           </Link>

@@ -33,6 +33,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
   useEffect(() => {
+    const handleOpen = () => setMobileOpen(true);
+    const handleClose = () => setMobileOpen(false);
+    window.addEventListener('openSidebar', handleOpen);
+    window.addEventListener('closeSidebar', handleClose);
+    return () => {
+      window.removeEventListener('openSidebar', handleOpen);
+      window.removeEventListener('closeSidebar', handleClose);
+    };
+  }, []);
+
+  useEffect(() => {
     if (mounted && user && user.terms_accepted === false) {
       setShowTerms(true);
     }

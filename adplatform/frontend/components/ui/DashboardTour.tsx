@@ -20,12 +20,25 @@ export default function DashboardTour() {
   }, []);
 
   const handleJoyrideCallback = (data: EventData) => {
-    const { status } = data;
+    const { status, type, index } = data;
     const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
 
     if (finishedStatuses.includes(status)) {
       setRun(false);
       localStorage.setItem('studioarella_tour_seen', 'true');
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+        window.dispatchEvent(new Event('closeSidebar'));
+      }
+    }
+
+    if (type === 'step:before') {
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+        if (index === 1 || index === 2) {
+          window.dispatchEvent(new Event('openSidebar'));
+        } else {
+          window.dispatchEvent(new Event('closeSidebar'));
+        }
+      }
     }
   };
 

@@ -66,8 +66,8 @@ export const createAd: RequestHandler = async (req, res) => {
       file_size = file.size;
     }
 
-    const initialStatus = 'pending';
-    const reviewedAt = null;
+    const initialStatus = 'approved';
+    const reviewedAt = new Date();
 
     const result = await pool.query(
       `INSERT INTO ads (user_id, campaign_id, title, media_url, file_url, file_type, file_size,
@@ -89,23 +89,9 @@ export const createAd: RequestHandler = async (req, res) => {
       ]
     );
 
-    // Pending review flow
-    notifyAdmins({
-      type: 'new_creative_review',
-      title: 'New creative awaiting review',
-      body: `${authReq.user?.name || 'An advertiser'} uploaded "${result.rows[0].title}" and it is pending your approval.`,
-      link: '/admin/review',
-    });
-
-    // Send email alerts to all admins
-    const admins = await pool.query("SELECT email FROM users WHERE role = 'admin'");
-    admins.rows.forEach(admin => {
-      sendAdminNewCreativeAlert(admin.email, authReq.user?.name || 'An advertiser', result.rows[0].title).catch(console.error);
-    });
-
     res.status(201).json({
       ad: result.rows[0],
-      message: 'Your creative has been uploaded successfully! You can go ahead and book a slot now, but please note your video will be reviewed before it is displayed on the ad screen.',
+      message: 'Your creative has been uploaded successfully! It is now approved and ready to be used in your bookings.',
     });
   } catch (err) {
     console.error('Upload error:', err);
