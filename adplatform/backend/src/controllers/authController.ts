@@ -38,9 +38,9 @@ export const register: RequestHandler = async (req, res) => {
     const fullName = `${first_name.trim()} ${last_name.trim()}`;
     const hashed = await bcrypt.hash(password, 12);
     const result = await pool.query(
-      `INSERT INTO users (name, first_name, last_name, email, password, role, business_name, phone, email_verified)
-       VALUES ($1, $2, $3, $4, $5, 'advertiser', $6, $7, false)
-       RETURNING id, name, first_name, last_name, email, role, credits, business_name, phone`,
+       `INSERT INTO users (name, first_name, last_name, email, password, role, business_name, phone, email_verified)
+        VALUES ($1, $2, $3, $4, $5, 'advertiser', $6, $7, false)
+        RETURNING id, name, first_name, last_name, email, role, credits, business_name, phone, terms_accepted`,
       [fullName, first_name.trim(), last_name.trim(), email, hashed, business_name || null, phone || null]
     );
     const user = result.rows[0];
@@ -159,7 +159,7 @@ export const getMe: RequestHandler = async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT id, name, first_name, last_name, email, role, credits, business_name, phone, logo_url,
-              avatar, email_verified, suspended, language, created_at
+              avatar, email_verified, suspended, language, terms_accepted, created_at
        FROM users WHERE id = $1`,
       [authReq.user?.id]
     );
@@ -192,6 +192,20 @@ export const updateProfile: RequestHandler = async (req, res) => {
     res.json(result.rows[0]);
   } catch (err) {
     res.status(500).json({ message: 'Update failed' });
+  }
+};
+
+// ── Accept Terms ──────────────────────────────────────────────────────────────
+export const acceptTerms: RequestHandler = async (req, res) => {
+  const authReq = req as AuthRequest;
+  try {
+    const result = await pool.query(
+      `UPDATE users SET terms_accepted = true WHERE id = $1 RETURNING id, terms_accepted`,
+      [authReq.user?.id]
+    );
+    res.json({ message: 'Terms accepted', user: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to accept terms' });
   }
 };
 

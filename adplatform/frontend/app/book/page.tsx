@@ -133,9 +133,9 @@ function DoohScheduler() {
   // Fetch approved ads
   useEffect(() => {
     api.get('/ads').then((a) => {
-      const approved = (a.data.ads || []).filter((ad: any) => ad.status === 'approved');
-      setApprovedCreatives(approved);
-      if (approved.length > 0) setSelectedCreative(approved[0]);
+      const allowed = (a.data.ads || []).filter((ad: any) => ad.status === 'approved' || ad.status === 'pending');
+      setApprovedCreatives(allowed);
+      if (allowed.length > 0) setSelectedCreative(allowed[0]);
     }).catch(() => {});
   }, []);
 
@@ -559,6 +559,15 @@ function DoohScheduler() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+              
+              {selectedCreative && selectedCreative.status === 'pending' && (
+                <div style={{ marginTop: 24, padding: 16, background: theme.color.surface2, border: `1px solid ${theme.color.gold}`, borderRadius: 12, display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <Info size={24} color={theme.color.gold} style={{ flexShrink: 0 }} />
+                  <p style={{ margin: 0, fontSize: 14, color: theme.color.text2, lineHeight: 1.5 }}>
+                    <strong style={{ color: theme.color.text1 }}>Pending Review:</strong> You can book slots for this creative right now, but please note it will be reviewed by our team before it is displayed on the screen.
+                  </p>
                 </div>
               )}
               

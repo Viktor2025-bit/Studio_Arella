@@ -66,14 +66,8 @@ export const createAd: RequestHandler = async (req, res) => {
       file_size = file.size;
     }
 
-    // Check if user is a trusted advertiser (3+ previously approved ads)
-    const countResult = await pool.query(
-      `SELECT COUNT(*) FROM ads WHERE user_id = $1 AND status = 'approved'`,
-      [authReq.user?.id]
-    );
-    const isTrusted = parseInt(countResult.rows[0].count) >= 3;
-    const initialStatus = isTrusted ? 'approved' : 'pending';
-    const reviewedAt = isTrusted ? new Date() : null;
+    const initialStatus = 'pending';
+    const reviewedAt = null;
 
     const result = await pool.query(
       `INSERT INTO ads (user_id, campaign_id, title, media_url, file_url, file_type, file_size,
@@ -95,47 +89,24 @@ export const createAd: RequestHandler = async (req, res) => {
       ]
     );
 
-    if (isTrusted) {
-      // Auto-approval flow
-      createNotification({
-        user_id: authReq.user!.id,
-        type: 'creative_approved',
-        title: 'Creative auto-approved!',
-        body: `Because you are a trusted advertiser, "${result.rows[0].title}" was instantly approved.`,
-        link: '/ads',
-      });
-      
-      notifyAdmins({
-        type: 'new_creative_review',
-        title: 'Trusted advertiser auto-approved',
-        body: `Trusted advertiser ${authReq.user?.name || ''} uploaded "${result.rows[0].title}". It was automatically approved.`,
-        link: '/admin/review',
-      });
+    // Pending review flow
+    notifyAdmins({
+      type: 'new_creative_review',
+      title: 'New creative awaiting review',
+      body: `${authReq.user?.name || 'An advertiser'} uploaded "${result.rows[0].title}" and it is pending your approval.`,
+      link: '/admin/review',
+    });
 
-      res.status(201).json({
-        ad: result.rows[0],
-        message: 'You are a trusted advertiser! Your creative was automatically approved and is ready to use.',
-      });
-    } else {
-      // Pending review flow
-      notifyAdmins({
-        type: 'new_creative_review',
-        title: 'New creative awaiting review',
-        body: `${authReq.user?.name || 'An advertiser'} uploaded "${result.rows[0].title}" and it is pending your approval.`,
-        link: '/admin/review',
-      });
+    // Send email alerts to all admins
+    const admins = await pool.query("SELECT email FROM users WHERE role = 'admin'");
+    admins.rows.forEach(admin => {
+      sendAdminNewCreativeAlert(admin.email, authReq.user?.name || 'An advertiser', result.rows[0].title).catch(console.error);
+    });
 
-      // Send email alerts to all admins
-      const admins = await pool.query("SELECT email FROM users WHERE role = 'admin'");
-      admins.rows.forEach(admin => {
-        sendAdminNewCreativeAlert(admin.email, authReq.user?.name || 'An advertiser', result.rows[0].title).catch(console.error);
-      });
-
-      res.status(201).json({
-        ad: result.rows[0],
-        message: 'Creative uploaded and submitted for admin review. You\'ll be notified when approved.',
-      });
-    }
+    res.status(201).json({
+      ad: result.rows[0],
+      message: 'Your creative has been uploaded successfully! You can go ahead and book a slot now, but please note your video will be reviewed before it is displayed on the ad screen.',
+    });
   } catch (err) {
     console.error('Upload error:', err);
     res.status(500).json({ message: 'Upload failed' });

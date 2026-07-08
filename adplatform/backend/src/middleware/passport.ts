@@ -42,7 +42,7 @@ passport.use(
              SET avatar = COALESCE(avatar, $1),
                  google_id = COALESCE(google_id, $2)
              WHERE email = $3
-             RETURNING id, name, email, role, credits, avatar`,
+             RETURNING id, name, email, role, credits, avatar, terms_accepted`,
             [avatar, googleId, email]
           );
           user = result.rows[0];
@@ -50,7 +50,7 @@ passport.use(
           const result = await pool.query(
             `INSERT INTO users (name, email, avatar, google_id, role, password)
              VALUES ($1, $2, $3, $4, 'advertiser', '')
-             RETURNING id, name, email, role, credits, avatar`,
+             RETURNING id, name, email, role, credits, avatar, terms_accepted`,
             [name, email, avatar, googleId]
           );
           user = result.rows[0];

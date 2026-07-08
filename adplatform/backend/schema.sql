@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
   role VARCHAR(50) DEFAULT 'advertiser', -- 'advertiser' | 'admin'
   credits DECIMAL(10,2) DEFAULT 0.00,
   language VARCHAR(10) DEFAULT 'en',
+  terms_accepted BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );

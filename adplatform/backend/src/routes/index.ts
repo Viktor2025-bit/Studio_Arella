@@ -4,7 +4,7 @@ import { upload } from '../middleware/upload';
 import { authenticate } from '../middleware/auth';
 
 // Auth
-import { register, login, getMe, updateProfile, verifyEmail, resendVerification, forgotPassword, resetPassword } from '../controllers/authController';
+import { register, login, getMe, updateProfile, verifyEmail, resendVerification, forgotPassword, resetPassword, acceptTerms } from '../controllers/authController';
 import { googleCallback } from '../controllers/googleAuthController';
 
 // Features
@@ -45,6 +45,7 @@ router.get('/auth/verify-email', verifyEmail);
 router.post('/auth/resend-verification', resendVerification);
 router.post('/auth/forgot-password', forgotPassword);
 router.post('/auth/reset-password', resetPassword);
+router.post('/auth/accept-terms', authenticate, acceptTerms);
 
 // ── Google OAuth ──────────────────────────────────────────────────────────────
 router.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'], prompt: 'select_account' }));

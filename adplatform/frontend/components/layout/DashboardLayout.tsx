@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
 import ThemeProvider from '@/components/ui/ThemeProvider';
+import TermsModal from '@/components/ui/TermsModal';
 import { theme } from '@/lib/theme';
 
 const F = theme.font.body;
@@ -16,6 +17,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
 
   useEffect(() => {
     loadFromStorage();
@@ -30,10 +32,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => { setMobileOpen(false); }, [pathname]);
 
+  useEffect(() => {
+    if (mounted && user && user.terms_accepted === false) {
+      setShowTerms(true);
+    }
+  }, [mounted, user]);
+
   if (!mounted) return null;
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: theme.color.bg, fontFamily: F, overflow: 'hidden' }}>
+      {showTerms && <TermsModal onAccept={() => {
+        setShowTerms(false);
+        // refresh user from API or manually update state
+        useAuthStore.getState().checkAuth();
+      }} />}
       <ThemeProvider />
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       <div className="main-wrapper" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
