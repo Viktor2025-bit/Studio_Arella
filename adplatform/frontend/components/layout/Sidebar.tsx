@@ -10,13 +10,13 @@ const F = theme.font.body;
 
 const advertiserNav = [
   { href: '/dashboard',  label: 'Dashboard',        icon: LayoutDashboard },
+  { href: '/ads',        label: 'My Ads',           icon: Film },
   { href: '/analytics',  label: 'Analytics',        icon: BarChart2 },
   { href: '/book',       label: 'Book Ad Slot',     icon: CalendarCheck, highlight: true },
   { href: '/podcast',    label: 'Book Podcast',     icon: Mic },
   { href: '/bookings',   label: 'My Bookings',      icon: ClipboardList },
   { href: '/calendar',   label: 'My Calendar',      icon: Calendar },
   { href: '/campaigns',  label: 'My Campaigns',     icon: Megaphone },
-  { href: '/ads',        label: 'My Ads',           icon: Film },
   { href: '/creative',   label: 'Request Creative', icon: Paintbrush },
   { href: '/finances',   label: 'Finances',         icon: DollarSign },
 ];
