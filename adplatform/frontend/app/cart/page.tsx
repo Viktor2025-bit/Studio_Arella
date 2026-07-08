@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Trash2, Clock, Calendar, Edit2 } from 'lucide-react';
+import { ChevronLeft, Trash2, Clock, Calendar, Edit2, Timer } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useToast } from '@/components/ui/ToastProvider';
 import { useCartStore } from '@/store/cartStore';
@@ -36,13 +36,36 @@ function formatDurationSec(sec: number) {
 export default function CartPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { cart, removeFromCart, getCartTotal, clearCart } = useCartStore();
+  const { cart, removeFromCart, getCartTotal, clearCart, cartExpiresAt } = useCartStore() as any;
   
   const [reserving, setReserving] = useState(false);
   const [paying, setPaying] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<CartItem | null>(null);
   const [initialTab, setInitialTab] = useState<'time' | 'period'>('time');
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!cartExpiresAt || cart.length === 0) {
+      setTimeLeft(null);
+      return;
+    }
+    const updateTimer = () => {
+      const remaining = Math.max(0, Math.floor((cartExpiresAt - Date.now()) / 1000));
+      setTimeLeft(remaining);
+      if (remaining === 0) {
+        clearCart();
+        toast("Your cart has expired and slots have been released.", "error");
+        router.push('/book');
+      }
+    };
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [cartExpiresAt, cart.length, clearCart, router, toast]);
+
+  const mins = timeLeft ? Math.floor(timeLeft / 60) : 0;
+  const secs = timeLeft ? timeLeft % 60 : 0;
 
   const cartTotal = getCartTotal();
 
@@ -54,7 +77,7 @@ export default function CartPage() {
     setReserving(true);
     try {
       const slots = cart.map(c => {
-         const d = c.date;
+         const d = new Date(c.date);
          const startDt = new Date(d.getFullYear(), d.getMonth(), d.getDate(), Math.floor(c.startMin / 60), c.startMin % 60);
          const endDt = new Date(startDt.getTime() + c.durationSec * 1000);
          return { start: startDt.toISOString(), end: endDt.toISOString(), mins: c.durationSec / 60 };
@@ -113,6 +136,21 @@ export default function CartPage() {
             </div>
           ) : (
             <div style={{ background: theme.color.surface, borderRadius: 16, border: `1px solid ${theme.color.border}`, padding: "40px 32px", boxShadow: theme.shadow.sm }}>
+              {timeLeft !== null && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, background: theme.color.error + "10", border: `1px solid ${theme.color.error}`, padding: "16px 20px", borderRadius: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <Timer size={20} color={theme.color.error} />
+                    <div>
+                      <div style={{ color: theme.color.error, fontWeight: 800, fontSize: 15 }}>Slots Temporarily Held</div>
+                      <div style={{ color: theme.color.error, fontSize: 13, opacity: 0.9, marginTop: 2 }}>Complete payment before the timer elapses to permanently secure your booking.</div>
+                    </div>
+                  </div>
+                  <div className="mono" style={{ fontSize: 24, fontWeight: 900, color: theme.color.error, background: "#fff", padding: "8px 16px", borderRadius: 8, boxShadow: theme.shadow.sm }}>
+                    {pad(mins)}:{pad(secs)}
+                  </div>
+                </div>
+              )}
+
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 32 }}>
                 {[...cart].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime() || a.startMin - b.startMin).map((c) => {
                   const d = new Date(c.date);

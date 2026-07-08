@@ -163,7 +163,7 @@ function DoohScheduler() {
 
   function bookingsForDate(dateKey: string) {
     const others = liveBookings.filter((b) => b.dateKey === dateKey).map((b) => ({ ...b, type: "other" }));
-    const cartItems = cart.filter((c) => localDateKey(c.date) === dateKey)
+    const cartItems = cart.filter((c) => localDateKey(new Date(c.date)) === dateKey)
       .map((c) => ({ startMin: c.startMin, durationMin: Math.max(1, Math.round(c.durationSec / 60)), label: selectedCreative?.title || "Your booking", type: "cart" }));
     return [...others, ...cartItems];
   }
@@ -316,7 +316,7 @@ function DoohScheduler() {
         const dateKey = localDateKey(curDate);
         const existing = [
           ...liveBookings.filter((b) => b.dateKey === dateKey).map((b) => ({ ...b, type: "other" })),
-          ...cart.filter((c) => localDateKey(c.date) === dateKey).map((c) => ({ startMin: c.startMin, durationMin: Math.round(c.durationSec / 60) })),
+          ...cart.filter((c) => localDateKey(new Date(c.date)) === dateKey).map((c) => ({ startMin: c.startMin, durationMin: Math.round(c.durationSec / 60) })),
           ...newItems.filter((n) => localDateKey(n.date) === dateKey).map((n) => ({ startMin: n.startMin, durationMin: Math.round(n.durationSec / 60) })),
         ];
 
@@ -373,7 +373,7 @@ function DoohScheduler() {
     const dateKey = localDateKey(editCartItem.date);
     const existing = [
       ...liveBookings.filter((b) => b.dateKey === dateKey).map((b) => ({ ...b, type: "other" })),
-      ...cart.filter((c) => c.id !== editCartItem.id && localDateKey(c.date) === dateKey).map((c) => ({ startMin: c.startMin, durationMin: Math.round(c.durationSec / 60) })),
+      ...cart.filter((c) => c.id !== editCartItem.id && localDateKey(new Date(c.date)) === dateKey).map((c) => ({ startMin: c.startMin, durationMin: Math.round(c.durationSec / 60) })),
     ];
     const requiredEnd = newStartMin + editCartItem.durationSec / 60;
     const conflict = isStartInsideBooking(newStartMin, existing) || existing.some((b) => newStartMin < b.startMin + (b.durationMin || 0) && requiredEnd > b.startMin);
@@ -405,7 +405,7 @@ function DoohScheduler() {
     if (!d) return 'none';
     const key = localDateKey(d);
     const other = liveBookings.filter((b) => b.dateKey === key);
-    const mine = cart.filter((c) => localDateKey(c.date) === key);
+    const mine = cart.filter((c) => localDateKey(new Date(c.date)) === key);
     
     if (other.length === 0 && mine.length === 0) return 'green';
     
