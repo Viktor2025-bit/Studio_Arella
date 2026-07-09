@@ -373,8 +373,7 @@ function DoohScheduler() {
       const dayOfWeek = curDate.getDay(); 
       
       let shouldAdd = false;
-      if (spreadReplicate) shouldAdd = true; 
-      else if (spreadPattern === "daily") shouldAdd = true;
+      if (spreadPattern === "daily") shouldAdd = true;
       else if (spreadPattern === "weekdays") shouldAdd = (dayOfWeek >= 1 && dayOfWeek <= 5);
       else if (spreadPattern === "weekends") shouldAdd = (dayOfWeek === 0 || dayOfWeek === 6);
       else if (spreadPattern === "custom") shouldAdd = customDays.includes(dayOfWeek);
@@ -1098,20 +1097,18 @@ function DoohScheduler() {
                     </div>
                   )}
 
-                  {!spreadReplicate && (
-                    <div style={{ marginBottom: 20 }}>
-                      <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: theme.color.text2 }}>2. Pattern (Which days?)</label>
-                      <select value={spreadPattern} onChange={e => setSpreadPattern(e.target.value)} style={{ ...inputStyle, padding: "12px", fontSize: 15, fontWeight: 600 }}>
-                        <option value="daily">Every Day</option>
-                        <option value="weekdays">Every Weekday (Mon-Fri)</option>
-                        <option value="weekends">Every Weekend (Sat-Sun)</option>
-                        <option value="alternate">Every Other Day</option>
-                        <option value="custom">Custom Days...</option>
-                      </select>
-                    </div>
-                  )}
+                  <div style={{ marginBottom: 20 }}>
+                    <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: theme.color.text2 }}>2. Pattern (Which days?)</label>
+                    <select value={spreadPattern} onChange={e => setSpreadPattern(e.target.value)} style={{ ...inputStyle, padding: "12px", fontSize: 15, fontWeight: 600 }}>
+                      <option value="daily">Every Day</option>
+                      <option value="weekdays">Every Weekday (Mon-Fri)</option>
+                      <option value="weekends">Every Weekend (Sat-Sun)</option>
+                      <option value="alternate">Every Other Day</option>
+                      <option value="custom">Custom Days...</option>
+                    </select>
+                  </div>
                   
-                  {!spreadReplicate && spreadPattern === "custom" && (
+                  {spreadPattern === "custom" && (
                     <div style={{ marginBottom: 24 }}>
                        <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: theme.color.text2 }}>Select Days</label>
                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
