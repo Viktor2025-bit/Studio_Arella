@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Trash2, Clock, Calendar, Edit2, Timer } from 'lucide-react';
+import { ChevronLeft, Trash2, Clock, Calendar, Edit2, Timer, X } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useToast } from '@/components/ui/ToastProvider';
 import { useCartStore } from '@/store/cartStore';
@@ -36,33 +36,45 @@ function formatDurationSec(sec: number) {
 export default function CartPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { cart, removeFromCart, getCartTotal, clearCart, cartExpiresAt } = useCartStore();
+  const { cart, removeFromCart, getCartTotal, clearCart } = useCartStore();
   
   const [reserving, setReserving] = useState(false);
   const [paying, setPaying] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null);
+  const [showInvoice, setShowInvoice] = useState(false);
+
   const [editingItem, setEditingItem] = useState<CartItem | null>(null);
   const [initialTab, setInitialTab] = useState<'time' | 'period'>('time');
+
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
+  // Modal countdown timer
   useEffect(() => {
-    if (!cartExpiresAt || cart.length === 0) {
+    if (!showInvoice || !lockedUntil) {
       setTimeLeft(null);
       return;
     }
     const updateTimer = () => {
-      const remaining = Math.max(0, Math.floor((cartExpiresAt - Date.now()) / 1000));
+      const remaining = Math.max(0, Math.floor((lockedUntil - Date.now()) / 1000));
       setTimeLeft(remaining);
       if (remaining === 0) {
-        clearCart();
-        toast("Your cart has expired and slots have been released.", "error");
-        router.push('/book');
+        setShowInvoice(false);
+        setBookingId(null);
+        setLockedUntil(null);
+        toast("Payment window expired. Please proceed to checkout again.", "error");
       }
     };
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [cartExpiresAt, cart.length, clearCart, router, toast]);
+  }, [showInvoice, lockedUntil, toast]);
+
+  // If cart is modified, invalidate the current reservation
+  useEffect(() => {
+    setBookingId(null);
+    setLockedUntil(null);
+  }, [cart, clearCart]); // Actually clearCart is stable, but depending on cart means any change resets it.
 
   const mins = timeLeft ? Math.floor(timeLeft / 60) : 0;
   const secs = timeLeft ? timeLeft % 60 : 0;
@@ -71,7 +83,14 @@ export default function CartPage() {
 
   const handleReserve = async () => {
     if (cart.length === 0) return;
-    const selectedCreative = cart[0].creative; // Assume same creative for all items in cart based on previous logic
+    
+    // If we already have a valid unexpired reservation, just reopen the invoice modal
+    if (bookingId && lockedUntil && Date.now() < lockedUntil) {
+      setShowInvoice(true);
+      return;
+    }
+
+    const selectedCreative = cart[0].creative;
     if (!selectedCreative) return;
 
     setReserving(true);
@@ -89,6 +108,8 @@ export default function CartPage() {
         slots: slots
       });
       setBookingId(res.data.booking_id);
+      setLockedUntil(new Date(res.data.locked_until).getTime());
+      setShowInvoice(true);
     } catch (err: any) {
       toast(err?.response?.data?.message || 'Failed to reserve slots', 'error');
     } finally {
@@ -136,21 +157,6 @@ export default function CartPage() {
             </div>
           ) : (
             <div style={{ background: theme.color.surface, borderRadius: 16, border: `1px solid ${theme.color.border}`, padding: "40px 32px", boxShadow: theme.shadow.sm }}>
-              {timeLeft !== null && (
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, background: theme.color.error + "10", border: `1px solid ${theme.color.error}`, padding: "16px 20px", borderRadius: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <Timer size={20} color={theme.color.error} />
-                    <div>
-                      <div style={{ color: theme.color.error, fontWeight: 800, fontSize: 15 }}>Slots Temporarily Held</div>
-                      <div style={{ color: theme.color.error, fontSize: 13, opacity: 0.9, marginTop: 2 }}>Complete payment before the timer elapses to permanently secure your booking.</div>
-                    </div>
-                  </div>
-                  <div className="mono" style={{ fontSize: 24, fontWeight: 900, color: theme.color.error, background: "#fff", padding: "8px 16px", borderRadius: 8, boxShadow: theme.shadow.sm }}>
-                    {pad(mins)}:{pad(secs)}
-                  </div>
-                </div>
-              )}
-
               <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 32 }}>
                 {[...cart].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime() || a.startMin - b.startMin).map((c) => {
                   const d = new Date(c.date);
@@ -198,34 +204,79 @@ export default function CartPage() {
               </div>
 
               <div style={{ display: "flex", gap: 20, flexDirection: "column" }}>
-                {bookingId ? (
-                   <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                     <div style={{ textAlign: "center", color: theme.color.success, fontWeight: 800, marginBottom: 8, fontSize: 16 }}>Slots reserved successfully! Choose a payment method:</div>
-                     <AnimatedButton onClick={() => handlePay('wallet')} disabled={paying} style={{ background: theme.color.charcoal900, color: '#fff', border: 'none', padding: '18px', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                       <FaWallet size={20} /> Pay from Wallet
-                     </AnimatedButton>
-                     <AnimatedButton onClick={() => handlePay('monnify')} disabled={paying} style={{ background: theme.color.goldLight, color: theme.color.goldDark, border: `2px solid ${theme.color.goldMid}`, padding: '18px', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                       <FaCreditCard size={20} /> Pay with Card / Bank
-                     </AnimatedButton>
-                   </div>
-                ) : (
-                  <AnimatedButton onClick={handleReserve} disabled={reserving} style={{ width: "100%", padding: "18px 0", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontWeight: 800, fontSize: 18, cursor: reserving ? 'not-allowed' : 'pointer', opacity: reserving ? 0.7 : 1, display: "flex", gap: 10, alignItems: "center", justifyContent: "center", boxShadow: theme.shadow.gold }}>
-                    {reserving ? 'Reserving Slots...' : <>Proceed to Checkout</>}
-                  </AnimatedButton>
-                )}
+                <AnimatedButton onClick={handleReserve} disabled={reserving} style={{ width: "100%", padding: "18px 0", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontWeight: 800, fontSize: 18, cursor: reserving ? 'not-allowed' : 'pointer', opacity: reserving ? 0.7 : 1, display: "flex", gap: 10, alignItems: "center", justifyContent: "center", boxShadow: theme.shadow.gold }}>
+                  {reserving ? 'Reserving Slots...' : <>Proceed to Checkout</>}
+                </AnimatedButton>
               </div>
             </div>
           )}
         </div>
       </PageTransition>
     </DashboardLayout>
-      {editingItem && (
-        <EditCartModal 
-          item={editingItem} 
-          onClose={() => setEditingItem(null)} 
-          initialTab={initialTab} 
-        />
-      )}
-    </>
-  );
+
+    {/* Invoice Modal */}
+    {showInvoice && (
+      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+        <div style={{ background: theme.color.surface, borderRadius: 24, width: "100%", maxWidth: 500, padding: 32, boxShadow: theme.shadow.xl, position: "relative", animation: "slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)" }}>
+          <button onClick={() => setShowInvoice(false)} style={{ position: "absolute", top: 24, right: 24, background: theme.color.surface2, border: "none", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: theme.color.text2 }}>
+            <X size={20} />
+          </button>
+          
+          <div style={{ textAlign: "center", marginBottom: 24 }}>
+            <div style={{ display: "inline-flex", background: theme.color.success + "15", color: theme.color.success, padding: "10px 20px", borderRadius: 30, fontSize: 14, fontWeight: 800, marginBottom: 16 }}>
+              Slots Reserved Successfully
+            </div>
+            <h2 style={{ fontSize: 24, fontWeight: 900, color: theme.color.text1, fontFamily: theme.font.display, marginBottom: 8 }}>Checkout Invoice</h2>
+            <p style={{ color: theme.color.text3, fontSize: 15 }}>Complete your payment to secure these slots permanently.</p>
+          </div>
+
+          {timeLeft !== null && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, background: theme.color.error + "10", border: `1px solid ${theme.color.error}`, padding: "16px 20px", borderRadius: 16 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <Timer size={20} color={theme.color.error} />
+                <div style={{ color: theme.color.error, fontWeight: 800, fontSize: 15 }}>Time Remaining</div>
+              </div>
+              <div className="mono" style={{ fontSize: 24, fontWeight: 900, color: theme.color.error, background: "#fff", padding: "8px 16px", borderRadius: 8, boxShadow: theme.shadow.sm }}>
+                {pad(mins)}:{pad(secs)}
+              </div>
+            </div>
+          )}
+
+          <div style={{ background: theme.color.surface2, borderRadius: 16, padding: 24, marginBottom: 24 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, color: theme.color.text2 }}>
+              <span style={{ fontWeight: 600 }}>Total Airtime</span>
+              <span className="mono" style={{ fontWeight: 700, color: theme.color.text1 }}>{cart.length} block(s)</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, color: theme.color.text2 }}>
+              <span style={{ fontWeight: 600 }}>Screen</span>
+              <span style={{ fontWeight: 700, color: theme.color.text1 }}>Bems Junction, Umuahia</span>
+            </div>
+            <div style={{ height: 1, background: theme.color.border, margin: "16px 0" }} />
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ fontWeight: 800, fontSize: 18, color: theme.color.text1 }}>Total Due</span>
+              <span className="mono" style={{ color: theme.color.goldDark, fontWeight: 900, fontSize: 24 }}>{naira(cartTotal)}</span>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <AnimatedButton onClick={() => handlePay('wallet')} disabled={paying} style={{ background: theme.color.charcoal900, color: '#fff', border: 'none', padding: '18px', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+              <FaWallet size={20} /> Pay from Wallet
+            </AnimatedButton>
+            <AnimatedButton onClick={() => handlePay('monnify')} disabled={paying} style={{ background: theme.color.goldLight, color: theme.color.goldDark, border: `2px solid ${theme.color.goldMid}`, padding: '18px', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+              <FaCreditCard size={20} /> Pay with Card / Bank
+            </AnimatedButton>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {editingItem && (
+      <EditCartModal 
+        item={editingItem} 
+        onClose={() => setEditingItem(null)} 
+        initialTab={initialTab} 
+      />
+    )}
+  </>
+);
 }
