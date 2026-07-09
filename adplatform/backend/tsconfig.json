@@ -12,7 +12,7 @@
     "isolatedModules": false,
     "outDir": "./dist",
     "rootDir": "./src",
-    "incremental": true,
+    "incremental": false,
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts"],
