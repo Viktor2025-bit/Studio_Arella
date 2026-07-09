@@ -76,7 +76,7 @@ export const reserveSlots: RequestHandler = async (req, res) => {
       res.status(400).json({ message: 'Screen, ad, and time slots are required' }); return;
     }
     
-    const adRes = await client.query('SELECT duration_seconds FROM ads WHERE id = $1 AND user_id = $2 AND status IN ($3, $4)', [ad_id, authReq.user?.id, 'approved', 'pending']);
+    const adRes = await client.query('SELECT duration_seconds FROM ads WHERE id = $1 AND user_id = $2 AND (status = $3 OR status = $4)', [ad_id, authReq.user?.id, 'approved', 'pending']);
     if (adRes.rows.length === 0) {
        res.status(400).json({ message: 'Valid creative not found' }); return;
     }
