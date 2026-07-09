@@ -712,7 +712,9 @@ function DoohScheduler() {
                                 alignItems: "center"
                               }}
                             >
-                              {tabDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                              {spreadReplicate 
+                                ? tabDate.toLocaleDateString("en-US", { weekday: "short" }) 
+                                : tabDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
                             </div>
                           );
                         })}
