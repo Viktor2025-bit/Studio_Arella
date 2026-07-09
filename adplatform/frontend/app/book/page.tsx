@@ -112,6 +112,8 @@ function DoohScheduler() {
   const [spreadModal, setSpreadModal] = useState(false);
   const [spreadDuration, setSpreadDuration] = useState("4weeks");
   const [spreadPattern, setSpreadPattern] = useState("weekdays");
+  const [spreadReplicate, setSpreadReplicate] = useState(true);
+  const [replicationConfig, setReplicationConfig] = useState<{ active: boolean, duration: string } | null>(null);
   const [customDays, setCustomDays] = useState<number[]>([]);
   
   // Tabbed Multi-Day Editor State
@@ -124,7 +126,7 @@ function DoohScheduler() {
   const [editMinute, setEditMinute] = useState(0);
   const [isRestoring, setIsRestoring] = useState(true);
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedHours, setSelectedHours] = useState<number[]>([8]);
+  const [selectedHours, setSelectedHours] = useState<number[]>([]);
   const [draftLoops, setDraftLoops] = useState(1);
   const activeLoops = draft ? draft.loops : draftLoops;
   const draftDurationSec = activeLoops * (videoSeconds || 60);
@@ -354,25 +356,25 @@ function DoohScheduler() {
 
   function handleSpreadAdd() {
     if (!selectedCreative) { toast("Please select a creative first", "error"); return; }
-    if (!draft && selectedHours.length === 0) { toast("There isn't enough open room here to fit even one full play of your video.", "error"); return; }
     
     const startDate = draft ? draft.date : viewDate;
     let endDate = new Date(startDate);
     if (spreadDuration === "1week") endDate = addDays(startDate, 7);
-    else if (spreadDuration === "4weeks") endDate = addDays(startDate, 28);
-    else if (spreadDuration === "3months") endDate = addMonths(startDate, 3);
-    else if (spreadDuration === "6months") endDate = addMonths(startDate, 6);
-    else if (spreadDuration === "1year") endDate = addYears(startDate, 1);
+    else if (spreadDuration === "4weeks") endDate = addDays(startDate, spreadReplicate ? 7 : 28);
+    else if (spreadDuration === "3months") endDate = addDays(startDate, spreadReplicate ? 7 : 90);
+    else if (spreadDuration === "6months") endDate = addDays(startDate, spreadReplicate ? 7 : 180);
+    else if (spreadDuration === "1year") endDate = addDays(startDate, spreadReplicate ? 7 : 365);
 
     const targetDates: Date[] = [];
     let curDate = new Date(startDate);
     
     let dayIndex = 0;
     while (curDate < endDate) {
-      const dayOfWeek = curDate.getDay(); // 0 = Sun, 1 = Mon ... 6 = Sat
+      const dayOfWeek = curDate.getDay(); 
       
       let shouldAdd = false;
-      if (spreadPattern === "daily") shouldAdd = true;
+      if (spreadReplicate) shouldAdd = true; 
+      else if (spreadPattern === "daily") shouldAdd = true;
       else if (spreadPattern === "weekdays") shouldAdd = (dayOfWeek >= 1 && dayOfWeek <= 5);
       else if (spreadPattern === "weekends") shouldAdd = (dayOfWeek === 0 || dayOfWeek === 6);
       else if (spreadPattern === "custom") shouldAdd = customDays.includes(dayOfWeek);
@@ -398,6 +400,12 @@ function DoohScheduler() {
     setSpreadTabs(targetDates);
     setMultiDaySelections(newSelections);
     setActiveTabDateKey(localDateKey(targetDates[0]));
+    setViewDate(targetDates[0]);
+    if (spreadReplicate && spreadDuration !== "1week") {
+      setReplicationConfig({ active: true, duration: spreadDuration });
+    } else {
+      setReplicationConfig(null);
+    }
     
     setSpreadModal(false);
   }
@@ -628,9 +636,9 @@ function DoohScheduler() {
                         <button key={i} onClick={() => { 
                             if (status === 'red' || isPast) return;
                             setViewDate(d); 
-                            setSelectedHours([8]);
+                            setSelectedHours([]);
                             setDraftLoops(1);
-                            autoSelectSlot(d, 8);
+                            setDraft(null);
                             setShowSlotModal(true);
                           }} className="day-cell"
                           style={{
@@ -803,6 +811,14 @@ function DoohScheduler() {
                     let displayTotalCost = 0;
                     let displayTotalBlocks = 0;
                     let displayTotalSec = 0;
+                    
+                    let multiplier = 1;
+                    if (replicationConfig?.active) {
+                      if (replicationConfig.duration === "4weeks") multiplier = 4;
+                      else if (replicationConfig.duration === "3months") multiplier = 13;
+                      else if (replicationConfig.duration === "6months") multiplier = 26;
+                      else if (replicationConfig.duration === "1year") multiplier = 52;
+                    }
 
                     if (spreadTabs.length > 1) {
                       const currentSelections = { ...multiDaySelections };
@@ -811,11 +827,11 @@ function DoohScheduler() {
                       Object.keys(currentSelections).forEach(key => {
                         const state = currentSelections[key];
                         if (!state || !state.selectedHours) return;
-                        displayTotalBlocks += state.selectedHours.length;
+                        displayTotalBlocks += state.selectedHours.length * multiplier;
                         const loops = state.draft ? state.draft.loops : state.draftLoops;
-                        displayTotalSec += loops * (videoSeconds || 60) * state.selectedHours.length;
+                        displayTotalSec += loops * (videoSeconds || 60) * state.selectedHours.length * multiplier;
                         const costPerBlock = calcCost(loops * (videoSeconds || 60), selectedCreative?.ppm_rate || PPM).cost;
-                        displayTotalCost += costPerBlock * state.selectedHours.length;
+                        displayTotalCost += costPerBlock * state.selectedHours.length * multiplier;
                       });
                     } else {
                       displayTotalCost = draftPrice.cost * selectedHours.length;
@@ -872,29 +888,88 @@ function DoohScheduler() {
                                <strong>Total Time Needed for Booking:</strong> {Math.floor(displayTotalSec / 60)} min {displayTotalSec % 60}sec ({displayTotalSec} sec)<br/>
                              </div>
                              
+                             {spreadTabs.length > 1 && (
+                               <div style={{ marginBottom: 20 }}>
+                                 <button onClick={() => {
+                                    setMultiDaySelections(prev => {
+                                      const next = { ...prev };
+                                      Object.keys(next).forEach(k => {
+                                        next[k] = { selectedHours: [...selectedHours], draft: draft ? { ...draft, date: new Date(k) } : null, draftLoops };
+                                      });
+                                      return next;
+                                    });
+                                    toast("Replicated to all days!", "success");
+                                 }} style={{ background: theme.color.surface2, border: `1px solid ${theme.color.border}`, padding: "10px 16px", borderRadius: 8, fontSize: 14, fontWeight: 700, color: theme.color.text1, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, transition: "all 0.2s" }} className="hover:bg-gray-50">
+                                   <RepeatIcon size={16} color={theme.color.goldDark} /> Replicate These Hours to All Days
+                                 </button>
+                               </div>
+                             )}
+
                              <div className="flex flex-wrap items-center gap-3 md:gap-4 w-full">
                                <button onClick={() => {
                                   const newItems: any[] = [];
-                                  selectedHours.forEach(h => {
-                                     let startMin = h * 60;
-                                     if (selectedHours.length === 1 && draft) startMin = draft.startMin;
-                                     else {
-                                        while(startMin < (h + 1) * 60 && isStartInsideBooking(startMin, bookings)) startMin++;
-                                     }
-                                     newItems.push({
-                                        id: crypto.randomUUID(),
-                                        creative: selectedCreative,
-                                        date: viewDate,
-                                        startMin,
-                                        loops: activeLoops,
-                                        durationSec: draftDurationSec,
-                                        priceInfo: draftPrice
-                                     });
-                                  });
+                                  
+                                  const generateItemsForDate = (d: Date, state: any) => {
+                                    state.selectedHours.forEach((h: number) => {
+                                       let startMin = h * 60;
+                                       if (state.selectedHours.length === 1 && state.draft) startMin = state.draft.startMin;
+                                       else {
+                                          while(startMin < (h + 1) * 60 && isStartInsideBooking(startMin, bookingsForDate(localDateKey(d)))) startMin++;
+                                       }
+                                       newItems.push({
+                                          id: crypto.randomUUID(),
+                                          creative: selectedCreative,
+                                          date: d,
+                                          startMin,
+                                          loops: state.draft ? state.draft.loops : state.draftLoops,
+                                          durationSec: (state.draft ? state.draft.loops : state.draftLoops) * (videoSeconds || 60),
+                                          priceInfo: calcCost((state.draft ? state.draft.loops : state.draftLoops) * (videoSeconds || 60), selectedCreative?.ppm_rate || PPM)
+                                       });
+                                    });
+                                  };
+
+                                  if (spreadTabs.length > 1) {
+                                    const finalSelections = { ...multiDaySelections };
+                                    if (activeTabDateKey) finalSelections[activeTabDateKey] = { selectedHours, draft, draftLoops };
+                                    
+                                    if (replicationConfig?.active) {
+                                      const startDate = spreadTabs[0];
+                                      let totalDays = 0;
+                                      if (replicationConfig.duration === "4weeks") totalDays = 28;
+                                      else if (replicationConfig.duration === "3months") totalDays = 90;
+                                      else if (replicationConfig.duration === "6months") totalDays = 180;
+                                      else if (replicationConfig.duration === "1year") totalDays = 365;
+
+                                      for (let i = 0; i < totalDays; i++) {
+                                        const cur = addDays(startDate, i);
+                                        const matchingMasterDay = spreadTabs.find(t => t.getDay() === cur.getDay());
+                                        if (matchingMasterDay) {
+                                          const state = finalSelections[localDateKey(matchingMasterDay)];
+                                          if (state && state.selectedHours.length > 0) {
+                                            generateItemsForDate(cur, state);
+                                          }
+                                        }
+                                      }
+                                    } else {
+                                      Object.keys(finalSelections).forEach(key => {
+                                        const state = finalSelections[key];
+                                        if (state && state.selectedHours.length > 0) {
+                                          generateItemsForDate(new Date(key), state);
+                                        }
+                                      });
+                                    }
+                                  } else {
+                                    generateItemsForDate(viewDate, { selectedHours, draft, draftLoops });
+                                  }
+                                  
                                   if (newItems.length > 0) {
                                      addMultipleToCart(newItems);
                                      setSelectedHours([]);
                                      setDraft(null);
+                                     setSpreadTabs([]);
+                                     setActiveTabDateKey(null);
+                                     setMultiDaySelections({});
+                                     setReplicationConfig(null);
                                      toast(`Added ${newItems.length} slot(s) to Cart!`, "success");
                                   }
                                }} className="flex-1 min-w-[200px] justify-center" style={{ padding: "16px 28px", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontSize: 16, fontWeight: 800, cursor: "pointer", display: "flex", gap: 10, alignItems: "center", boxShadow: theme.shadow.gold, transition: "all 0.2s" }}>
@@ -997,7 +1072,10 @@ function DoohScheduler() {
                   
                   <div style={{ marginBottom: 20 }}>
                     <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: theme.color.text2 }}>1. Duration (How long?)</label>
-                    <select value={spreadDuration} onChange={e => setSpreadDuration(e.target.value)} style={{ ...inputStyle, padding: "12px", fontSize: 15, fontWeight: 600 }}>
+                    <select value={spreadDuration} onChange={e => {
+                        setSpreadDuration(e.target.value);
+                        if (e.target.value === "1week") setSpreadReplicate(false);
+                    }} style={{ ...inputStyle, padding: "12px", fontSize: 15, fontWeight: 600 }}>
                       <option value="1week">1 Week</option>
                       <option value="4weeks">4 Weeks</option>
                       <option value="3months">3 Months</option>
@@ -1006,18 +1084,29 @@ function DoohScheduler() {
                     </select>
                   </div>
                   
-                  <div style={{ marginBottom: 20 }}>
-                    <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: theme.color.text2 }}>2. Pattern (Which days?)</label>
-                    <select value={spreadPattern} onChange={e => setSpreadPattern(e.target.value)} style={{ ...inputStyle, padding: "12px", fontSize: 15, fontWeight: 600 }}>
-                      <option value="daily">Every Day</option>
-                      <option value="weekdays">Every Weekday (Mon-Fri)</option>
-                      <option value="weekends">Every Weekend (Sat-Sun)</option>
-                      <option value="alternate">Every Other Day</option>
-                      <option value="custom">Custom Days...</option>
-                    </select>
-                  </div>
+                  {spreadDuration !== "1week" && (
+                    <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 10, background: theme.color.surface2, padding: "12px 16px", borderRadius: 12, border: `1px solid ${theme.color.border}` }}>
+                      <input type="checkbox" id="replicate" checked={spreadReplicate} onChange={e => setSpreadReplicate(e.target.checked)} style={{ width: 18, height: 18, accentColor: theme.color.goldDark }} />
+                      <label htmlFor="replicate" style={{ fontSize: 14, fontWeight: 700, color: theme.color.text1, cursor: "pointer", userSelect: "none" }}>
+                        Replicate first week's schedule across the entire {spreadDuration.replace('weeks', ' weeks').replace('months', ' months').replace('year', ' year')}?
+                      </label>
+                    </div>
+                  )}
+
+                  {!spreadReplicate && (
+                    <div style={{ marginBottom: 20 }}>
+                      <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: theme.color.text2 }}>2. Pattern (Which days?)</label>
+                      <select value={spreadPattern} onChange={e => setSpreadPattern(e.target.value)} style={{ ...inputStyle, padding: "12px", fontSize: 15, fontWeight: 600 }}>
+                        <option value="daily">Every Day</option>
+                        <option value="weekdays">Every Weekday (Mon-Fri)</option>
+                        <option value="weekends">Every Weekend (Sat-Sun)</option>
+                        <option value="alternate">Every Other Day</option>
+                        <option value="custom">Custom Days...</option>
+                      </select>
+                    </div>
+                  )}
                   
-                  {spreadPattern === "custom" && (
+                  {!spreadReplicate && spreadPattern === "custom" && (
                     <div style={{ marginBottom: 24 }}>
                        <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: theme.color.text2 }}>Select Days</label>
                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
