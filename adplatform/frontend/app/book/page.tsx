@@ -711,9 +711,15 @@ function DoohScheduler() {
                           <div>
                             <div style={{ fontSize: 12, fontWeight: 800, color: theme.color.text3, textTransform: "uppercase", marginBottom: 6 }}>Loops (Full Plays)</div>
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <button onClick={() => setDraftLoops(prev => Math.max(1, prev - 1))} style={{...stepBtnStyle, width: 36, height: 36}}>−</button>
-                              <span className="mono" style={{ width: 44, textAlign: "center", fontWeight: 800, fontSize: 20, color: theme.color.text1 }}>{draftLoops}</span>
-                              <button onClick={() => setDraftLoops(prev => prev + 1)} style={{ ...stepBtnStyle, width: 36, height: 36 }}>+</button>
+                              <button onClick={() => {
+                                setDraftLoops(prev => Math.max(1, prev - 1));
+                                if (draft) setDraft({ ...draft, loops: Math.max(1, draft.loops - 1) });
+                              }} style={{...stepBtnStyle, width: 36, height: 36}}>−</button>
+                              <span className="mono" style={{ width: 44, textAlign: "center", fontWeight: 800, fontSize: 20, color: theme.color.text1 }}>{activeLoops}</span>
+                              <button onClick={() => {
+                                setDraftLoops(prev => prev + 1);
+                                if (draft) setDraft({ ...draft, loops: draft.loops + 1 });
+                              }} style={{ ...stepBtnStyle, width: 36, height: 36 }}>+</button>
                             </div>
                           </div>
                           <div style={{ flex: 1, minWidth: 200 }}>
@@ -737,7 +743,7 @@ function DoohScheduler() {
                            <>
                              <div style={{ fontSize: 14, color: theme.color.text3, lineHeight: 1.6, marginBottom: 20, fontWeight: 500 }}>
                                <strong>Video Length:</strong> {videoSeconds}s<br/>
-                               <strong>Total Time Needed Per Block:</strong> {videoSeconds * draftLoops}s<br/>
+                               <strong>Total Time Needed Per Block:</strong> {formatDurationSec(videoSeconds * activeLoops)}<br/>
                              </div>
                              
                              <div className="flex flex-wrap items-center gap-3 md:gap-4 w-full">
