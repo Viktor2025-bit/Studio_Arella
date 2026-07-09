@@ -685,8 +685,9 @@ function DoohScheduler() {
                             key={localDateKey(tabDate)}
                             onClick={() => handleTabChange(tabDate)}
                             style={{
-                              padding: "10px 20px",
-                              borderRadius: 12,
+                              padding: "8px 14px",
+                              fontSize: 14,
+                              borderRadius: 10,
                               border: `1px solid ${isTabActive ? theme.color.goldMid : 'transparent'}`,
                               background: isTabActive ? theme.color.goldLight : theme.color.surface2,
                               color: isTabActive ? theme.color.charcoal900 : theme.color.text3,
@@ -696,7 +697,7 @@ function DoohScheduler() {
                               transition: "all 0.2s"
                             }}
                           >
-                            {tabDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                            {tabDate.toLocaleDateString("en-US", { weekday: "short" })}
                           </button>
                         );
                       })}
@@ -770,13 +771,31 @@ function DoohScheduler() {
                     }
 
                     const isInvalid = hasConflict;
-                    const totalCost = draftPrice.cost * selectedHours.length;
+                    let displayTotalCost = 0;
+                    let displayTotalBlocks = 0;
+
+                    if (spreadTabs.length > 1) {
+                      const currentSelections = { ...multiDaySelections };
+                      if (activeTabDateKey) currentSelections[activeTabDateKey] = { selectedHours, draft, draftLoops };
+                      
+                      Object.keys(currentSelections).forEach(key => {
+                        const state = currentSelections[key];
+                        if (!state || !state.selectedHours) return;
+                        displayTotalBlocks += state.selectedHours.length;
+                        const loops = state.draft ? state.draft.loops : state.draftLoops;
+                        const costPerBlock = calcCost(loops * (videoSeconds || 60), selectedCreative?.ppm_rate || PPM).cost;
+                        displayTotalCost += costPerBlock * state.selectedHours.length;
+                      });
+                    } else {
+                      displayTotalCost = draftPrice.cost * selectedHours.length;
+                      displayTotalBlocks = selectedHours.length;
+                    }
 
                     return (
                       <div style={{ marginTop: 28, padding: "28px", background: isInvalid ? theme.color.errorLight : `linear-gradient(135deg, ${theme.color.surface2} 0%, ${theme.color.surface} 100%)`, border: `1px solid ${isInvalid ? theme.color.error : theme.color.border2}`, borderRadius: 20, boxShadow: theme.shadow.md }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
                           <div style={{ fontWeight: 800, fontSize: 20, color: isInvalid ? theme.color.error : theme.color.text1, letterSpacing: "-0.3px" }}>
-                            {isInvalid ? 'Invalid Selection' : 'Duration & Booking Details'}
+                            {isInvalid ? 'Invalid Selection' : (spreadTabs.length > 1 ? 'Total Spread Booking Details' : 'Duration & Booking Details')}
                           </div>
                           <button onClick={() => { setSelectedHours([]); setDraft(null); }} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, color: theme.color.text3, fontSize: 13, fontWeight: 700 }}><X size={16} /> Clear</button>
                         </div>
@@ -801,9 +820,9 @@ function DoohScheduler() {
                             <div style={{ background: theme.color.surface, borderRadius: 16, padding: "16px 20px", border: `1px solid ${theme.color.border2}`, boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)" }}>
                               <div className="mono" style={{ fontSize: 15, display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: 700 }}>
                                 <span style={{ color: theme.color.text2 }}>
-                                  {selectedHours.length} Block(s) selected <span style={{ color: theme.color.text4, fontWeight: 500, fontSize: 13 }}>({formatDurationSec(draftDurationSec)} each)</span>
+                                  {displayTotalBlocks} Block(s) selected <span style={{ color: theme.color.text4, fontWeight: 500, fontSize: 13 }}>({Math.ceil(draftDurationSec / 60)} min each)</span>
                                 </span>
-                                <span style={{ color: theme.color.goldDark, fontWeight: 800, fontSize: 20 }}>{naira(totalCost)}</span>
+                                <span style={{ color: theme.color.goldDark, fontWeight: 800, fontSize: 20 }}>{naira(displayTotalCost)}</span>
                               </div>
                             </div>
                           </div>
@@ -818,7 +837,7 @@ function DoohScheduler() {
                            <>
                              <div style={{ fontSize: 14, color: theme.color.text3, lineHeight: 1.6, marginBottom: 20, fontWeight: 500 }}>
                                <strong>Video Length:</strong> {videoSeconds}s<br/>
-                               <strong>Total Time Needed Per Block:</strong> {formatDurationSec(videoSeconds * activeLoops)}<br/>
+                               <strong>Total Time Needed Per Block:</strong> {Math.floor((videoSeconds * activeLoops) / 60)} min {(videoSeconds * activeLoops) % 60}sec ({videoSeconds * activeLoops} sec)<br/>
                              </div>
                              
                              <div className="flex flex-wrap items-center gap-3 md:gap-4 w-full">
