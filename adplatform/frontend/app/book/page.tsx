@@ -689,59 +689,48 @@ function DoohScheduler() {
 
                   {/* Multi-Day Tabs */}
                   {spreadTabs.length > 1 && (
-                    <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 16, marginBottom: 24, borderBottom: `1px solid ${theme.color.border}` }}>
-                      {spreadTabs.map(tabDate => {
-                        const isTabActive = localDateKey(tabDate) === activeTabDateKey;
-                        return (
-                          <div
-                            key={localDateKey(tabDate)}
-                            onClick={() => handleTabChange(tabDate)}
-                            style={{
-                              padding: "6px 10px 6px 14px",
-                              fontSize: 14,
-                              borderRadius: 10,
-                              border: `1px solid ${isTabActive ? theme.color.goldMid : 'transparent'}`,
-                              background: isTabActive ? theme.color.goldLight : theme.color.surface2,
-                              color: isTabActive ? theme.color.charcoal900 : theme.color.text3,
-                              fontWeight: isTabActive ? 800 : 700,
-                              cursor: "pointer",
-                              whiteSpace: "nowrap",
-                              transition: "all 0.2s",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 6
-                            }}
-                          >
-                            {tabDate.toLocaleDateString("en-US", { weekday: "short" })}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const dateKeyToRemove = localDateKey(tabDate);
-                                setSpreadTabs(prev => prev.filter(d => localDateKey(d) !== dateKeyToRemove));
-                                setMultiDaySelections(prev => {
-                                  const next = { ...prev };
-                                  delete next[dateKeyToRemove];
-                                  return next;
-                                });
-                                if (isTabActive) {
-                                  const remaining = spreadTabs.filter(d => localDateKey(d) !== dateKeyToRemove);
-                                  if (remaining.length > 0) handleTabChange(remaining[0]);
-                                  else {
-                                    setSpreadTabs([]);
-                                    setActiveTabDateKey(null);
-                                    setMultiDaySelections({});
-                                    setSelectedHours([]);
-                                    setDraft(null);
-                                  }
-                                }
+                    <div style={{ marginBottom: 28 }}>
+                      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 16, marginBottom: 12, borderBottom: `1px solid ${theme.color.border}` }}>
+                        {spreadTabs.map(tabDate => {
+                          const isTabActive = localDateKey(tabDate) === activeTabDateKey;
+                          return (
+                            <div
+                              key={localDateKey(tabDate)}
+                              onClick={() => handleTabChange(tabDate)}
+                              style={{
+                                padding: "6px 14px",
+                                fontSize: 14,
+                                borderRadius: 10,
+                                border: `1px solid ${isTabActive ? theme.color.goldMid : 'transparent'}`,
+                                background: isTabActive ? theme.color.goldLight : theme.color.surface2,
+                                color: isTabActive ? theme.color.charcoal900 : theme.color.text3,
+                                fontWeight: isTabActive ? 800 : 700,
+                                cursor: "pointer",
+                                whiteSpace: "nowrap",
+                                transition: "all 0.2s",
+                                display: "flex",
+                                alignItems: "center"
                               }}
-                              style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", color: isTabActive ? theme.color.charcoal900 : theme.color.text3, opacity: 0.6 }}
                             >
-                              <X size={14} />
-                            </button>
-                          </div>
-                        );
-                      })}
+                              {tabDate.toLocaleDateString("en-US", { weekday: "short" })}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                        <button onClick={() => {
+                           setMultiDaySelections(prev => {
+                             const next = { ...prev };
+                             Object.keys(next).forEach(k => {
+                               next[k] = { selectedHours: [...selectedHours], draft: draft ? { ...draft, date: new Date(k) } : null, draftLoops };
+                             });
+                             return next;
+                           });
+                           toast("Replicated to all days!", "success");
+                        }} style={{ background: theme.color.surface2, border: `1px solid ${theme.color.border}`, padding: "8px 12px", borderRadius: 8, fontSize: 13, fontWeight: 700, color: theme.color.text1, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, transition: "all 0.2s" }} className="hover:bg-gray-50">
+                          <RepeatIcon size={14} color={theme.color.goldDark} /> Replicate These Hours to All Days
+                        </button>
+                      </div>
                     </div>
                   )}
 
@@ -892,23 +881,6 @@ function DoohScheduler() {
                                <strong>Total Time Needed for Booking:</strong> {Math.floor(displayTotalSec / 60)} min {displayTotalSec % 60}sec ({displayTotalSec} sec)<br/>
                              </div>
                              
-                             {spreadTabs.length > 1 && (
-                               <div style={{ marginBottom: 20 }}>
-                                 <button onClick={() => {
-                                    setMultiDaySelections(prev => {
-                                      const next = { ...prev };
-                                      Object.keys(next).forEach(k => {
-                                        next[k] = { selectedHours: [...selectedHours], draft: draft ? { ...draft, date: new Date(k) } : null, draftLoops };
-                                      });
-                                      return next;
-                                    });
-                                    toast("Replicated to all days!", "success");
-                                 }} style={{ background: theme.color.surface2, border: `1px solid ${theme.color.border}`, padding: "10px 16px", borderRadius: 8, fontSize: 14, fontWeight: 700, color: theme.color.text1, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, transition: "all 0.2s" }} className="hover:bg-gray-50">
-                                   <RepeatIcon size={16} color={theme.color.goldDark} /> Replicate These Hours to All Days
-                                 </button>
-                               </div>
-                             )}
-
                              <div className="flex flex-wrap items-center gap-3 md:gap-4 w-full">
                                <button onClick={() => {
                                   const newItems: any[] = [];
