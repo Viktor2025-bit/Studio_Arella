@@ -120,7 +120,8 @@ function DoohScheduler() {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedHours, setSelectedHours] = useState<number[]>([8]);
   const [draftLoops, setDraftLoops] = useState(1);
-  const draftDurationSec = draftLoops * (videoSeconds || 60);
+  const activeLoops = draft ? draft.loops : draftLoops;
+  const draftDurationSec = activeLoops * (videoSeconds || 60);
   const draftDurationMin = Math.ceil(draftDurationSec / 60);
   const [showSlotModal, setShowSlotModal] = useState(false);
   const [requestedMinutes, setRequestedMinutes] = useState(1);
@@ -257,8 +258,6 @@ function DoohScheduler() {
   const availMins = draft ? availableMinsForward(draft.startMin, draftBookings) : 0;
   const draftMaxLoops = draft ? Math.floor((availMins * 60) / (videoSeconds || 60)) : 0;
   
-  const draftDurationMin = draft ? Math.ceil((videoSeconds * draft.loops) / 60) : 0;
-  const draftDurationSec = draftDurationMin * 60;
   const draftPrice = calcCost(draftDurationSec, baseRate);
 
   function handleAddToCart() {
@@ -335,7 +334,7 @@ function DoohScheduler() {
              if (conflict) { 
                skipped++; 
              } else {
-               newItems.push({ id: crypto.randomUUID(), creative: selectedCreative, date: new Date(curDate), startMin, durationSec: draftDurationSec, videoSeconds, loops: draftLoops, priceInfo: draftPrice });
+               newItems.push({ id: crypto.randomUUID(), creative: selectedCreative, date: new Date(curDate), startMin, durationSec: draftDurationSec, videoSeconds, loops: activeLoops, priceInfo: draftPrice });
                added++;
                // We add it to existing so subsequent hours in the same day check against it
                existing.push({ startMin, durationMin: draftDurationMin, type: "other" } as any);
