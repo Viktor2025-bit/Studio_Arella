@@ -903,14 +903,14 @@ function DoohScheduler() {
             )}
             
             {/* SPREAD MODAL */}
-            {spreadModal && draft && (
+            {spreadModal && (draft || selectedHours.length > 0) && (
               <div className="qs" style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(10,10,10,0.6)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 16, animation: "fadeIn 0.2s ease-out" }}>
                 <div style={{ background: theme.color.surface, borderRadius: 24, width: "100%", maxWidth: 500, padding: "clamp(20px, 5vw, 32px)", position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.2)", border: `1px solid ${theme.color.border2}` }}>
                   <button onClick={() => setSpreadModal(false)} style={{ position: "absolute", top: 16, right: 16, background: theme.color.surface2, border: `1px solid ${theme.color.border}`, borderRadius: "50%", padding: 10, cursor: "pointer", color: theme.color.text1 }}>
                     <X size={18} />
                   </button>
                   <div style={{ fontWeight: 800, fontSize: 24, marginBottom: 8, color: theme.color.text1 }}>Spread Booking</div>
-                  <div style={{ fontSize: 14, color: theme.color.text3, marginBottom: 24 }}>Select how you want to duplicate your {formatMin(draft.startMin)} slot.</div>
+                  <div style={{ fontSize: 14, color: theme.color.text3, marginBottom: 24 }}>Select how you want to duplicate your {draft ? `${formatMin(draft.startMin)} slot` : `${selectedHours.length} selected hour(s)`}.</div>
                   
                   <div style={{ marginBottom: 20 }}>
                     <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: theme.color.text2 }}>1. Duration (How long?)</label>
