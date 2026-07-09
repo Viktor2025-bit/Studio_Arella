@@ -114,6 +114,11 @@ function DoohScheduler() {
   const [spreadPattern, setSpreadPattern] = useState("weekdays");
   const [customDays, setCustomDays] = useState<number[]>([]);
   
+  // Tabbed Multi-Day Editor State
+  const [spreadTabs, setSpreadTabs] = useState<Date[]>([]);
+  const [activeTabDateKey, setActiveTabDateKey] = useState<string | null>(null);
+  const [multiDaySelections, setMultiDaySelections] = useState<Record<string, { selectedHours: number[], draft: any, draftLoops: number }>>({});
+  
   const [editCartItem, setEditCartItem] = useState<any>(null);
   const [editHour, setEditHour] = useState(8);
   const [editMinute, setEditMinute] = useState(0);
@@ -128,6 +133,29 @@ function DoohScheduler() {
   const [requestedMinutes, setRequestedMinutes] = useState(1);
   const anchorRef = useRef<number | null>(null);
   const timelineRef = useRef<HTMLDivElement | null>(null);
+
+  // Switch tabs in Multi-Day Editor
+  function handleTabChange(date: Date) {
+    const key = localDateKey(date);
+    if (activeTabDateKey) {
+      // Save current state to multiDaySelections before switching
+      setMultiDaySelections(prev => ({
+        ...prev,
+        [activeTabDateKey]: { selectedHours, draft, draftLoops }
+      }));
+    }
+    
+    // Load state from new tab
+    setActiveTabDateKey(key);
+    setViewDate(date);
+    
+    const state = multiDaySelections[key];
+    if (state) {
+      setSelectedHours(state.selectedHours);
+      setDraft(state.draft);
+      setDraftLoops(state.draftLoops);
+    }
+  }
 
   // Hydrate state from sessionStorage
   useEffect(() => {
@@ -336,10 +364,7 @@ function DoohScheduler() {
     else if (spreadDuration === "6months") endDate = addMonths(startDate, 6);
     else if (spreadDuration === "1year") endDate = addYears(startDate, 1);
 
-    const draftPrice = calcCost(draftDurationSec, selectedCreative?.ppm_rate || PPM);
-
-    let added = 0, skipped = 0;
-    const newItems: any[] = [];
+    const targetDates: Date[] = [];
     let curDate = new Date(startDate);
     
     let dayIndex = 0;
@@ -353,49 +378,28 @@ function DoohScheduler() {
       else if (spreadPattern === "custom") shouldAdd = customDays.includes(dayOfWeek);
       else if (spreadPattern === "alternate") shouldAdd = (dayIndex % 2 === 0);
       
-      if (shouldAdd) {
-        const dateKey = localDateKey(curDate);
-        const existing = [
-          ...liveBookings.filter((b) => b.dateKey === dateKey).map((b) => ({ ...b, type: "other" })),
-          ...cart.filter((c) => localDateKey(new Date(c.date)) === dateKey).map((c) => ({ startMin: c.startMin, durationMin: Math.round(c.durationSec / 60) })),
-          ...newItems.filter((n) => localDateKey(n.date) === dateKey).map((n) => ({ startMin: n.startMin, durationMin: Math.round(n.durationSec / 60) })),
-        ];
-
-        selectedHours.forEach(h => {
-          let startMin = h * 60;
-          if (selectedHours.length === 1 && draft) startMin = draft.startMin;
-          else {
-            while(startMin < (h + 1) * 60 && isStartInsideBooking(startMin, existing)) startMin++;
-          }
-          
-          if (startMin >= (h + 1) * 60) {
-             skipped++;
-          } else {
-             const requiredEnd = startMin + draftDurationSec / 60;
-             const conflict = isStartInsideBooking(startMin, existing) || existing.some((b) => startMin < b.startMin + (b.durationMin || 0) && requiredEnd > b.startMin);
-             
-             if (conflict) { 
-               skipped++; 
-             } else {
-               newItems.push({ id: crypto.randomUUID(), creative: selectedCreative, date: new Date(curDate), startMin, durationSec: draftDurationSec, videoSeconds, loops: activeLoops, priceInfo: draftPrice });
-               added++;
-               // We add it to existing so subsequent hours in the same day check against it
-               existing.push({ startMin, durationMin: draftDurationMin, type: "other" } as any);
-             }
-          }
-        });
-      }
+      if (shouldAdd) targetDates.push(new Date(curDate));
       
       curDate = addDays(curDate, 1);
       dayIndex++;
     }
     
-    if (newItems.length > 0) addMultipleToCart(newItems);
+    if (targetDates.length === 0) {
+      toast("No days matched your pattern", "error");
+      return;
+    }
+
+    const newSelections: Record<string, { selectedHours: number[], draft: any, draftLoops: number }> = {};
+    targetDates.forEach(d => {
+      const copyDraft = draft ? { ...draft, date: new Date(d) } : null;
+      newSelections[localDateKey(d)] = { selectedHours: [...selectedHours], draft: copyDraft, draftLoops };
+    });
+
+    setSpreadTabs(targetDates);
+    setMultiDaySelections(newSelections);
+    setActiveTabDateKey(localDateKey(targetDates[0]));
+    
     setSpreadModal(false);
-    setDraft(null);
-    setSelectedHours([]);
-    setMessage(skipped > 0 ? `Added ${added} bookings. Skipped ${skipped} due to conflicts.` : `Successfully spread ${added} bookings.`);
-    toast(`Added ${added} slots`, "success");
   }
 
   function openCartEdit(item: any) {
@@ -667,9 +671,37 @@ function DoohScheduler() {
                 </button>
                 
                 <div style={{ padding: "clamp(20px, 5vw, 36px) clamp(20px, 5vw, 32px)" }}>
-                  <div style={{ fontWeight: 800, fontSize: 24, marginBottom: 28, paddingRight: 40, color: theme.color.text1 }}>
-                    Schedule for {viewDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+                  <div style={{ fontWeight: 800, fontSize: 24, marginBottom: spreadTabs.length > 1 ? 16 : 28, paddingRight: 40, color: theme.color.text1 }}>
+                    {spreadTabs.length > 1 ? 'Multi-Day Schedule' : `Schedule for ${viewDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}`}
                   </div>
+
+                  {/* Multi-Day Tabs */}
+                  {spreadTabs.length > 1 && (
+                    <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 16, marginBottom: 24, borderBottom: `1px solid ${theme.color.border}` }}>
+                      {spreadTabs.map(tabDate => {
+                        const isTabActive = localDateKey(tabDate) === activeTabDateKey;
+                        return (
+                          <button
+                            key={localDateKey(tabDate)}
+                            onClick={() => handleTabChange(tabDate)}
+                            style={{
+                              padding: "10px 20px",
+                              borderRadius: 12,
+                              border: `1px solid ${isTabActive ? theme.color.goldMid : 'transparent'}`,
+                              background: isTabActive ? theme.color.goldLight : theme.color.surface2,
+                              color: isTabActive ? theme.color.charcoal900 : theme.color.text3,
+                              fontWeight: isTabActive ? 800 : 700,
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                              transition: "all 0.2s"
+                            }}
+                          >
+                            {tabDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   {/* Period Selector (Hours) */}
                   <div style={{ marginBottom: 28 }}>
@@ -956,7 +988,7 @@ function DoohScheduler() {
                   </div>
                   
                   <AnimatedButton onClick={handleSpreadAdd} style={{ width: "100%", padding: "16px", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontWeight: 800, fontSize: 16, cursor: "pointer", boxShadow: theme.shadow.gold }}>
-                    Generate Booking Spread
+                    Continue to Edit
                   </AnimatedButton>
                 </div>
               </div>
