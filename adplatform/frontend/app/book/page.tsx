@@ -120,6 +120,8 @@ function DoohScheduler() {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedHours, setSelectedHours] = useState<number[]>([8]);
   const [draftLoops, setDraftLoops] = useState(1);
+  const draftDurationSec = draftLoops * (videoSeconds || 60);
+  const draftDurationMin = Math.ceil(draftDurationSec / 60);
   const [showSlotModal, setShowSlotModal] = useState(false);
   const [requestedMinutes, setRequestedMinutes] = useState(1);
   const anchorRef = useRef<number | null>(null);
@@ -175,8 +177,7 @@ function DoohScheduler() {
       firstAvailMin++;
     }
     if (firstAvailMin < (hour + 1) * 60) {
-      setDraftLoops(1);
-      setDraft({ date, startMin: firstAvailMin, loops: 1 });
+      setDraft({ date, startMin: firstAvailMin, loops: draftLoops });
     } else {
       setDraft(null);
     }
@@ -293,9 +294,7 @@ function DoohScheduler() {
     else if (spreadDuration === "6months") endDate = addMonths(startDate, 6);
     else if (spreadDuration === "1year") endDate = addYears(startDate, 1);
 
-    const draftDurationSec = draftLoops * (videoSeconds || 60);
     const draftPrice = calcCost(draftDurationSec, selectedCreative?.ppm_rate || PPM);
-    const draftDurationMin = Math.ceil(draftDurationSec / 60);
 
     let added = 0, skipped = 0;
     const newItems: any[] = [];
@@ -671,9 +670,7 @@ function DoohScheduler() {
 
                   {/* Draft Summary & Add to Cart */}
                   {selectedHours.length > 0 && (() => {
-                    const draftDurationSec = draftLoops * (videoSeconds || 60);
                     const draftPrice = calcCost(draftDurationSec, selectedCreative?.ppm_rate || PPM);
-                    const draftDurationMin = Math.ceil(draftDurationSec / 60);
                     
                     // Check conflicts for all selected hours
                     const bookings = bookingsForDate(localDateKey(viewDate));

@@ -27,12 +27,9 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         <button className="show-on-mobile-flex" onClick={onMenuClick} style={{ alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', color: theme.color.text1, cursor: 'pointer', padding: 4 }}>
           <Menu size={24} />
         </button>
-        <img src="/logo.png" alt="Studio Arella Logo" style={{ 
+        <img src={appTheme === 'dark' ? "/logo-white.png" : "/logo.png"} alt="Studio Arella Logo" style={{ 
           height: 56, 
-          objectFit: 'contain',
-          background: appTheme === 'dark' ? '#ffffff' : 'transparent',
-          padding: appTheme === 'dark' ? '4px 8px' : '0',
-          borderRadius: appTheme === 'dark' ? 8 : 0
+          objectFit: 'contain'
         }} />
       </div>
 
