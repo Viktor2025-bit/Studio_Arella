@@ -633,7 +633,7 @@ function DoohScheduler() {
                             aspectRatio: "1", borderRadius: 12, border: isToday && !isViewing ? `1px solid ${theme.color.gold}` : "1px solid transparent",
                             background: isViewing ? theme.color.surface2 : "transparent", color: isPast ? theme.color.text4 : theme.color.text1,
                             fontSize: 16, cursor: (status === 'red' || isPast) ? "not-allowed" : "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
-                            boxShadow: isViewing ? `inset 0 0 0 2px ${theme.color.charcoal900}` : "none",
+                            boxShadow: isViewing ? `inset 0 0 0 2px #f1b945` : "none",
                             opacity: isPast ? 0.4 : 1
                           }}>
                           <span className="mono" style={{ fontWeight: isViewing ? 800 : 600 }}>{d.getDate()}</span>
