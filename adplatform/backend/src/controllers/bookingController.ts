@@ -155,10 +155,10 @@ export const reserveSlots: RequestHandler = async (req, res) => {
        locked_until: new Date(Date.now() + 5 * 60000)
     });
 
-  } catch (err) {
+  } catch (err: any) {
     await client.query('ROLLBACK');
     console.error('Reserve slots error', err);
-    res.status(500).json({ message: 'Failed to reserve slots' });
+    res.status(500).json({ message: err.message || 'Failed to reserve slots' });
   } finally {
     client.release();
   }
