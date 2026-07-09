@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
 import { FaArrowRightFromBracket, FaCalendarCheck, FaMoon, FaSun, FaUser } from 'react-icons/fa6';
 import NotificationBell from '@/components/ui/NotificationBell';
-import { Menu } from 'lucide-react';
+import { Menu, ShoppingCart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { theme } from '@/lib/theme';
 
@@ -34,8 +34,8 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <Link href="/book" className="hide-on-mobile" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: theme.color.gold, color: '#1A1A1A', padding: '8px 16px', borderRadius: theme.radius.sm, fontSize: 12, fontWeight: 800, textDecoration: 'none', boxShadow: theme.shadow.gold }}>
-          <FaCalendarCheck size={12} /> Book Slot
+        <Link href="/cart" className="hide-on-mobile" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: theme.color.gold, color: '#1A1A1A', padding: '8px 16px', borderRadius: theme.radius.sm, fontSize: 12, fontWeight: 800, textDecoration: 'none', boxShadow: theme.shadow.gold }}>
+          <ShoppingCart size={14} strokeWidth={2.5} /> Cart
         </Link>
 
         <button onClick={toggleTheme} className="hide-on-mobile" style={{ width: 38, height: 38, borderRadius: '50%', background: theme.color.surface2, border: `1px solid ${theme.color.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.15s', color: theme.color.text2 }}>
@@ -63,11 +63,11 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                     <p style={{ fontSize: 11, color: theme.color.text4, margin: 0, fontWeight: 500 }}>{user?.email}</p>
                   </div>
                   <div className="show-on-mobile" style={{ borderBottom: `1px solid ${theme.color.border2}`, marginBottom: 6, paddingBottom: 6 }}>
-                    <Link href="/book" onClick={() => setDropOpen(false)}
+                    <Link href="/cart" onClick={() => setDropOpen(false)}
                       style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', fontSize: 13, fontWeight: 800, color: theme.color.goldDark, textDecoration: 'none', borderRadius: theme.radius.sm, transition: 'background 0.1s' }}
                       onMouseOver={e => (e.currentTarget.style.background = theme.color.goldLight)}
                       onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
-                      <FaCalendarCheck size={13} /> Book Slot
+                      <ShoppingCart size={14} strokeWidth={2.5} /> Cart
                     </Link>
                     <button onClick={() => { toggleTheme(); setDropOpen(false); }}
                       style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', fontSize: 13, fontWeight: 700, color: theme.color.text2, background: 'none', border: 'none', cursor: 'pointer', borderRadius: theme.radius.sm, fontFamily: F, textAlign: 'left' }}
