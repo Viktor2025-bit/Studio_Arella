@@ -852,7 +852,7 @@ function DoohScheduler() {
                             <div style={{ background: theme.color.surface, borderRadius: 16, padding: "16px 20px", border: `1px solid ${theme.color.border2}`, boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)" }}>
                               <div className="mono" style={{ fontSize: 15, display: "flex", justifyContent: "space-between", alignItems: "center", fontWeight: 700 }}>
                                 <span style={{ color: theme.color.text2 }}>
-                                  {displayTotalBlocks} Block(s) selected <span style={{ color: theme.color.text4, fontWeight: 500, fontSize: 13 }}>({Math.ceil(draftDurationSec / 60)} min each)</span>
+                                  {displayTotalBlocks} Block(s) selected <span style={{ color: theme.color.text4, fontWeight: 500, fontSize: 13 }}>({Math.ceil(displayTotalSec / 60)} min total)</span>
                                 </span>
                                 <span style={{ color: theme.color.goldDark, fontWeight: 800, fontSize: 20 }}>{naira(displayTotalCost)}</span>
                               </div>
