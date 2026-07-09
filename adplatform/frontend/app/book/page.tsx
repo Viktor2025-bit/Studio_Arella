@@ -681,11 +681,11 @@ function DoohScheduler() {
                       {spreadTabs.map(tabDate => {
                         const isTabActive = localDateKey(tabDate) === activeTabDateKey;
                         return (
-                          <button
+                          <div
                             key={localDateKey(tabDate)}
                             onClick={() => handleTabChange(tabDate)}
                             style={{
-                              padding: "8px 14px",
+                              padding: "6px 10px 6px 14px",
                               fontSize: 14,
                               borderRadius: 10,
                               border: `1px solid ${isTabActive ? theme.color.goldMid : 'transparent'}`,
@@ -694,11 +694,40 @@ function DoohScheduler() {
                               fontWeight: isTabActive ? 800 : 700,
                               cursor: "pointer",
                               whiteSpace: "nowrap",
-                              transition: "all 0.2s"
+                              transition: "all 0.2s",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 6
                             }}
                           >
                             {tabDate.toLocaleDateString("en-US", { weekday: "short" })}
-                          </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const dateKeyToRemove = localDateKey(tabDate);
+                                setSpreadTabs(prev => prev.filter(d => localDateKey(d) !== dateKeyToRemove));
+                                setMultiDaySelections(prev => {
+                                  const next = { ...prev };
+                                  delete next[dateKeyToRemove];
+                                  return next;
+                                });
+                                if (isTabActive) {
+                                  const remaining = spreadTabs.filter(d => localDateKey(d) !== dateKeyToRemove);
+                                  if (remaining.length > 0) handleTabChange(remaining[0]);
+                                  else {
+                                    setSpreadTabs([]);
+                                    setActiveTabDateKey(null);
+                                    setMultiDaySelections({});
+                                    setSelectedHours([]);
+                                    setDraft(null);
+                                  }
+                                }
+                              }}
+                              style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", color: isTabActive ? theme.color.charcoal900 : theme.color.text3, opacity: 0.6 }}
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
                         );
                       })}
                     </div>
@@ -773,6 +802,7 @@ function DoohScheduler() {
                     const isInvalid = hasConflict;
                     let displayTotalCost = 0;
                     let displayTotalBlocks = 0;
+                    let displayTotalSec = 0;
 
                     if (spreadTabs.length > 1) {
                       const currentSelections = { ...multiDaySelections };
@@ -783,12 +813,14 @@ function DoohScheduler() {
                         if (!state || !state.selectedHours) return;
                         displayTotalBlocks += state.selectedHours.length;
                         const loops = state.draft ? state.draft.loops : state.draftLoops;
+                        displayTotalSec += loops * (videoSeconds || 60) * state.selectedHours.length;
                         const costPerBlock = calcCost(loops * (videoSeconds || 60), selectedCreative?.ppm_rate || PPM).cost;
                         displayTotalCost += costPerBlock * state.selectedHours.length;
                       });
                     } else {
                       displayTotalCost = draftPrice.cost * selectedHours.length;
                       displayTotalBlocks = selectedHours.length;
+                      displayTotalSec = activeLoops * (videoSeconds || 60) * selectedHours.length;
                     }
 
                     return (
@@ -837,7 +869,7 @@ function DoohScheduler() {
                            <>
                              <div style={{ fontSize: 14, color: theme.color.text3, lineHeight: 1.6, marginBottom: 20, fontWeight: 500 }}>
                                <strong>Video Length:</strong> {videoSeconds}s<br/>
-                               <strong>Total Time Needed Per Block:</strong> {Math.floor((videoSeconds * activeLoops) / 60)} min {(videoSeconds * activeLoops) % 60}sec ({videoSeconds * activeLoops} sec)<br/>
+                               <strong>Total Time Needed for Booking:</strong> {Math.floor(displayTotalSec / 60)} min {displayTotalSec % 60}sec ({displayTotalSec} sec)<br/>
                              </div>
                              
                              <div className="flex flex-wrap items-center gap-3 md:gap-4 w-full">
