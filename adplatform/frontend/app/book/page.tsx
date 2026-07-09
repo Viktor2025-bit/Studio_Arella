@@ -602,11 +602,11 @@ function DoohScheduler() {
                   <div style={{ fontSize: 14, color: theme.color.text3, marginBottom: 24 }}>Green dots mean fully available.</div>
                   
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, background: theme.color.surface2, padding: "10px 14px", borderRadius: 12, border: `1px solid ${theme.color.border}` }}>
-                    <button onClick={() => setCalCursor(new Date(calCursor.getFullYear(), calCursor.getMonth() - 1, 1))} style={iconBtnStyle}><ChevronLeft size={18} color={theme.color.text2} /></button>
+                    <button onClick={() => setCalCursor(new Date(calCursor.getFullYear(), calCursor.getMonth() - 1, 1))} style={{ ...iconBtnStyle, border: '1px solid #f1b945' }}><ChevronLeft size={18} color={theme.color.text2} /></button>
                     <div style={{ fontWeight: 800, fontSize: 16, color: theme.color.text1 }}>
                       {calCursor.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
                     </div>
-                    <button onClick={() => setCalCursor(new Date(calCursor.getFullYear(), calCursor.getMonth() + 1, 1))} style={iconBtnStyle}><ChevronRight size={18} color={theme.color.text2} /></button>
+                    <button onClick={() => setCalCursor(new Date(calCursor.getFullYear(), calCursor.getMonth() + 1, 1))} style={{ ...iconBtnStyle, border: '1px solid #f1b945' }}><ChevronRight size={18} color={theme.color.text2} /></button>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 6, marginBottom: 14 }}>
                     {WEEKDAYS.map((w) => <div key={w} className="mono" style={{ fontSize: 13, textAlign: "center", color: theme.color.text3, fontWeight: 700 }}>{w}</div>)}
@@ -633,7 +633,7 @@ function DoohScheduler() {
                             aspectRatio: "1", borderRadius: 12, border: isToday && !isViewing ? `1px solid ${theme.color.gold}` : "1px solid transparent",
                             background: isViewing ? theme.color.surface2 : "transparent", color: isPast ? theme.color.text4 : theme.color.text1,
                             fontSize: 16, cursor: (status === 'red' || isPast) ? "not-allowed" : "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6,
-                            boxShadow: isViewing ? `inset 0 0 0 2px #f1b945` : "none",
+                            boxShadow: isViewing ? `inset 0 0 0 2px ${theme.color.charcoal900}` : "none",
                             opacity: isPast ? 0.4 : 1
                           }}>
                           <span className="mono" style={{ fontWeight: isViewing ? 800 : 600 }}>{d.getDate()}</span>
