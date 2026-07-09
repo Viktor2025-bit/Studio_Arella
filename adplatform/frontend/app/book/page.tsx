@@ -602,11 +602,11 @@ function DoohScheduler() {
                   <div style={{ fontSize: 14, color: theme.color.text3, marginBottom: 24 }}>Green dots mean fully available.</div>
                   
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20, background: theme.color.surface2, padding: "10px 14px", borderRadius: 12, border: `1px solid ${theme.color.border}` }}>
-                    <button onClick={() => setCalCursor(new Date(calCursor.getFullYear(), calCursor.getMonth() - 1, 1))} style={{ ...iconBtnStyle, background: '#000', border: '1px solid #f1b945' }}><ChevronLeft size={18} color="#efb842" /></button>
+                    <button onClick={() => setCalCursor(new Date(calCursor.getFullYear(), calCursor.getMonth() - 1, 1))} style={{ ...iconBtnStyle, background: '#efb842', border: '1px solid #f1b945' }}><ChevronLeft size={18} color="#000" /></button>
                     <div style={{ fontWeight: 800, fontSize: 16, color: theme.color.text1 }}>
                       {calCursor.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
                     </div>
-                    <button onClick={() => setCalCursor(new Date(calCursor.getFullYear(), calCursor.getMonth() + 1, 1))} style={{ ...iconBtnStyle, background: '#000', border: '1px solid #f1b945' }}><ChevronRight size={18} color="#efb842" /></button>
+                    <button onClick={() => setCalCursor(new Date(calCursor.getFullYear(), calCursor.getMonth() + 1, 1))} style={{ ...iconBtnStyle, background: '#efb842', border: '1px solid #f1b945' }}><ChevronRight size={18} color="#000" /></button>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 6, marginBottom: 14 }}>
                     {WEEKDAYS.map((w) => <div key={w} className="mono" style={{ fontSize: 13, textAlign: "center", color: theme.color.text3, fontWeight: 700 }}>{w}</div>)}
