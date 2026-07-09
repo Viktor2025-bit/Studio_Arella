@@ -217,7 +217,7 @@ export default function CartPage() {
     {/* Invoice Modal */}
     {showInvoice && (
       <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ background: theme.color.surface, borderRadius: 24, width: "100%", maxWidth: 500, padding: 32, boxShadow: theme.shadow.xl, position: "relative", animation: "slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)" }}>
+        <div style={{ background: theme.color.surface, borderRadius: 24, width: "100%", maxWidth: 500, padding: 32, boxShadow: theme.shadow.lg, position: "relative", animation: "slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)" }}>
           <button onClick={() => setShowInvoice(false)} style={{ position: "absolute", top: 24, right: 24, background: theme.color.surface2, border: "none", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: theme.color.text2 }}>
             <X size={20} />
           </button>
