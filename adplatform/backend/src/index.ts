@@ -34,10 +34,32 @@ app.get('/health', (_req, res) => res.json({
   timestamp: new Date().toISOString(),
 }));
 
-app.listen(PORT, () => {
+import pool from './db/pool';
+
+app.listen(PORT, async () => {
   console.log(`\n🟠 Studio Arella Backend running on port ${PORT}`);
   console.log(`   Platform: Bems Screens — Bems Junction, Umuahia`);
   console.log(`   Environment: ${process.env.NODE_ENV || 'development'}\n`);
+  
+  // HOTFIX: Ensure booking_slots table exists in production database
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS booking_slots (
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        booking_id UUID REFERENCES bookings(id) ON DELETE CASCADE,
+        screen_id UUID REFERENCES screens(id) ON DELETE CASCADE,
+        start_time TIMESTAMPTZ NOT NULL,
+        end_time TIMESTAMPTZ NOT NULL,
+        status VARCHAR(50) DEFAULT 'locked',
+        locked_until TIMESTAMPTZ,
+        created_at TIMESTAMP DEFAULT NOW()
+      );
+    `);
+    console.log('✅ booking_slots table verified');
+  } catch (err) {
+    console.error('❌ Failed to create booking_slots table:', err);
+  }
+
   startBookingLifecycleCron();
 });
 

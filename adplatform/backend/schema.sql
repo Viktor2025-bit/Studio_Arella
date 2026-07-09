@@ -100,6 +100,18 @@ CREATE TABLE IF NOT EXISTS bookings (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Booking Slots table
+CREATE TABLE IF NOT EXISTS booking_slots (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  booking_id UUID REFERENCES bookings(id) ON DELETE CASCADE,
+  screen_id UUID REFERENCES screens(id) ON DELETE CASCADE,
+  start_time TIMESTAMPTZ NOT NULL,
+  end_time TIMESTAMPTZ NOT NULL,
+  status VARCHAR(50) DEFAULT 'locked', -- 'locked' | 'active' | 'cancelled'
+  locked_until TIMESTAMPTZ,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Transactions / Credits table
 CREATE TABLE IF NOT EXISTS transactions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
