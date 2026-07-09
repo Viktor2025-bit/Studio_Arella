@@ -135,7 +135,7 @@ function DoohScheduler() {
       const saved = sessionStorage.getItem('rella-booking-state');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.currentStep) setCurrentStep(parsed.currentStep);
+        if (parsed.currentStep) setCurrentStep(parsed.currentStep > 2 ? 2 : parsed.currentStep);
         if (parsed.viewDate) setViewDate(new Date(parsed.viewDate));
         if (parsed.selectedHours) setSelectedHours(parsed.selectedHours);
         if (parsed.draftLoops) setDraftLoops(parsed.draftLoops);
