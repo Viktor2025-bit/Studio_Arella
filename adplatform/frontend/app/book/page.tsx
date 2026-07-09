@@ -393,8 +393,13 @@ function DoohScheduler() {
 
     const newSelections: Record<string, { selectedHours: number[], draft: any, draftLoops: number }> = {};
     targetDates.forEach(d => {
-      const copyDraft = draft ? { ...draft, date: new Date(d) } : null;
-      newSelections[localDateKey(d)] = { selectedHours: [...selectedHours], draft: copyDraft, draftLoops };
+      const isFirst = localDateKey(d) === localDateKey(targetDates[0]);
+      if (spreadReplicate || isFirst) {
+        const copyDraft = draft ? { ...draft, date: new Date(d) } : null;
+        newSelections[localDateKey(d)] = { selectedHours: [...selectedHours], draft: copyDraft, draftLoops };
+      } else {
+        newSelections[localDateKey(d)] = { selectedHours: [], draft: null, draftLoops: 1 };
+      }
     });
 
     setSpreadTabs(targetDates);
@@ -636,9 +641,9 @@ function DoohScheduler() {
                         <button key={i} onClick={() => { 
                             if (status === 'red' || isPast) return;
                             setViewDate(d); 
-                            setSelectedHours([]);
+                            setSelectedHours([7]);
                             setDraftLoops(1);
-                            setDraft(null);
+                            autoSelectSlot(d, 7);
                             setShowSlotModal(true);
                           }} className="day-cell"
                           style={{
