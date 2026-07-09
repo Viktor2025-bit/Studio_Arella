@@ -689,8 +689,8 @@ function DoohScheduler() {
 
                   {/* Multi-Day Tabs */}
                   {spreadTabs.length > 1 && (
-                    <div style={{ marginBottom: 28 }}>
-                      <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 16, marginBottom: 12, borderBottom: `1px solid ${theme.color.border}` }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginBottom: 28, paddingBottom: 16, borderBottom: `1px solid ${theme.color.border}` }}>
+                      <div style={{ display: "flex", gap: 8, overflowX: "auto", flex: 1, paddingBottom: 4 }}>
                         {spreadTabs.map(tabDate => {
                           const isTabActive = localDateKey(tabDate) === activeTabDateKey;
                           return (
@@ -717,20 +717,18 @@ function DoohScheduler() {
                           );
                         })}
                       </div>
-                      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                        <button onClick={() => {
-                           setMultiDaySelections(prev => {
-                             const next = { ...prev };
-                             Object.keys(next).forEach(k => {
-                               next[k] = { selectedHours: [...selectedHours], draft: draft ? { ...draft, date: new Date(k) } : null, draftLoops };
-                             });
-                             return next;
+                      <button onClick={() => {
+                         setMultiDaySelections(prev => {
+                           const next = { ...prev };
+                           Object.keys(next).forEach(k => {
+                             next[k] = { selectedHours: [...selectedHours], draft: draft ? { ...draft, date: new Date(k) } : null, draftLoops };
                            });
-                           toast("Replicated to all days!", "success");
-                        }} style={{ background: theme.color.surface2, border: `1px solid ${theme.color.border}`, padding: "8px 12px", borderRadius: 8, fontSize: 13, fontWeight: 700, color: theme.color.text1, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, transition: "all 0.2s" }} className="hover:bg-gray-50">
-                          <RepeatIcon size={14} color={theme.color.goldDark} /> Replicate These Hours to All Days
-                        </button>
-                      </div>
+                           return next;
+                         });
+                         toast("Replicated to all days!", "success");
+                      }} style={{ flexShrink: 0, background: theme.color.surface2, border: `1px solid ${theme.color.border}`, padding: "8px 12px", borderRadius: 8, fontSize: 13, fontWeight: 700, color: theme.color.text1, cursor: "pointer", display: "flex", alignItems: "center", gap: 6, transition: "all 0.2s" }} className="hover:bg-gray-50">
+                        <RepeatIcon size={14} color={theme.color.goldDark} /> Replicate These Hours to All Days
+                      </button>
                     </div>
                   )}
 
