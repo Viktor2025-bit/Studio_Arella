@@ -117,6 +117,7 @@ function DoohScheduler() {
   const [editCartItem, setEditCartItem] = useState<any>(null);
   const [editHour, setEditHour] = useState(8);
   const [editMinute, setEditMinute] = useState(0);
+  const [isRestoring, setIsRestoring] = useState(true);
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedHours, setSelectedHours] = useState<number[]>([8]);
   const [draftLoops, setDraftLoops] = useState(1);
@@ -128,11 +129,53 @@ function DoohScheduler() {
   const anchorRef = useRef<number | null>(null);
   const timelineRef = useRef<HTMLDivElement | null>(null);
 
+  // Hydrate state from sessionStorage
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('rella-booking-state');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.currentStep) setCurrentStep(parsed.currentStep);
+        if (parsed.viewDate) setViewDate(new Date(parsed.viewDate));
+        if (parsed.selectedHours) setSelectedHours(parsed.selectedHours);
+        if (parsed.draftLoops) setDraftLoops(parsed.draftLoops);
+        if (parsed.draft) setDraft({ ...parsed.draft, date: new Date(parsed.draft.date) });
+      }
+    } catch(e) {}
+    setIsRestoring(false);
+  }, []);
+
+  // Save state to sessionStorage
+  useEffect(() => {
+    if (isRestoring) return;
+    const stateToSave = {
+      currentStep,
+      viewDate: viewDate.toISOString(),
+      selectedHours,
+      draftLoops,
+      draft: draft ? { ...draft, date: draft.date.toISOString() } : null,
+      selectedCreativeId: selectedCreative?.id
+    };
+    sessionStorage.setItem('rella-booking-state', JSON.stringify(stateToSave));
+  }, [currentStep, viewDate, selectedHours, draftLoops, draft, selectedCreative, isRestoring]);
+
   // Fetch approved ads
   useEffect(() => {
     api.get('/ads').then((a) => {
       const allowed = (a.data.ads || []).filter((ad: any) => ad.status === 'approved' || ad.status === 'pending');
       setApprovedCreatives(allowed);
+      let restoredCreativeId = null;
+      try {
+        const saved = sessionStorage.getItem('rella-booking-state');
+        if (saved) restoredCreativeId = JSON.parse(saved).selectedCreativeId;
+      } catch(e) {}
+      if (restoredCreativeId) {
+        const found = allowed.find((c: any) => c.id === restoredCreativeId);
+        if (found) {
+          setSelectedCreative(found);
+          return;
+        }
+      }
       if (allowed.length > 0) setSelectedCreative(allowed[0]);
     }).catch(() => {});
   }, []);
@@ -760,13 +803,15 @@ function DoohScheduler() {
                                         creative: selectedCreative,
                                         date: viewDate,
                                         startMin,
-                                        loops: draftLoops,
+                                        loops: activeLoops,
                                         durationSec: draftDurationSec,
                                         priceInfo: draftPrice
                                      });
                                   });
                                   if (newItems.length > 0) {
                                      addMultipleToCart(newItems);
+                                     setSelectedHours([]);
+                                     setDraft(null);
                                      toast(`Added ${newItems.length} slot(s) to Cart!`, "success");
                                   }
                                }} className="flex-1 min-w-[200px] justify-center" style={{ padding: "16px 28px", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontSize: 16, fontWeight: 800, cursor: "pointer", display: "flex", gap: 10, alignItems: "center", boxShadow: theme.shadow.gold, transition: "all 0.2s" }}>
