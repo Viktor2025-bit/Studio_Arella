@@ -977,8 +977,7 @@ function DoohScheduler() {
                     <AnimatedButton onClick={() => {
                       setMessage("");
                       setShowSlotModal(false);
-                      setCurrentStep(3);
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      router.push('/cart');
                     }} style={{ width: "100%", padding: "16px", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontWeight: 800, fontSize: 16, cursor: "pointer", boxShadow: theme.shadow.gold, display: "flex", justifyContent: "center", alignItems: "center", gap: 8 }}>
                       View Cart & Checkout <ChevronRight size={18} />
                     </AnimatedButton>
