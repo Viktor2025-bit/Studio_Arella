@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, Trash2, Clock, Calendar, Edit2, Timer, X } from 'lucide-react';
+import { ChevronLeft, ChevronDown, ChevronUp, Trash2, Clock, Calendar, Edit2, Timer, X } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useToast } from '@/components/ui/ToastProvider';
 import { useCartStore } from '@/store/cartStore';
@@ -48,6 +48,32 @@ export default function CartPage() {
   const [initialTab, setInitialTab] = useState<'time' | 'period'>('time');
 
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+
+  const groupedCart = useMemo(() => {
+    const groups: Record<string, { creative: any, totalCost: number, items: CartItem[], dates: Set<string> }> = {};
+    
+    cart.forEach(c => {
+      const cId = c.creative?.id || 'unknown';
+      if (!groups[cId]) {
+        groups[cId] = { creative: c.creative, totalCost: 0, items: [], dates: new Set() };
+      }
+      groups[cId].items.push(c);
+      groups[cId].totalCost += c.priceInfo.cost;
+      groups[cId].dates.add(new Date(c.date).toDateString());
+    });
+
+    return Object.values(groups);
+  }, [cart]);
+
+  const toggleGroup = (id: string) => {
+    setExpandedGroups(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const removeCampaign = (creativeId: string) => {
+    const itemsToRemove = cart.filter(c => (c.creative?.id || 'unknown') === creativeId);
+    itemsToRemove.forEach(item => removeFromCart(item.id));
+  };
 
   // Modal countdown timer
   useEffect(() => {
@@ -157,35 +183,89 @@ export default function CartPage() {
             </div>
           ) : (
             <div style={{ background: theme.color.surface, borderRadius: 16, border: `1px solid ${theme.color.border}`, padding: "40px 32px", boxShadow: theme.shadow.sm }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 32 }}>
-                {[...cart].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime() || a.startMin - b.startMin).map((c) => {
-                  const d = new Date(c.date);
+              <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 32 }}>
+                {groupedCart.map((group) => {
+                  const creativeId = group.creative?.id || 'unknown';
+                  // Expand by default if it's the only campaign, otherwise rely on state
+                  const isExpanded = groupedCart.length === 1 ? expandedGroups[creativeId] !== false : !!expandedGroups[creativeId];
+                  
+                  // group by date inside
+                  const itemsByDate: Record<string, CartItem[]> = {};
+                  group.items.forEach(c => {
+                    const dKey = new Date(c.date).toDateString();
+                    if (!itemsByDate[dKey]) itemsByDate[dKey] = [];
+                    itemsByDate[dKey].push(c);
+                  });
+
+                  // Sort dates
+                  const sortedDates = Object.keys(itemsByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
                   return (
-                    <div key={c.id} style={{ background: theme.color.surface2, borderRadius: 14, padding: "clamp(14px, 4vw, 20px) clamp(16px, 4vw, 24px)", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "clamp(12px, 3vw, 20px)", border: `1px solid ${theme.color.border}`, flexWrap: "wrap" }}>
-                      <div className="mono" style={{ color: theme.color.text3, fontSize: "clamp(12px, 3vw, 14px)", flex: 1 }}>
-                        <div style={{ color: theme.color.text1, fontWeight: 800, marginBottom: 8, fontSize: "clamp(15px, 4vw, 18px)", fontFamily: theme.font.display }}>
-                          {c.creative?.title || 'Unknown Ad'}
+                    <div key={creativeId} style={{ background: theme.color.surface, borderRadius: 16, border: `1px solid ${theme.color.border}`, overflow: 'hidden' }}>
+                      {/* Campaign Header */}
+                      <div onClick={() => toggleGroup(creativeId)} style={{ padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", background: isExpanded ? theme.color.surface2 : 'transparent', transition: 'all 0.2s' }}>
+                        <div>
+                           <div style={{ fontWeight: 800, fontSize: 18, fontFamily: theme.font.display, color: theme.color.text1, marginBottom: 4 }}>
+                             {group.creative?.title || 'Unknown Ad'}
+                           </div>
+                           <div style={{ color: theme.color.text3, fontSize: 14, fontWeight: 500, display: "flex", gap: 12 }}>
+                             <span>{group.dates.size} Day(s)</span>
+                             <span>&bull;</span>
+                             <span>{group.items.length} Block(s)</span>
+                           </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, color: theme.color.text2, fontWeight: 600 }}>
-                          <Calendar size={14} />
-                          {d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <Clock size={14} />
-                          {formatMin(c.startMin)} – {formatMin(c.startMin + Math.max(1, Math.ceil(c.durationSec / 60)))} · {formatDurationSec(c.durationSec)} airtime
-                        </div>
-                      </div>
-                      <div className="w-full md:w-auto flex justify-between md:justify-end items-center" style={{ gap: "clamp(10px, 3vw, 14px)" }}>
-                        <span className="mono" style={{ color: theme.color.success, fontWeight: 800, fontSize: "clamp(15px, 4.5vw, 18px)" }}>{naira(c.priceInfo.cost)}</span>
-                        <div style={{ display: "flex", gap: "clamp(10px, 3vw, 14px)" }}>
-                          <button onClick={() => { setEditingItem(c); setInitialTab('time'); }} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: "clamp(6px, 2vw, 10px)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: theme.color.text2 }} title="Edit Loops & Time">
-                            <Edit2 size={16} />
-                          </button>
-                          <button onClick={() => removeFromCart(c.id)} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: "clamp(6px, 2vw, 10px)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }} title="Delete">
-                            <Trash2 size={16} color={theme.color.error} />
-                          </button>
+                        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                           <span className="mono" style={{ color: theme.color.goldDark, fontWeight: 800, fontSize: 18 }}>{naira(group.totalCost)}</span>
+                           <div style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: "50%", padding: 6, display: "flex", color: theme.color.text2 }}>
+                             {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                           </div>
                         </div>
                       </div>
+
+                      {/* Expanded Content: Grouped by Date */}
+                      {isExpanded && (
+                         <div style={{ padding: "0 24px 24px", borderTop: `1px solid ${theme.color.border}` }}>
+                            <div style={{ display: "flex", justifyContent: "flex-end", padding: "16px 0" }}>
+                               <button onClick={(e) => { e.stopPropagation(); removeCampaign(creativeId); }} style={{ display: "flex", alignItems: "center", gap: 6, color: theme.color.error, fontSize: 13, fontWeight: 700, background: "none", border: "none", cursor: "pointer", padding: "6px 12px", borderRadius: 8, transition: "background 0.2s" }} className="hover:bg-red-50">
+                                 <Trash2 size={14} /> Remove Entire Campaign
+                               </button>
+                            </div>
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                              {sortedDates.map(dateKey => (
+                                <div key={dateKey}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, color: theme.color.text2, fontWeight: 800, fontSize: 14, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                    <Calendar size={16} color={theme.color.goldDark} />
+                                    {new Date(dateKey).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+                                  </div>
+                                  
+                                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                    {itemsByDate[dateKey].sort((a, b) => a.startMin - b.startMin).map(c => (
+                                      <div key={c.id} style={{ background: theme.color.surface2, borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", border: `1px solid ${theme.color.border}` }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: theme.color.text1, fontWeight: 600, fontSize: 14 }}>
+                                          <Clock size={14} color={theme.color.text3} />
+                                          {formatMin(c.startMin)} – {formatMin(c.startMin + Math.max(1, Math.ceil(c.durationSec / 60)))} 
+                                          <span style={{ color: theme.color.text4, fontWeight: 500, fontSize: 13, marginLeft: 4 }}>({Math.ceil(c.durationSec / 60)} min alloc)</span>
+                                        </div>
+                                        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                                          <span className="mono" style={{ color: theme.color.success, fontWeight: 700, fontSize: 15 }}>{naira(c.priceInfo.cost)}</span>
+                                          <div style={{ display: "flex", gap: 8 }}>
+                                            <button onClick={() => { setEditingItem(c); setInitialTab('time'); }} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: 6, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: theme.color.text2 }} title="Edit">
+                                              <Edit2 size={14} />
+                                            </button>
+                                            <button onClick={() => removeFromCart(c.id)} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: 6, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }} title="Remove">
+                                              <Trash2 size={14} color={theme.color.error} />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                         </div>
+                      )}
                     </div>
                   );
                 })}
