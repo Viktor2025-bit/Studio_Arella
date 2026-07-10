@@ -186,8 +186,8 @@ export default function CartPage() {
               <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 32 }}>
                 {groupedCart.map((group) => {
                   const creativeId = group.creative?.id || 'unknown';
-                  // Expand by default if it's the only campaign, otherwise rely on state
-                  const isExpanded = groupedCart.length === 1 ? expandedGroups[creativeId] !== false : !!expandedGroups[creativeId];
+                  // Always start closed, regardless of how many campaigns
+                  const isExpanded = !!expandedGroups[creativeId];
                   
                   // group by date inside
                   const itemsByDate: Record<string, CartItem[]> = {};
