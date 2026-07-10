@@ -1074,7 +1074,7 @@ function DoohScheduler() {
                   <div style={{ marginBottom: 20 }}>
                     <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8, color: theme.color.text2 }}>2. Pattern (Which days?)</label>
                     <select value={spreadPattern} onChange={e => setSpreadPattern(e.target.value)} style={{ ...inputStyle, padding: "12px", fontSize: 15, fontWeight: 600 }}>
-                      <option value="daily">Every Day</option>
+                      <option value="daily">Every Day (Sun-Sat)</option>
                       <option value="weekdays">Every Weekday (Mon-Fri)</option>
                       <option value="weekends">Every Weekend (Sat-Sun)</option>
                       <option value="alternate">Every Other Day</option>
