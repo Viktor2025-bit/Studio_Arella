@@ -291,7 +291,9 @@ export default function AdsPage() {
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(min(100%, 260px),1fr))', gap: 14 }}>
               {ads.map((ad, i) => {
-                const fileUrl = ad.file_url ? `${API_BASE}${ad.file_url}` : null;
+                const fileUrl = ad.file_url 
+                  ? (ad.file_url.startsWith('http') ? ad.file_url : `${API_BASE}${ad.file_url}`) 
+                  : null;
                 const info = statusInfo[ad.status] || statusInfo.pending;
                 return (
                   <FadeCard key={ad.id} delay={i * 0.05} style={{ ...card, overflow: 'hidden' }}>

@@ -92,7 +92,7 @@ export default function AdminReviewPage() {
                   {/* Thumbnail / file icon */}
                   <div style={{ width: 72, height: 54, borderRadius: 10, background: theme.color.surface2, border: `1px solid ${theme.color.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
                     {ad.file_url && (ad.file_type === 'image' || ad.file_type === 'gif') ? (
-                      <img src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${ad.file_url}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 9 }} onError={e => (e.currentTarget.style.display = 'none')} />
+                      <img src={ad.file_url.startsWith('http') ? ad.file_url : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${ad.file_url}`} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 9 }} onError={e => (e.currentTarget.style.display = 'none')} />
                     ) : ad.file_type === 'video' ? (
                       <FaFilm size={22} color={theme.color.text3} />
                     ) : (
@@ -119,7 +119,7 @@ export default function AdminReviewPage() {
                     {/* Preview & actions */}
                     <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
                       {ad.file_url && (
-                        <a href={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${ad.file_url}`}
+                        <a href={ad.file_url.startsWith('http') ? ad.file_url : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${ad.file_url}`}
                           target="_blank" rel="noopener noreferrer"
                           style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 14px', background: theme.color.surface2, border: `1px solid ${theme.color.border}`, borderRadius: 8, fontSize: 12, fontWeight: 600, color: theme.color.text2, textDecoration: 'none' }}>
                           <FaEye size={12} color={theme.color.text3} /> Preview
@@ -156,11 +156,11 @@ export default function AdminReviewPage() {
                   <p style={{ fontSize: 13, color: theme.color.text3, margin: '0 0 18px' }}>by {selected.advertiser_name}</p>
 
                   {selected.file_url && (
-                    <div style={{ background: theme.color.surface2, border: `1px solid ${theme.color.border}`, borderRadius: 10, overflow: 'hidden', marginBottom: 18, maxHeight: 220, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: theme.color.charcoal900, borderRadius: 10, padding: 12, display: 'flex', justifyContent: 'center' }}>
                       {selected.file_type === 'video' ? (
-                        <video src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${selected.file_url}`} controls style={{ maxWidth: '100%', maxHeight: 220 }} />
+                        <video src={selected.file_url.startsWith('http') ? selected.file_url : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${selected.file_url}`} controls style={{ maxWidth: '100%', maxHeight: 220 }} />
                       ) : (
-                        <img src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${selected.file_url}`} alt="" style={{ maxWidth: '100%', maxHeight: 220, objectFit: 'contain' }} />
+                        <img src={selected.file_url.startsWith('http') ? selected.file_url : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${selected.file_url}`} alt="" style={{ maxWidth: '100%', maxHeight: 220, objectFit: 'contain' }} />
                       )}
                     </div>
                   )}

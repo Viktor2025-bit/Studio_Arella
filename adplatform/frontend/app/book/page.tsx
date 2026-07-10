@@ -558,17 +558,17 @@ function DoohScheduler() {
                         }}>
                         <div style={{ width: 52, height: 52, flexShrink: 0, borderRadius: 12, background: theme.color.surface2, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: "hidden" }}>
                           {c.file_url ? (
-                            (c.file_type || c.media_type || '').includes('video') ? (
-                              <video 
-                                src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${c.file_url}`} 
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                                autoPlay muted loop playsInline 
+                            c.file_type === 'video' ? (
+                              <video
+                                src={c.file_url.startsWith('http') ? c.file_url : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${c.file_url}`} 
+                                autoPlay muted loop playsInline
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                               />
                             ) : (
-                              <img 
-                                src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${c.file_url}`} 
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                                alt="Ad preview" 
+                              <img
+                                src={c.file_url.startsWith('http') ? c.file_url : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:5000'}${c.file_url}`} 
+                                alt="Ad preview"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                               />
                             )
                           ) : (

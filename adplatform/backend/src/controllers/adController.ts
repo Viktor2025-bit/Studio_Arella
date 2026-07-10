@@ -5,6 +5,14 @@ import path from 'path';
 import fs from 'fs';
 import { sendCreativeApprovedEmail, sendCreativeRejectedEmail, sendAdminNewCreativeAlert } from '../services/emailService';
 import { createNotification, notifyAdmins } from '../services/notificationService';
+import { v2 as cloudinary } from 'cloudinary';
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const ALLOWED_VIDEO = ['mp4', 'mov'];
 const ALLOWED_IMAGE = ['jpg', 'jpeg', 'png', 'gif'];
@@ -61,9 +69,26 @@ export const createAd: RequestHandler = async (req, res) => {
         return;
       }
 
-      file_url = `/uploads/${file.filename}`;
-      file_type = isVideo ? 'video' : ext === 'gif' ? 'gif' : 'image';
-      file_size = file.size;
+      try {
+        const folder = `bems-screens/${authReq.user?.id}`;
+        const uploadResult = await cloudinary.uploader.upload(file.path, {
+          folder,
+          resource_type: isVideo ? 'video' : 'image',
+          transformation: isVideo ? [{ quality: 'auto' }] : [{ quality: 'auto', fetch_format: 'auto' }],
+        });
+
+        file_url = uploadResult.secure_url;
+        file_type = isVideo ? 'video' : ext === 'gif' ? 'gif' : 'image';
+        file_size = file.size;
+
+        // Delete local temporary file
+        fs.unlinkSync(file.path);
+      } catch (uploadErr) {
+        if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+        console.error('Cloudinary upload error:', uploadErr);
+        res.status(500).json({ message: 'Cloudinary upload failed' });
+        return;
+      }
     }
 
     const initialStatus = 'approved';
