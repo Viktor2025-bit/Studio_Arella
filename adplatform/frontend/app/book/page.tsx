@@ -128,6 +128,18 @@ function DoohScheduler() {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedHours, setSelectedHours] = useState<number[]>([]);
   const [minuteSelections, setMinuteSelections] = useState<Record<number, number>>({});
+  const [activeMinuteGridHour, setActiveMinuteGridHour] = useState<number | null>(null);
+  
+  useEffect(() => {
+    if (selectedHours.length > 0) {
+      if (activeMinuteGridHour === null || !selectedHours.includes(activeMinuteGridHour)) {
+        setActiveMinuteGridHour(selectedHours[0]);
+      }
+    } else {
+      setActiveMinuteGridHour(null);
+    }
+  }, [selectedHours, activeMinuteGridHour]);
+
   const [draftLoops, setDraftLoops] = useState(1);
   const activeLoops = draft ? draft.loops : draftLoops;
   const draftDurationSec = activeLoops * (videoSeconds || 60);
@@ -975,64 +987,92 @@ function DoohScheduler() {
                     );
                   })()}
 
-                  {/* Minute Grids */}
-                  {selectedHours.length > 0 && selectedHours.map(hour => (
-                    <div key={hour} style={{ background: theme.color.surface2, borderRadius: 20, padding: "28px", border: `1px solid ${theme.color.border2}`, marginTop: 28, boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-                        <div style={{ fontWeight: 800, fontSize: 18, color: theme.color.text1, letterSpacing: "-0.3px" }}>{formatMin(hour * 60)} Slots (Minute-by-Minute)</div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: theme.color.goldDark, background: theme.color.goldLight, padding: "6px 12px", borderRadius: 8 }}>
-                          {(() => {
-                             const bookings = bookingsForDate(localDateKey(viewDate));
-                             let available = 0;
-                             for(let m=0; m<60; m++) {
-                               if(!isStartInsideBooking(hour * 60 + m, bookings)) available++;
-                             }
-                             return `${available} Available Slots`;
-                          })()}
-                        </div>
-                      </div>
-
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(40px, 1fr))", gap: 8 }}>
-                        {Array.from({ length: 60 }).map((_, m) => {
-                          const minOfDay = hour * 60 + m;
-                          const bookings = bookingsForDate(localDateKey(viewDate));
-                          const isBooked = isStartInsideBooking(minOfDay, bookings);
-                          
-                          let isSelected = false;
-                          const selectedStart = minuteSelections[hour] !== undefined ? minuteSelections[hour] : (selectedHours.length === 1 && draft && isSameDate(draft.date, viewDate) ? draft.startMin : null);
-                          
-                          if (selectedStart !== null) {
-                            const draftEnd = selectedStart + draftDurationSec / 60;
-                            if (minOfDay >= selectedStart && minOfDay < draftEnd) {
-                              isSelected = true;
-                            }
-                          }
-
-                          return (
-                            <button key={m}
-                              onClick={() => {
-                                if (isBooked) return;
-                                setMinuteSelections(prev => ({ ...prev, [hour]: minOfDay }));
-                                setDraft({ date: viewDate, startMin: minOfDay, loops: draftLoops });
-                              }}
-                              disabled={isBooked}
+                  {/* Minute Grid Tabs */}
+                  {selectedHours.length > 0 && (
+                    <div style={{ marginTop: 28 }}>
+                      {selectedHours.length > 1 && (
+                        <div style={{ display: "flex", gap: 8, marginBottom: 12, overflowX: "auto", paddingBottom: 4 }}>
+                          {selectedHours.map(hour => (
+                            <button
+                              key={hour}
+                              onClick={() => setActiveMinuteGridHour(hour)}
                               style={{
-                                aspectRatio: "1.5", borderRadius: 10, border: `1px solid ${isSelected ? theme.color.goldMid : isBooked ? "transparent" : theme.color.border2}`,
-                                background: isBooked ? theme.color.surface2 : isSelected ? theme.color.gold : theme.color.surface,
-                                color: isBooked ? theme.color.text4 : isSelected ? theme.color.charcoal900 : theme.color.text2,
-                                fontWeight: isSelected ? 800 : 600,
-                                fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center",
-                                cursor: isBooked ? "not-allowed" : "pointer", opacity: isBooked ? 0.6 : 1, transition: "all 0.2s ease",
-                                boxShadow: isSelected ? theme.shadow.gold : "0 1px 2px rgba(0,0,0,0.03)"
+                                padding: "8px 16px",
+                                borderRadius: 12,
+                                border: `1px solid ${activeMinuteGridHour === hour ? theme.color.goldMid : theme.color.border2}`,
+                                background: activeMinuteGridHour === hour ? theme.color.goldLight : theme.color.surface2,
+                                color: activeMinuteGridHour === hour ? theme.color.goldDark : theme.color.text1,
+                                fontWeight: 700,
+                                cursor: "pointer",
+                                fontSize: 13,
+                                whiteSpace: "nowrap"
                               }}
-                              className="mono">
-                              :{String(m).padStart(2, '0')}
+                            >
+                              {formatMin(hour * 60)} Slots
                             </button>
-                          );
-                        })}
-                      </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {activeMinuteGridHour !== null && selectedHours.includes(activeMinuteGridHour) && (
+                        <div style={{ background: theme.color.surface2, borderRadius: 20, padding: "28px", border: `1px solid ${theme.color.border2}`, boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                            <div style={{ fontWeight: 800, fontSize: 18, color: theme.color.text1, letterSpacing: "-0.3px" }}>{formatMin(activeMinuteGridHour * 60)} Slots (Minute-by-Minute)</div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: theme.color.goldDark, background: theme.color.goldLight, padding: "6px 12px", borderRadius: 8 }}>
+                              {(() => {
+                                 const bookings = bookingsForDate(localDateKey(viewDate));
+                                 let available = 0;
+                                 for(let m=0; m<60; m++) {
+                                   if(!isStartInsideBooking(activeMinuteGridHour * 60 + m, bookings)) available++;
+                                 }
+                                 return `${available} Available Slots`;
+                              })()}
+                            </div>
+                          </div>
+
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(40px, 1fr))", gap: 8 }}>
+                            {Array.from({ length: 60 }).map((_, m) => {
+                              const minOfDay = activeMinuteGridHour * 60 + m;
+                              const bookings = bookingsForDate(localDateKey(viewDate));
+                              const isBooked = isStartInsideBooking(minOfDay, bookings);
+                              
+                              let isSelected = false;
+                              const selectedStart = minuteSelections[activeMinuteGridHour] !== undefined ? minuteSelections[activeMinuteGridHour] : (selectedHours.length === 1 && draft && isSameDate(draft.date, viewDate) ? draft.startMin : null);
+                              
+                              if (selectedStart !== null) {
+                                const draftEnd = selectedStart + draftDurationSec / 60;
+                                if (minOfDay >= selectedStart && minOfDay < draftEnd) {
+                                  isSelected = true;
+                                }
+                              }
+
+                              return (
+                                <button key={m}
+                                  onClick={() => {
+                                    if (isBooked) return;
+                                    setMinuteSelections(prev => ({ ...prev, [activeMinuteGridHour]: minOfDay }));
+                                    setDraft({ date: viewDate, startMin: minOfDay, loops: draftLoops });
+                                  }}
+                                  disabled={isBooked}
+                                  style={{
+                                    aspectRatio: "1.5", borderRadius: 10, border: `1px solid ${isSelected ? theme.color.goldMid : isBooked ? "transparent" : theme.color.border2}`,
+                                    background: isBooked ? theme.color.surface2 : isSelected ? theme.color.gold : theme.color.surface,
+                                    color: isBooked ? theme.color.text4 : isSelected ? theme.color.charcoal900 : theme.color.text2,
+                                    fontWeight: isSelected ? 800 : 600,
+                                    fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center",
+                                    cursor: isBooked ? "not-allowed" : "pointer", opacity: isBooked ? 0.6 : 1, transition: "all 0.2s ease",
+                                    boxShadow: isSelected ? theme.shadow.gold : "0 1px 2px rgba(0,0,0,0.03)"
+                                  }}
+                                  className="mono">
+                                  :{String(m).padStart(2, '0')}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  ))}
+                  )}
 
                 </div>
               </div>
