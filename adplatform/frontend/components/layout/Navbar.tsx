@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { useThemeStore } from '@/store/themeStore';
-import { FaArrowRightFromBracket, FaCalendarCheck, FaMoon, FaSun, FaUser } from 'react-icons/fa6';
+import { FaArrowRightFromBracket, FaCalendarCheck, FaMoon, FaSun, FaUser, FaChartPie, FaGear, FaHeadset } from 'react-icons/fa6';
 import NotificationBell from '@/components/ui/NotificationBell';
 import { Menu, ShoppingCart } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -56,40 +56,40 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
             {dropOpen && (
               <>
                 <div style={{ position: 'fixed', inset: 0, zIndex: 9 }} onClick={() => setDropOpen(false)} />
-                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 6 }} transition={{ duration: 0.15 }}
-                  style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: theme.radius.lg, padding: 8, minWidth: 200, boxShadow: theme.shadow.md, zIndex: 10 }}>
-                  <div style={{ padding: '10px 12px', borderBottom: `1px solid ${theme.color.border2}`, marginBottom: 6 }}>
-                    <p style={{ fontSize: 13, fontWeight: 800, color: theme.color.text1, margin: '0 0 2px' }}>{user?.name}</p>
-                    <p style={{ fontSize: 11, color: theme.color.text4, margin: 0, fontWeight: 500 }}>{user?.email}</p>
+                <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }} transition={{ duration: 0.2, type: 'spring', stiffness: 400, damping: 25 }}
+                  style={{ position: 'absolute', top: '100%', right: 0, marginTop: 12, background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: 16, padding: '8px', minWidth: 240, boxShadow: '0 20px 40px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.02)', zIndex: 10 }}>
+                  <div style={{ padding: '14px 16px', borderBottom: `1px solid ${theme.color.border2}`, marginBottom: 8 }}>
+                    <p style={{ fontSize: 14, fontWeight: 800, color: theme.color.text1, margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name}</p>
+                    <p style={{ fontSize: 12, color: theme.color.text4, margin: 0, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</p>
                   </div>
-                  <div className="show-on-mobile" style={{ borderBottom: `1px solid ${theme.color.border2}`, marginBottom: 6, paddingBottom: 6 }}>
+                  <div className="show-on-mobile" style={{ borderBottom: `1px solid ${theme.color.border2}`, marginBottom: 8, paddingBottom: 8 }}>
                     <Link href="/cart" onClick={() => setDropOpen(false)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', fontSize: 13, fontWeight: 800, color: theme.color.goldDark, textDecoration: 'none', borderRadius: theme.radius.sm, transition: 'background 0.1s' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, color: theme.color.goldDark, textDecoration: 'none', borderRadius: theme.radius.md, transition: 'background 0.15s' }}
                       onMouseOver={e => (e.currentTarget.style.background = theme.color.goldLight)}
                       onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
                       <ShoppingCart size={14} strokeWidth={2.5} /> Cart
                     </Link>
                     <button onClick={() => { toggleTheme(); setDropOpen(false); }}
-                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', fontSize: 13, fontWeight: 700, color: theme.color.text2, background: 'none', border: 'none', cursor: 'pointer', borderRadius: theme.radius.sm, fontFamily: F, textAlign: 'left' }}
-                      onMouseOver={e => (e.currentTarget.style.background = theme.color.surface2)}
-                      onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
-                      {appTheme === 'dark' ? <FaSun size={13} /> : <FaMoon size={13} />} {appTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, color: theme.color.text2, background: 'none', border: 'none', cursor: 'pointer', borderRadius: theme.radius.md, fontFamily: F, textAlign: 'left', transition: 'background 0.15s' }}
+                      onMouseOver={e => { e.currentTarget.style.background = theme.color.surface2; e.currentTarget.style.color = theme.color.text1; }}
+                      onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = theme.color.text2; }}>
+                      {appTheme === 'dark' ? <FaSun size={14} /> : <FaMoon size={14} />} {appTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}
                     </button>
                   </div>
-                  {[{ label: 'My Dashboard', href: '/dashboard' }, { label: 'Settings', href: '/settings' }, { label: 'Support', href: '/support' }].map(({ label, href }) => (
+                  {[{ label: 'My Dashboard', href: '/dashboard', icon: FaChartPie }, { label: 'Settings', href: '/settings', icon: FaGear }, { label: 'Support', href: '/support', icon: FaHeadset }].map(({ label, href, icon: Icon }) => (
                     <Link key={href} href={href} onClick={() => setDropOpen(false)}
-                      style={{ display: 'block', padding: '9px 12px', fontSize: 13, fontWeight: 600, color: theme.color.text2, textDecoration: 'none', borderRadius: theme.radius.sm, transition: 'background 0.1s' }}
-                      onMouseOver={e => (e.currentTarget.style.background = theme.color.surface2)}
-                      onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
-                      {label}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, color: theme.color.text2, textDecoration: 'none', borderRadius: theme.radius.md, transition: 'all 0.15s' }}
+                      onMouseOver={e => { e.currentTarget.style.background = theme.color.surface2; e.currentTarget.style.color = theme.color.text1; }}
+                      onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = theme.color.text2; }}>
+                      <Icon size={14} color={theme.color.text3} style={{ transition: 'color 0.15s' }} /> {label}
                     </Link>
                   ))}
-                  <div style={{ borderTop: `1px solid ${theme.color.border2}`, marginTop: 6, paddingTop: 6 }}>
+                  <div style={{ borderTop: `1px solid ${theme.color.border2}`, marginTop: 8, paddingTop: 8 }}>
                     <button onClick={handleLogout}
-                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '9px 12px', fontSize: 13, fontWeight: 700, color: theme.color.error, background: 'none', border: 'none', cursor: 'pointer', borderRadius: theme.radius.sm, fontFamily: F, textAlign: 'left' }}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, color: theme.color.error, background: 'none', border: 'none', cursor: 'pointer', borderRadius: theme.radius.md, fontFamily: F, textAlign: 'left', transition: 'all 0.15s' }}
                       onMouseOver={e => (e.currentTarget.style.background = theme.color.errorLight)}
                       onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
-                      <FaArrowRightFromBracket size={13} /> Sign out
+                      <FaArrowRightFromBracket size={14} /> Sign out
                     </button>
                   </div>
                 </motion.div>
