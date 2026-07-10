@@ -44,7 +44,7 @@ export default function SettingsPage() {
   return (
     <DashboardLayout>
       <PageTransition>
-        <div style={{ fontFamily: F, display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 640 }}>
+        <div style={{ fontFamily: F, display: 'flex', flexDirection: 'column', gap: 24, maxWidth: 1000 }}>
 
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 4 }}>
@@ -54,8 +54,11 @@ export default function SettingsPage() {
             <p style={{ fontSize: 13, color: theme.color.text3, margin: 0 }}>Manage your account and preferences</p>
           </div>
 
-          {/* Profile card */}
-          <FadeCard style={{ ...card, padding: '24px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'flex-start' }}>
+            {/* Left Column */}
+            <div style={{ flex: '1 1 500px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+              {/* Profile card */}
+              <FadeCard style={{ ...card, padding: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 24, paddingBottom: 20, borderBottom: `1px solid ${theme.color.border2}` }}>
               <div style={{ width: 56, height: 56, borderRadius: '50%', background: `linear-gradient(135deg,${theme.color.gold},${theme.color.charcoal700})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 900, color: '#fff', flexShrink: 0 }}>
                 {user?.name?.[0]?.toUpperCase() || 'U'}
@@ -91,10 +94,13 @@ export default function SettingsPage() {
                 </Button>
               </div>
             </div>
-          </FadeCard>
+              </FadeCard>
+            </div>
 
-          {/* Account info */}
-          <FadeCard delay={0.1} style={{ ...card, padding: '24px' }}>
+            {/* Right Column */}
+            <div style={{ flex: '1 1 350px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+              {/* Account info */}
+              <FadeCard delay={0.1} style={{ ...card, padding: '24px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
               <FaUser size={14} color={theme.color.gold} />
               <p style={{ fontSize: 14, fontWeight: 800, color: theme.color.text1, margin: 0 }}>Account Details</p>
@@ -125,7 +131,9 @@ export default function SettingsPage() {
               onMouseOut={e => { (e.currentTarget as HTMLButtonElement).style.background = 'none'; }}>
               Delete My Account
             </button>
-          </FadeCard>
+              </FadeCard>
+            </div>
+          </div>
 
         </div>
       </PageTransition>
