@@ -67,7 +67,7 @@ export default function AnalyticsPage() {
               {data.length === 0 ? (
                 <div style={{ padding: 40, textAlign: 'center' }}>
                   <div style={{ width: 48, height: 48, background: theme.color.surface2, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-                    <BarChart2 size={24} color={theme.color.border} />
+                    <BarChart2 size={24} color={theme.color.text4} />
                   </div>
                   <p style={{ fontSize: 14, fontWeight: 700, color: theme.color.text2, margin: '0 0 4px' }}>No analytics yet</p>
                   <p style={{ fontSize: 13, color: theme.color.text3, margin: 0 }}>Data will appear here once your ads start playing.</p>
