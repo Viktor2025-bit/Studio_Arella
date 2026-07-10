@@ -319,6 +319,7 @@ export default function AdsPage() {
                           muted
                           loop
                           playsInline
+                          preload="metadata"
                           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         />
                       ) : fileUrl && (ad.file_type === 'image' || ad.file_type === 'gif') ? (
