@@ -949,6 +949,7 @@ function DoohScheduler() {
                                      setMultiDaySelections({});
                                      setReplicationConfig(null);
                                      toast(`Added ${newItems.length} slot(s) to Cart!`, "success");
+                                     router.push('/cart');
                                   }
                                }} className="flex-1 min-w-[200px] justify-center" style={{ padding: "16px 28px", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontSize: 16, fontWeight: 800, cursor: "pointer", display: "flex", gap: 10, alignItems: "center", boxShadow: theme.shadow.gold, transition: "all 0.2s" }}>
                                  Add to Cart
