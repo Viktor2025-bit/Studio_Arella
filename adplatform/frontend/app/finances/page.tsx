@@ -92,16 +92,19 @@ export default function FinancesPage() {
           </div>
 
           {/* Credits card */}
-          <FadeCard delay={0.2} style={{ background: `linear-gradient(135deg, ${theme.color.gold} 0%, ${theme.color.charcoal900} 100%)`, borderRadius: 16, padding: '28px 28px', position: 'relative', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: -30, right: -30, width: 140, height: 140, background: 'rgba(255,255,255,0.07)', borderRadius: '50%' }} />
-            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', margin: '0 0 8px' }}>Current Balance</p>
-            <p style={{ fontFamily: theme.font.display, fontSize: 40, fontWeight: 600, color: '#fff', margin: '0 0 4px', letterSpacing: '-0.5px' }}>₦{(balance?.credits || 0).toLocaleString()}</p>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', margin: '0 0 24px' }}>Use credits to book ad slots on Studio Arella · Minimum ₦1,000/minute</p>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 7, background: theme.color.surface, color: theme.color.gold, border: 'none', borderRadius: 10, padding: '11px 22px', fontSize: 13, fontWeight: 900, cursor: 'pointer', fontFamily: F }}>
+          <FadeCard delay={0.2} style={{ background: `linear-gradient(135deg, ${theme.color.charcoal800} 0%, ${theme.color.charcoal900} 100%)`, borderRadius: 20, padding: '36px 32px', position: 'relative', overflow: 'hidden', boxShadow: theme.shadow.md, border: `1px solid rgba(255,255,255,0.05)` }}>
+            {/* Ambient gold glows */}
+            <div style={{ position: 'absolute', top: -80, right: -40, width: 250, height: 250, background: `radial-gradient(circle, ${theme.color.goldDark} 0%, transparent 60%)`, opacity: 0.25, borderRadius: '50%', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: -50, left: '15%', width: 200, height: 200, background: `radial-gradient(circle, ${theme.color.gold} 0%, transparent 60%)`, opacity: 0.1, borderRadius: '50%', pointerEvents: 'none' }} />
+            
+            <p style={{ position: 'relative', fontSize: 12, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', color: theme.color.gold, margin: '0 0 10px' }}>Current Balance</p>
+            <p style={{ position: 'relative', fontFamily: theme.font.display, fontSize: 'clamp(36px, 5vw, 48px)', fontWeight: 600, color: '#fff', margin: '0 0 4px', letterSpacing: '-1px' }}>₦{(balance?.credits || 0).toLocaleString()}</p>
+            <p style={{ position: 'relative', fontSize: 14, color: 'rgba(255,255,255,0.6)', margin: '0 0 32px', fontWeight: 500 }}>Use credits to book ad slots on Studio Arella · Minimum ₦1,000/minute</p>
+            <div style={{ position: 'relative', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <button onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 7, background: theme.color.gold, color: theme.color.charcoal900, border: 'none', borderRadius: 10, padding: '12px 24px', fontSize: 14, fontWeight: 900, cursor: 'pointer', fontFamily: F, transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(224, 165, 38, 0.2)' }}>
                 <FaPlus size={12} /> Add Credits
               </button>
-              <Link href="/book" style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 10, padding: '11px 22px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>
+              <Link href="/book" style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '12px 24px', fontSize: 14, fontWeight: 700, textDecoration: 'none', transition: 'all 0.2s' }}>
                 Book Slot <FaArrowRight size={12} />
               </Link>
             </div>
@@ -125,8 +128,14 @@ export default function FinancesPage() {
                 <tbody>
                   {loading ? Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i}>{Array.from({ length: 5 }).map((_, j) => <td key={j} style={{ padding: '14px 18px' }}><Skeleton height={13} width={70} /></td>)}</tr>
-                  )) : transactions.length === 0 ? (
-                    <tr><td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: theme.color.text4, fontSize: 13 }}>No transactions yet</td></tr>
+                  ) : transactions.length === 0 ? (
+                    <tr><td colSpan={5} style={{ padding: '60px 20px', textAlign: 'center' }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, borderRadius: '50%', background: theme.color.surface2, marginBottom: 16 }}>
+                        <DollarSign size={24} color={theme.color.text4} />
+                      </div>
+                      <p style={{ fontSize: 15, fontWeight: 700, color: theme.color.text1, margin: '0 0 4px' }}>No transactions yet</p>
+                      <p style={{ fontSize: 13, color: theme.color.text3, margin: 0 }}>When you add credits or book a slot, it will appear here.</p>
+                    </td></tr>
                   ) : transactions.map(t => (
                     <motion.tr key={t.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} whileHover={{ background: theme.color.surface2 }}>
                       <td style={{ padding: '12px 18px', color: theme.color.text3, fontSize: 12, borderBottom: `1px solid ${theme.color.border2}` }}>{new Date(t.created_at).toLocaleDateString('en', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
