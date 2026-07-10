@@ -52,7 +52,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!mounted) return null;
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: theme.color.bg, fontFamily: F, overflow: 'hidden' }}>
+    <div style={{ 
+      display: 'flex', 
+      height: '100vh', 
+      background: `radial-gradient(circle at top right, rgba(224, 165, 38, 0.08), transparent 40%), radial-gradient(circle at bottom left, rgba(224, 165, 38, 0.04), transparent 40%), ${theme.color.bg}`, 
+      fontFamily: F, 
+      overflow: 'hidden' 
+    }}>
       {showTerms && <TermsModal onAccept={() => {
         setShowTerms(false);
         // refresh user from API or manually update state
