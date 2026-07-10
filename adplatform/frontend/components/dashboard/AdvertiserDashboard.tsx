@@ -39,7 +39,7 @@ export default function AdvertiserDashboard() {
   useEffect(() => {
     let isMounted = true;
     Promise.allSettled([
-      api.get('/dashboard/stats').then(res => { if (isMounted) setStats(prev => ({ ...prev, ...res.data })) }),
+      api.get('/dashboard/stats').then(res => { if (isMounted) setStats((prev: any) => ({ ...prev, ...res.data })) }),
       api.get('/analytics/hourly').then(res => { if (isMounted) setChartData(res.data) }),
       api.get('/bookings?limit=6').then(res => { if (isMounted) setBookings(res.data.bookings || []) }),
       api.get('/finances/balance').then(res => { if (isMounted) setBalance(res.data) }),
