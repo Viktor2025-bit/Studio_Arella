@@ -144,8 +144,8 @@ export default function LoginPage() {
 
           <p style={{ fontSize: 12, color: '#64748B', textAlign: 'center', marginTop: 24, lineHeight: 1.6, fontWeight: 500 }}>
             By signing in you agree to our{' '}
-            <Link href="/support" style={{ color: '#94A3B8', textDecoration: 'none' }}>Terms</Link> &amp;{' '}
-            <Link href="/support" style={{ color: '#94A3B8', textDecoration: 'none' }}>Privacy Policy</Link>
+            <Link href="/terms" style={{ color: '#94A3B8', textDecoration: 'none' }}>Terms</Link> &amp;{' '}
+            <Link href="/privacy" style={{ color: '#94A3B8', textDecoration: 'none' }}>Privacy Policy</Link>
           </p>
         </motion.div>
       </div>
