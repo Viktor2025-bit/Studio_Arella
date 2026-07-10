@@ -203,19 +203,19 @@ export default function CartPage() {
                   return (
                     <div key={creativeId} style={{ background: theme.color.surface, borderRadius: 16, border: `1px solid ${theme.color.border}`, overflow: 'hidden' }}>
                       {/* Campaign Header */}
-                      <div onClick={() => toggleGroup(creativeId)} style={{ padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer", background: isExpanded ? theme.color.surface2 : 'transparent', transition: 'all 0.2s' }}>
-                        <div>
-                           <div style={{ fontWeight: 800, fontSize: 18, fontFamily: theme.font.display, color: theme.color.text1, marginBottom: 4 }}>
+                      <div onClick={() => toggleGroup(creativeId)} style={{ padding: "clamp(16px, 4vw, 20px) clamp(16px, 5vw, 24px)", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12, cursor: "pointer", background: isExpanded ? theme.color.surface2 : 'transparent', transition: 'all 0.2s' }}>
+                        <div style={{ flex: '1 1 min-content' }}>
+                           <div style={{ fontWeight: 800, fontSize: "clamp(16px, 4vw, 18px)", fontFamily: theme.font.display, color: theme.color.text1, marginBottom: 4 }}>
                              {group.creative?.title || 'Unknown Ad'}
                            </div>
-                           <div style={{ color: theme.color.text3, fontSize: 14, fontWeight: 500, display: "flex", gap: 12 }}>
+                           <div style={{ color: theme.color.text3, fontSize: "clamp(12px, 3.5vw, 14px)", fontWeight: 500, display: "flex", gap: 8 }}>
                              <span>{group.dates.size} Day(s)</span>
                              <span>&bull;</span>
                              <span>{group.items.length} Block(s)</span>
                            </div>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                           <span className="mono" style={{ color: theme.color.goldDark, fontWeight: 800, fontSize: 18 }}>{naira(group.totalCost)}</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "clamp(12px, 4vw, 20px)" }}>
+                           <span className="mono" style={{ color: theme.color.goldDark, fontWeight: 800, fontSize: "clamp(16px, 4.5vw, 18px)" }}>{naira(group.totalCost)}</span>
                            <div style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: "50%", padding: 6, display: "flex", color: theme.color.text2 }}>
                              {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                            </div>
@@ -241,11 +241,13 @@ export default function CartPage() {
                                   
                                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                                     {itemsByDate[dateKey].sort((a, b) => a.startMin - b.startMin).map(c => (
-                                      <div key={c.id} style={{ background: theme.color.surface2, borderRadius: 12, padding: "12px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", border: `1px solid ${theme.color.border}` }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: theme.color.text1, fontWeight: 600, fontSize: 14 }}>
-                                          <Clock size={14} color={theme.color.text3} />
-                                          {formatMin(c.startMin)} – {formatMin(c.startMin + Math.max(1, Math.ceil(c.durationSec / 60)))} 
-                                          <span style={{ color: theme.color.text4, fontWeight: 500, fontSize: 13, marginLeft: 4 }}>({Math.ceil(c.durationSec / 60)} min alloc)</span>
+                                      <div key={c.id} style={{ background: theme.color.surface2, borderRadius: 12, padding: "12px 16px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12, border: `1px solid ${theme.color.border}` }}>
+                                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: theme.color.text1, fontWeight: 600, fontSize: 14 }}>
+                                          <Clock size={14} color={theme.color.text3} style={{ marginTop: 2 }} />
+                                          <div style={{ display: "flex", flexDirection: "column" }}>
+                                            <span>{formatMin(c.startMin)} – {formatMin(c.startMin + Math.max(1, Math.ceil(c.durationSec / 60)))}</span>
+                                            <span style={{ color: theme.color.text4, fontWeight: 500, fontSize: 12 }}>({Math.ceil(c.durationSec / 60)} min alloc)</span>
+                                          </div>
                                         </div>
                                         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                                           <span className="mono" style={{ color: theme.color.success, fontWeight: 700, fontSize: 15 }}>{naira(c.priceInfo.cost)}</span>

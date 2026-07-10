@@ -8,7 +8,7 @@ import { createNotification, notifyAdmins } from '../services/notificationServic
 export const getBookings: RequestHandler = async (req, res) => {
   const authReq = req as AuthRequest;
   try {
-    const { limit = 20, page = 1, screen_id } = req.query;
+    const { limit = 20, page = 1, screen_id, status } = req.query;
     const offset = (Number(page) - 1) * Number(limit);
     const isAdmin = authReq.user?.role === 'admin';
 
@@ -30,6 +30,7 @@ export const getBookings: RequestHandler = async (req, res) => {
     const params: any[] = [];
     if (!isAdmin) { params.push(authReq.user?.id); query += ` AND b.user_id = $${params.length}`; }
     if (screen_id) { params.push(screen_id); query += ` AND b.screen_id = $${params.length}`; }
+    if (status && status !== 'all') { params.push(status); query += ` AND b.status = $${params.length}`; }
     query += ` ORDER BY b.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
     params.push(Number(limit), offset);
 
@@ -76,14 +77,16 @@ export const reserveSlots: RequestHandler = async (req, res) => {
       res.status(400).json({ message: 'Screen, ad, and time slots are required' }); return;
     }
     
-    const adRes = await client.query('SELECT duration_seconds FROM ads WHERE id = $1 AND user_id = $2 AND (status = $3 OR status = $4)', [ad_id, authReq.user?.id, 'approved', 'pending']);
-    if (adRes.rows.length === 0) {
+    const initialAdRes = await client.query('SELECT duration_seconds, ppm_rate FROM ads WHERE id = $1 AND user_id = $2 AND (status = $3 OR status = $4)', [ad_id, authReq.user?.id, 'approved', 'pending']);
+    if (initialAdRes.rows.length === 0) {
        res.status(400).json({ message: 'Valid creative not found' }); return;
     }
     
-    const adDuration = adRes.rows[0].duration_seconds || 60;
-    
+    const adDuration = initialAdRes.rows[0].duration_seconds || 60;
+    const ppmRate = initialAdRes.rows[0].ppm_rate || 1000;
+
     let totalSeconds = 0;
+    let totalCost = 0;
     let minStart = new Date(slots[0].start);
     let maxEnd = new Date(slots[0].end);
 
@@ -94,6 +97,13 @@ export const reserveSlots: RequestHandler = async (req, res) => {
       if (startDt < minStart) minStart = startDt;
       if (endDt > maxEnd) maxEnd = endDt;
       
+      if (startDt >= endDt) {
+         res.status(400).json({ message: 'End time must be after start time' }); return;
+      }
+      if (startDt.getTime() < Date.now()) {
+         res.status(400).json({ message: 'Cannot book slots in the past' }); return;
+      }
+      
       const startHour = startDt.getHours();
       const endHour = endDt.getHours();
       const endMins = endDt.getMinutes();
@@ -103,10 +113,11 @@ export const reserveSlots: RequestHandler = async (req, res) => {
          res.status(400).json({ message: 'Bookings must strictly be between 6:00 AM and 7:00 PM' }); return;
       }
       
-      totalSeconds += (endDt.getTime() - startDt.getTime()) / 1000;
+      const blockSecs = (endDt.getTime() - startDt.getTime()) / 1000;
+      totalSeconds += blockSecs;
+      totalCost += Math.ceil(blockSecs / 60) * ppmRate;
     }
-    const totalCost = Math.round(totalSeconds * (1000 / 60));
-    const costPerSec = totalCost / totalSeconds;
+    const costPerSec = totalSeconds > 0 ? totalCost / totalSeconds : 0;
 
     await client.query('BEGIN');
 

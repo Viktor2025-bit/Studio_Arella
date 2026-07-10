@@ -37,17 +37,19 @@ export default function AdvertiserDashboard() {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    api.get('/dashboard/stats').then(res => setStats(res.data)).catch(() => setStats({ total_revenue: 0, active_campaigns: 0, active_screens: 0 }));
-    api.get('/analytics/hourly').then(res => setChartData(res.data)).catch(() => setChartData([]));
-    api.get('/bookings?limit=6').then(res => setBookings(res.data.bookings || [])).catch(() => setBookings([]));
-    api.get('/finances/balance').then(res => setBalance(res.data)).catch(() => setBalance({ credits: 0 }));
-    
-    // We also need total_revenue from finances to match the finances page exactly if stats fails or is different.
-    api.get('/finances/revenue').then(res => {
-      setStats((prev: any) => ({ ...prev, total_revenue: res.data.total_revenue || 0, active_campaigns: prev?.active_campaigns || 0, active_screens: prev?.active_screens || 0 }));
-    }).catch(() => {});
-
-    setTimeout(() => setLoading(false), 800);
+    let isMounted = true;
+    Promise.allSettled([
+      api.get('/dashboard/stats').then(res => { if (isMounted) setStats(prev => ({ ...prev, ...res.data })) }),
+      api.get('/analytics/hourly').then(res => { if (isMounted) setChartData(res.data) }),
+      api.get('/bookings?limit=6').then(res => { if (isMounted) setBookings(res.data.bookings || []) }),
+      api.get('/finances/balance').then(res => { if (isMounted) setBalance(res.data) }),
+      api.get('/finances/revenue').then(res => {
+        if (isMounted) setStats((prev: any) => ({ ...prev, total_revenue: res.data.total_revenue || 0 }));
+      })
+    ]).then(() => {
+      if (isMounted) setLoading(false);
+    });
+    return () => { isMounted = false; };
   }, []);
 
   const hour = new Date().getHours();
