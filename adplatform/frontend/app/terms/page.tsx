@@ -24,8 +24,8 @@ export default function TermsPage() {
       </header>
 
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '48px 24px' }}>
-        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#D4AF37', textDecoration: 'none', fontWeight: 600, marginBottom: 32 }}>
-          <FaArrowLeft size={12} /> Back to Home
+        <Link href="/auth/login" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#D4AF37', textDecoration: 'none', fontWeight: 600, marginBottom: 32 }}>
+          <FaArrowLeft size={12} /> Back to Login
         </Link>
 
         <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 16, padding: '40px 48px' }}>

@@ -261,6 +261,13 @@ export default function RegisterPage() {
               </div>
             </div>
 
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 10, marginBottom: 4 }}>
+              <input type="checkbox" id="terms" required style={{ marginTop: 2, accentColor: '#D4AF37', cursor: 'pointer', width: 14, height: 14 }} />
+              <label htmlFor="terms" style={{ fontSize: 12, color: '#94A3B8', lineHeight: 1.5, cursor: 'pointer' }}>
+                I agree to the <Link href="/terms" style={{ color: '#D4AF37', textDecoration: 'none', fontWeight: 600 }}>Terms of Service</Link> and <Link href="/privacy" style={{ color: '#D4AF37', textDecoration: 'none', fontWeight: 600 }}>Privacy Policy</Link>
+              </label>
+            </div>
+
             <AnimatedButton
               type="submit"
               loading={isLoading}
@@ -270,13 +277,6 @@ export default function RegisterPage() {
               Create free account <FaArrowRight size={14} />
             </AnimatedButton>
           </form>
-
-          <p style={{ fontSize: 11, color: '#64748B', textAlign: 'center', marginTop: 24, lineHeight: 1.6 }}>
-            By creating an account you agree to our{' '}
-            <Link href="/terms" style={{ color: '#94A3B8', textDecoration: 'none' }}>Terms</Link>
-            {' '}&amp;{' '}
-            <Link href="/privacy" style={{ color: '#94A3B8', textDecoration: 'none' }}>Privacy Policy</Link>
-          </p>
         </motion.div>
       </div>
     </div>
