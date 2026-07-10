@@ -119,7 +119,7 @@ function DoohScheduler() {
   // Tabbed Multi-Day Editor State
   const [spreadTabs, setSpreadTabs] = useState<Date[]>([]);
   const [activeTabDateKey, setActiveTabDateKey] = useState<string | null>(null);
-  const [multiDaySelections, setMultiDaySelections] = useState<Record<string, { selectedHours: number[], draft: any, draftLoops: number }>>({});
+  const [multiDaySelections, setMultiDaySelections] = useState<Record<string, { selectedHours: number[], draft: any, draftLoops: number, minuteSelections?: Record<number, number> }>>({});
   
   const [editCartItem, setEditCartItem] = useState<any>(null);
   const [editHour, setEditHour] = useState(8);
@@ -127,6 +127,7 @@ function DoohScheduler() {
   const [isRestoring, setIsRestoring] = useState(true);
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedHours, setSelectedHours] = useState<number[]>([]);
+  const [minuteSelections, setMinuteSelections] = useState<Record<number, number>>({});
   const [draftLoops, setDraftLoops] = useState(1);
   const activeLoops = draft ? draft.loops : draftLoops;
   const draftDurationSec = activeLoops * (videoSeconds || 60);
@@ -143,7 +144,7 @@ function DoohScheduler() {
       // Save current state to multiDaySelections before switching
       setMultiDaySelections(prev => ({
         ...prev,
-        [activeTabDateKey]: { selectedHours, draft, draftLoops }
+        [activeTabDateKey]: { selectedHours, draft, draftLoops, minuteSelections }
       }));
     }
     
@@ -156,6 +157,12 @@ function DoohScheduler() {
       setSelectedHours(state.selectedHours);
       setDraft(state.draft);
       setDraftLoops(state.draftLoops);
+      setMinuteSelections(state.minuteSelections || {});
+    } else {
+      setSelectedHours([]);
+      setDraft(null);
+      setDraftLoops(1);
+      setMinuteSelections({});
     }
   }
 
@@ -889,17 +896,12 @@ function DoohScheduler() {
                                   
                                   const generateItemsForDate = (d: Date, state: any) => {
                                     state.selectedHours.forEach((h: number) => {
-                                       let startMin = h * 60;
-                                       if (state.selectedHours.length === 1 && state.draft) startMin = state.draft.startMin;
-                                       else {
-                                          while(startMin < (h + 1) * 60 && isStartInsideBooking(startMin, bookingsForDate(localDateKey(d)))) startMin++;
-                                       }
+                                       let startMin = state.minuteSelections?.[h] !== undefined ? state.minuteSelections[h] : h * 60;
                                        newItems.push({
                                           id: crypto.randomUUID(),
                                           creative: selectedCreative,
                                           date: d,
                                           startMin,
-                                          loops: state.draft ? state.draft.loops : state.draftLoops,
                                           durationSec: (state.draft ? state.draft.loops : state.draftLoops) * (videoSeconds || 60),
                                           priceInfo: calcCost((state.draft ? state.draft.loops : state.draftLoops) * (videoSeconds || 60), selectedCreative?.ppm_rate || PPM)
                                        });
@@ -908,7 +910,7 @@ function DoohScheduler() {
 
                                   if (spreadTabs.length > 1) {
                                     const finalSelections = { ...multiDaySelections };
-                                    if (activeTabDateKey) finalSelections[activeTabDateKey] = { selectedHours, draft, draftLoops };
+                                    if (activeTabDateKey) finalSelections[activeTabDateKey] = { selectedHours, draft, draftLoops, minuteSelections };
                                     
                                     if (replicationConfig?.active) {
                                       const startDate = spreadTabs[0];
@@ -937,13 +939,14 @@ function DoohScheduler() {
                                       });
                                     }
                                   } else {
-                                    generateItemsForDate(viewDate, { selectedHours, draft, draftLoops });
+                                    generateItemsForDate(viewDate, { selectedHours, draft, draftLoops, minuteSelections });
                                   }
                                   
                                   if (newItems.length > 0) {
                                      addMultipleToCart(newItems);
                                      setSelectedHours([]);
                                      setDraft(null);
+                                     setMinuteSelections({});
                                      setSpreadTabs([]);
                                      setActiveTabDateKey(null);
                                      setMultiDaySelections({});
@@ -972,17 +975,17 @@ function DoohScheduler() {
                     );
                   })()}
 
-                  {/* Minute Grid */}
-                  {selectedHours.length === 1 ? (
-                    <div style={{ background: theme.color.surface2, borderRadius: 20, padding: "28px", border: `1px solid ${theme.color.border2}`, marginTop: 28, boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)" }}>
+                  {/* Minute Grids */}
+                  {selectedHours.length > 0 && selectedHours.map(hour => (
+                    <div key={hour} style={{ background: theme.color.surface2, borderRadius: 20, padding: "28px", border: `1px solid ${theme.color.border2}`, marginTop: 28, boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-                        <div style={{ fontWeight: 800, fontSize: 18, color: theme.color.text1, letterSpacing: "-0.3px" }}>{formatMin(selectedHours[0] * 60)} Slots (Minute-by-Minute)</div>
+                        <div style={{ fontWeight: 800, fontSize: 18, color: theme.color.text1, letterSpacing: "-0.3px" }}>{formatMin(hour * 60)} Slots (Minute-by-Minute)</div>
                         <div style={{ fontSize: 12, fontWeight: 700, color: theme.color.goldDark, background: theme.color.goldLight, padding: "6px 12px", borderRadius: 8 }}>
                           {(() => {
                              const bookings = bookingsForDate(localDateKey(viewDate));
                              let available = 0;
                              for(let m=0; m<60; m++) {
-                               if(!isStartInsideBooking(selectedHours[0] * 60 + m, bookings)) available++;
+                               if(!isStartInsideBooking(hour * 60 + m, bookings)) available++;
                              }
                              return `${available} Available Slots`;
                           })()}
@@ -991,14 +994,16 @@ function DoohScheduler() {
 
                       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(40px, 1fr))", gap: 8 }}>
                         {Array.from({ length: 60 }).map((_, m) => {
-                          const minOfDay = selectedHours[0] * 60 + m;
+                          const minOfDay = hour * 60 + m;
                           const bookings = bookingsForDate(localDateKey(viewDate));
                           const isBooked = isStartInsideBooking(minOfDay, bookings);
                           
                           let isSelected = false;
-                          if (draft && isSameDate(draft.date, viewDate)) {
-                            const draftEnd = draft.startMin + draftDurationSec / 60;
-                            if (minOfDay >= draft.startMin && minOfDay < draftEnd) {
+                          const selectedStart = minuteSelections[hour] !== undefined ? minuteSelections[hour] : (selectedHours.length === 1 && draft && isSameDate(draft.date, viewDate) ? draft.startMin : null);
+                          
+                          if (selectedStart !== null) {
+                            const draftEnd = selectedStart + draftDurationSec / 60;
+                            if (minOfDay >= selectedStart && minOfDay < draftEnd) {
                               isSelected = true;
                             }
                           }
@@ -1007,6 +1012,7 @@ function DoohScheduler() {
                             <button key={m}
                               onClick={() => {
                                 if (isBooked) return;
+                                setMinuteSelections(prev => ({ ...prev, [hour]: minOfDay }));
                                 setDraft({ date: viewDate, startMin: minOfDay, loops: draftLoops });
                               }}
                               disabled={isBooked}
@@ -1026,13 +1032,7 @@ function DoohScheduler() {
                         })}
                       </div>
                     </div>
-                  ) : selectedHours.length > 1 ? (
-                    <div style={{ background: theme.color.surface2, borderRadius: 20, padding: "28px", border: `1px solid ${theme.color.border2}`, marginTop: 28, textAlign: "center" }}>
-                      <Info size={24} color={theme.color.text3} style={{ marginBottom: 12, display: "inline-block" }} />
-                      <div style={{ color: theme.color.text2, fontWeight: 600 }}>Minute-level selection is disabled when multiple hours are selected.</div>
-                      <div style={{ color: theme.color.text3, fontSize: 13, marginTop: 4 }}>The system will automatically find the earliest available start time in each selected hour.</div>
-                    </div>
-                  ) : null}
+                  ))}
 
                 </div>
               </div>
