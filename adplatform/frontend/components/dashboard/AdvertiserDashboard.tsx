@@ -210,8 +210,8 @@ export default function AdvertiserDashboard() {
               <p style={{ fontFamily: theme.font.display, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.65)', margin: '0 0 8px' }}>Studio Arella Screen</p>
               <p style={{ fontFamily: theme.font.display, fontSize: 18, fontWeight: 600, color: '#fff', margin: '0 0 4px', letterSpacing: '-0.2px', lineHeight: 1.2 }}>Book your ad slot from ₦1,000/min</p>
               <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.65)', margin: '0 0 18px', fontWeight: 500 }}>Bems Junction · Thousands of daily viewers</p>
-              <Link href="/book" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: theme.color.surface, color: theme.color.charcoal900, padding: '11px', borderRadius: 10, fontSize: 13, fontWeight: 900, textDecoration: 'none' }}>
-                Choose date & time <FaArrowRight size={12} />
+              <Link href="/book" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, background: '#1A1A1A', color: '#FFFFFF', padding: '12px', borderRadius: 10, fontSize: 13, fontWeight: 800, textDecoration: 'none', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                Choose date & time <FaArrowRight size={12} color={theme.color.gold} />
               </Link>
             </FadeCard>
 
