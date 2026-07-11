@@ -91,8 +91,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   checkAuth: async () => {
     try {
       const { data } = await api.get('/auth/me');
-      set({ user: data });
-      localStorage.setItem('user', JSON.stringify(data));
+      
+      set((state) => {
+        // Always trust local has_seen_tour = true to prevent infinite tour loops
+        const mergedData = { ...data };
+        if (state.user?.has_seen_tour) {
+          mergedData.has_seen_tour = true;
+        }
+        
+        localStorage.setItem('user', JSON.stringify(mergedData));
+        return { user: mergedData };
+      });
     } catch (err) {
       console.error('Failed to fetch user:', err);
     }

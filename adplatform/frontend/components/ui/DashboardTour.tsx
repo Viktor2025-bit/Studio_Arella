@@ -10,11 +10,16 @@ export default function DashboardTour() {
   const { user, markTourSeen } = useAuthStore();
 
   useEffect(() => {
-    // Only run tour if the user is loaded and hasn't seen it yet
-    if (user && !user.has_seen_tour) {
+    // Check secondary local safety net
+    const localFallback = localStorage.getItem('tour_safety_net');
+    
+    // Only run tour if the user is loaded, hasn't seen it, and no local fallback exists
+    if (user && !user.has_seen_tour && !localFallback) {
       // Small delay to let the dashboard render
       const timer = setTimeout(() => {
         setRun(true);
+        // Set safety net so a sudden refresh doesn't trigger it again
+        localStorage.setItem('tour_safety_net', 'true');
       }, 1000);
       return () => clearTimeout(timer);
     }
