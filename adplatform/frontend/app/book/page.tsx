@@ -271,6 +271,7 @@ function DoohScheduler() {
     }
     if (firstAvailMin < (hour + 1) * 60) {
       setDraft({ date, startMin: firstAvailMin, loops: draftLoops });
+      setMinuteSelections(prev => ({ ...prev, [hour]: firstAvailMin }));
     } else {
       setDraft(null);
     }
@@ -908,15 +909,25 @@ function DoohScheduler() {
                                   
                                   const generateItemsForDate = (d: Date, state: any) => {
                                     state.selectedHours.forEach((h: number) => {
-                                       let startMin = state.minuteSelections?.[h] !== undefined ? state.minuteSelections[h] : h * 60;
-                                       newItems.push({
-                                          id: crypto.randomUUID(),
-                                          creative: selectedCreative,
-                                          date: d,
-                                          startMin,
-                                          durationSec: (state.draft ? state.draft.loops : state.draftLoops) * (videoSeconds || 60),
-                                          priceInfo: calcCost((state.draft ? state.draft.loops : state.draftLoops) * (videoSeconds || 60), selectedCreative?.ppm_rate || PPM)
-                                       });
+                                       let startMin = state.minuteSelections?.[h];
+                                       if (startMin === undefined) {
+                                         const bookings = bookingsForDate(localDateKey(d));
+                                         let firstAvailMin = h * 60;
+                                         while (firstAvailMin < (h + 1) * 60 && isStartInsideBooking(firstAvailMin, bookings)) {
+                                           firstAvailMin++;
+                                         }
+                                         startMin = firstAvailMin;
+                                       }
+                                       if (startMin < (h + 1) * 60) {
+                                         newItems.push({
+                                            id: crypto.randomUUID(),
+                                            creative: selectedCreative,
+                                            date: d,
+                                            startMin,
+                                            durationSec: (state.draft ? state.draft.loops : state.draftLoops) * (videoSeconds || 60),
+                                            priceInfo: calcCost((state.draft ? state.draft.loops : state.draftLoops) * (videoSeconds || 60), selectedCreative?.ppm_rate || PPM)
+                                         });
+                                       }
                                     });
                                   };
 
