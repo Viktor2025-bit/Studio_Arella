@@ -11,12 +11,13 @@ import { theme } from '@/lib/theme';
 import { FaWallet, FaCreditCard } from "react-icons/fa6";
 
 const PACKAGES = [
-  { id: 'audio', title: 'Audio Only', price: 10000, icon: Mic, desc: 'Professional mics & soundproofing' },
-  { id: 'video', title: 'Audio + Video', price: 20000, icon: Video, desc: 'Multi-cam setup with professional lighting' }
+  { id: 'audio', title: 'Audio Only', price: 10000, icon: Mic, desc: 'Pro mics, soundproofing & dedicated engineer included' },
+  { id: 'video', title: 'Audio + Video', price: 20000, icon: Video, desc: 'Multi-cam, lighting & dedicated engineer included' }
 ];
 
 const ADDONS = [
-  { id: 'engineer', title: 'Dedicated Sound Engineer', price: 10000, icon: Headphones },
+  { id: 'social_clips', title: '3x Short-form Clips (TikTok/Reels)', price: 15000, icon: Video },
+  { id: 'post_prod', title: 'Full Post-Production & Editing', price: 25000, icon: Headphones },
   { id: 'livestream', title: 'Live Streaming Setup', price: 15000, icon: Radio },
   { id: 'extramic', title: 'Extra Microphone (Beyond 2)', price: 5000, icon: Plus }
 ];
