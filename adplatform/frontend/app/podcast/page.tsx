@@ -419,7 +419,7 @@ function PodcastScheduler() {
                                      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                          <div style={{ textAlign: 'center', color: theme.color.success, fontWeight: 800, marginBottom: 4, fontSize: 16 }}>Slots reserved successfully!</div>
                          <div style={{ textAlign: 'center', color: theme.color.error, fontWeight: 700, fontSize: 13, background: theme.color.errorLight, padding: 8, borderRadius: 8 }}>
-                           <AlarmCheck size={14} style={{ display: 'inline', marginBottom: 2 }} /> This reservation expires in 5 minutes. Pay immediately!
+                           <AlertTriangle size={14} style={{ display: 'inline', marginBottom: 2 }} /> This reservation expires in 5 minutes. Pay immediately!
                          </div>
                          {/* Paystack - recommended */}
                          <AnimatedButton onClick={() => handlePay('paystack')} disabled={paying} style={{ background: 'linear-gradient(135deg, #00C3FF 0%, #0052CC 100%)', color: '#fff', border: 'none', padding: '18px', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
