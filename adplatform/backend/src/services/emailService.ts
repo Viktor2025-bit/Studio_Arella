@@ -136,6 +136,52 @@ export async function sendBookingConfirmationEmail(to: string, name: string, boo
   });
 }
 
+// ── 5. Podcast booking confirmation ──────────────────────────────────────────
+export async function sendPodcastConfirmationEmail(to: string, name: string, booking: {
+  booking_number: string;
+  package_type: string;
+  start_time: string;
+  end_time: string;
+  duration_minutes: number;
+  total_cost: number;
+  addons?: string;
+  payment_reference?: string;
+}) {
+  const addonsText = (() => {
+    try {
+      const parsed = typeof booking.addons === 'string' ? JSON.parse(booking.addons) : booking.addons;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((a: any) => a.name).join(', ');
+      }
+    } catch {}
+    return 'None';
+  })();
+
+  await transporter.sendMail({
+    from: FROM, to,
+    subject: `Podcast session confirmed: ${booking.booking_number} — Studio Arella`,
+    html: wrap(`
+      ${h1('Your podcast session is booked!')}
+      ${p(`Hi ${name}, your Studio Arella podcast recording session has been confirmed and reserved. Here are your session details:`)}
+      ${table(
+        row('Booking Reference', booking.booking_number) +
+        row('Package', `${booking.package_type} Package`) +
+        row('Session Date', new Date(booking.start_time).toLocaleString('en-NG', { dateStyle: 'full', timeStyle: 'short' })) +
+        row('Session End', new Date(booking.end_time).toLocaleTimeString('en-NG', { timeStyle: 'short' })) +
+        row('Duration', `${booking.duration_minutes} hour${booking.duration_minutes > 1 ? 's' : ''}`) +
+        row('Add-ons', addonsText) +
+        row('Amount Paid', `₦${Number(booking.total_cost).toLocaleString()}`) +
+        (booking.payment_reference ? row('Payment Reference', booking.payment_reference) : '')
+      )}
+      <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:14px 18px;margin-top:16px">
+        <p style="font-size:13px;color:#15803D;font-weight:700;margin:0">📍 Studio Arella · Bems Junction, Finbars, Bende Road, Umuahia, Abia State</p>
+      </div>
+      ${p('Please arrive at least 10 minutes before your session. If you need to reschedule or have any questions, contact us on <strong>08164523926</strong>.', true)}
+      ${btn('View my bookings', `${process.env.FRONTEND_URL}/bookings?tab=podcasts`)}
+    `),
+  });
+}
+
 // ── 5. Creative approved ──────────────────────────────────────────────────────
 export async function sendCreativeApprovedEmail(to: string, name: string, creativeName: string) {
   await transporter.sendMail({

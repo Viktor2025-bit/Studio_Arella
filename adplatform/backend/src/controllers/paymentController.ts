@@ -3,7 +3,7 @@ import pool from '../db/pool';
 import { AuthRequest } from '../middleware/auth';
 import https from 'https';
 import crypto from 'crypto';
-import { sendBookingConfirmationEmail } from '../services/emailService';
+import { sendBookingConfirmationEmail, sendPodcastConfirmationEmail } from '../services/emailService';
 import { createNotification, notifyAdmins } from '../services/notificationService';
 
 const MONNIFY_API_KEY     = process.env.MONNIFY_API_KEY as string;
@@ -221,6 +221,34 @@ export const payFromWallet: RequestHandler = async (req, res) => {
     }
 
     await client.query('COMMIT');
+
+    // 6. Send confirmation email (non-blocking, after commit)
+    const userDetailRes = await pool.query('SELECT name, email FROM users WHERE id = $1', [authReq.user?.id]);
+    const userName = userDetailRes.rows[0].name;
+    const userEmail = userDetailRes.rows[0].email;
+
+    if (booking_type === 'podcast') {
+      sendPodcastConfirmationEmail(userEmail, userName, {
+        booking_number: booking.booking_number,
+        package_type: booking.package_type,
+        start_time: booking.start_time,
+        end_time: booking.end_time,
+        duration_minutes: booking.duration_minutes,
+        total_cost: booking.total_cost,
+        addons: booking.addons,
+        payment_reference: 'WALLET',
+      }).catch(console.error);
+    } else {
+      const screenRes = await pool.query('SELECT name FROM screens WHERE id = $1', [booking.screen_id]);
+      const ext = await pool.query('SELECT MIN(start_time) as min_start, MAX(end_time) as max_end FROM booking_slots WHERE booking_id = $1', [booking_id]);
+      sendBookingConfirmationEmail(userEmail, userName, {
+        ...booking,
+        start_time: ext.rows[0].min_start,
+        screen_name: screenRes.rows[0]?.name || 'Studio Arella',
+        payment_reference: 'WALLET',
+      }).catch(console.error);
+    }
+
     res.json({ success: true, message: 'Payment successful using wallet!' });
   } catch (err) {
     await client.query('ROLLBACK');
@@ -470,12 +498,26 @@ async function processConfirmedPayment(reference: string, meta: any, amountPaid:
     if (isPodcast) {
       const booking = await client.query('SELECT * FROM podcast_bookings WHERE id = $1', [bookingId]);
       const b = booking.rows[0];
+      const userRes = await client.query('SELECT name, email FROM users WHERE id = $1', [meta.user_id]);
+
+      // Send podcast confirmation email
+      sendPodcastConfirmationEmail(userRes.rows[0].email, userRes.rows[0].name, {
+        booking_number: b.booking_number,
+        package_type: b.package_type,
+        start_time: b.start_time,
+        end_time: b.end_time,
+        duration_minutes: b.duration_minutes,
+        total_cost: b.total_cost,
+        addons: b.addons,
+        payment_reference: reference,
+      }).catch(console.error);
+
       createNotification({
         user_id: meta.user_id,
         type: 'booking_confirmed',
         title: 'Podcast Booking Confirmed!',
         body: `Your podcast booking ${b.booking_number} is now confirmed for ${new Date(b.start_time).toLocaleString()}.`,
-        link: '/admin/podcasts',
+        link: '/bookings?tab=podcasts',
       });
     } else {
       const booking = await client.query('SELECT * FROM bookings WHERE id = $1', [bookingId]);
