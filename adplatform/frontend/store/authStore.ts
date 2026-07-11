@@ -99,15 +99,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   markTourSeen: async () => {
+    // Optimistic update so it persists immediately
+    set((state) => {
+      const updated = state.user ? { ...state.user, has_seen_tour: true } : null;
+      if (updated) localStorage.setItem('user', JSON.stringify(updated));
+      return { user: updated };
+    });
+
     try {
       await api.post('/auth/tour-seen');
-      set((state) => {
-        const updated = state.user ? { ...state.user, has_seen_tour: true } : null;
-        if (updated) localStorage.setItem('user', JSON.stringify(updated));
-        return { user: updated };
-      });
     } catch (err) {
-      console.error('Failed to mark tour as seen:', err);
+      console.error('Failed to mark tour as seen on server:', err);
     }
   },
 }));
