@@ -31,7 +31,7 @@ export default function AdvertiserDashboard() {
   const { user } = useAuthStore();
   const [stats, setStats] = useState<any>(null);
   const [chartData, setChartData] = useState<any[]>([]);
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<any[]>([]);
   const [balance, setBalance] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -41,7 +41,22 @@ export default function AdvertiserDashboard() {
     Promise.allSettled([
       api.get('/dashboard/stats').then(res => { if (isMounted) setStats((prev: any) => ({ ...prev, ...res.data })) }),
       api.get('/analytics/hourly').then(res => { if (isMounted) setChartData(res.data) }),
-      api.get('/bookings?limit=6').then(res => { if (isMounted) setBookings(res.data.bookings || []) }),
+      Promise.all([
+        api.get('/bookings?limit=6').catch(() => ({ data: { bookings: [] } })),
+        api.get('/podcasts/my-bookings').catch(() => ({ data: { bookings: [] } }))
+      ]).then(([ads, pods]) => {
+        if (isMounted) {
+          const adB = ads.data.bookings || [];
+          const podB = pods.data.bookings || [];
+          // tag them
+          const combined = [
+            ...adB.map((b: any) => ({ ...b, _type: 'ad' })),
+            ...podB.map((b: any) => ({ ...b, _type: 'podcast' }))
+          ];
+          combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          setBookings(combined.slice(0, 6));
+        }
+      }),
       api.get('/finances/balance').then(res => { if (isMounted) setBalance(res.data) }),
       api.get('/finances/revenue').then(res => {
         if (isMounted) setStats((prev: any) => ({ ...prev, total_revenue: res.data.total_revenue || 0 }));
@@ -156,7 +171,7 @@ export default function AdvertiserDashboard() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18, flexWrap: 'wrap', gap: 10 }}>
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 800, color: theme.color.text1, margin: '0 0 2px' }}>Recent Bookings</p>
-                  <p style={{ fontSize: 11, color: theme.color.text3, margin: 0, fontWeight: 500 }}>Your Studio Arella ad slots</p>
+                  <p style={{ fontSize: 11, color: theme.color.text3, margin: 0, fontWeight: 500 }}>Your Studio Arella ad slots & podcasts</p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ position: 'relative' }}>
@@ -182,7 +197,7 @@ export default function AdvertiserDashboard() {
                   <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
                     <thead>
                       <tr style={{ background: theme.color.surface2 }}>
-                        {['Booking #','Date','Duration','Cost','Status'].map(h => (
+                        {['Type', 'Booking #','Date','Cost','Status'].map(h => (
                           <th key={h} style={{ textAlign: 'left', padding: '9px 12px', color: theme.color.text3, fontWeight: 800, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.07em', borderBottom: `1px solid ${theme.color.border2}` }}>{h}</th>
                         ))}
                       </tr>
@@ -190,9 +205,11 @@ export default function AdvertiserDashboard() {
                     <tbody>
                       {filtered.map(b => (
                         <motion.tr key={b.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} whileHover={{ background: theme.color.surface2 }}>
+                          <td style={{ padding: '12px', color: theme.color.text2, borderBottom: `1px solid ${theme.color.border2}`, fontSize: 12, fontWeight: 600 }}>
+                            {b._type === 'podcast' ? <span style={{ background: 'rgba(212,175,55,0.1)', color: '#D4AF37', padding: '4px 8px', borderRadius: 4 }}>Podcast</span> : <span style={{ background: 'rgba(45,110,255,0.1)', color: '#2d6eff', padding: '4px 8px', borderRadius: 4 }}>Ad Slot</span>}
+                          </td>
                           <td style={{ padding: '12px', fontWeight: 800, color: theme.color.text1, borderBottom: `1px solid ${theme.color.border2}`, fontFamily: 'monospace', fontSize: 12 }}>{b.booking_number}</td>
                           <td style={{ padding: '12px', color: theme.color.text2, borderBottom: `1px solid ${theme.color.border2}`, fontSize: 12, fontWeight: 500 }}>{b.start_time ? new Date(b.start_time).toLocaleDateString('en', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
-                          <td style={{ padding: '12px', color: theme.color.text2, borderBottom: `1px solid ${theme.color.border2}`, fontSize: 12, fontWeight: 500 }}>{b.interval_seconds ? `${Math.round(b.interval_seconds / 60)} min` : '—'}</td>
                           <td style={{ padding: '12px', color: theme.color.gold, fontWeight: 800, borderBottom: `1px solid ${theme.color.border2}` }}>₦{Number(b.total_cost || 0).toLocaleString()}</td>
                           <td style={{ padding: '12px', borderBottom: `1px solid ${theme.color.border2}` }}><StatusBadge status={b.status} /></td>
                         </motion.tr>
