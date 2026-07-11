@@ -3,29 +3,30 @@
 import { useEffect, useState } from 'react';
 import { Joyride, EventData, STATUS, Step } from 'react-joyride';
 import { theme } from '@/lib/theme';
+import { useAuthStore } from '@/store/authStore';
 
 export default function DashboardTour() {
   const [run, setRun] = useState(false);
+  const { user, markTourSeen } = useAuthStore();
 
   useEffect(() => {
-    // Only run tour if the user hasn't seen it yet
-    const hasSeenTour = localStorage.getItem('studioarella_tour_seen');
-    if (!hasSeenTour) {
+    // Only run tour if the user is loaded and hasn't seen it yet
+    if (user && !user.has_seen_tour) {
       // Small delay to let the dashboard render
       const timer = setTimeout(() => {
         setRun(true);
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [user]);
 
   const handleJoyrideCallback = (data: EventData) => {
-    const { status, type, index } = data;
+    const { status, type, step } = data;
     const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
 
     if (finishedStatuses.includes(status)) {
       setRun(false);
-      localStorage.setItem('studioarella_tour_seen', 'true');
+      markTourSeen(); // Update backend and authStore
       if (typeof window !== 'undefined' && window.innerWidth < 1024) {
         window.dispatchEvent(new Event('closeSidebar'));
       }
@@ -33,7 +34,7 @@ export default function DashboardTour() {
 
     if (type === 'step:before') {
       if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-        if (index === 1 || index === 2) {
+        if (step.target === '#tour-book-ad' || step.target === '#tour-book-podcast') {
           window.dispatchEvent(new Event('openSidebar'));
         } else {
           window.dispatchEvent(new Event('closeSidebar'));

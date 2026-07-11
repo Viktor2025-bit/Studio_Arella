@@ -159,7 +159,7 @@ export const getMe: RequestHandler = async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT id, name, first_name, last_name, email, role, credits, business_name, phone, logo_url,
-              avatar, email_verified, suspended, language, terms_accepted, created_at
+              avatar, email_verified, suspended, language, terms_accepted, has_seen_tour, created_at
        FROM users WHERE id = $1`,
       [authReq.user?.id]
     );
@@ -206,6 +206,20 @@ export const acceptTerms: RequestHandler = async (req, res) => {
     res.json({ message: 'Terms accepted', user: result.rows[0] });
   } catch (err) {
     res.status(500).json({ message: 'Failed to accept terms' });
+  }
+};
+
+// ── Mark Tour Seen ────────────────────────────────────────────────────────────
+export const markTourSeen: RequestHandler = async (req, res) => {
+  const authReq = req as AuthRequest;
+  try {
+    const result = await pool.query(
+      `UPDATE users SET has_seen_tour = true WHERE id = $1 RETURNING id, has_seen_tour`,
+      [authReq.user?.id]
+    );
+    res.json({ message: 'Tour marked as seen', user: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to mark tour as seen' });
   }
 };
 

@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
   credits DECIMAL(10,2) DEFAULT 0.00,
   language VARCHAR(10) DEFAULT 'en',
   terms_accepted BOOLEAN DEFAULT false,
+  has_seen_tour BOOLEAN DEFAULT false,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );

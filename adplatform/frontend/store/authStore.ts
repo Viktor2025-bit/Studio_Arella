@@ -16,6 +16,7 @@ interface User {
   logo_url?: string;
   email_verified?: boolean;
   terms_accepted?: boolean;
+  has_seen_tour?: boolean;
 }
 
 interface AuthState {
@@ -28,6 +29,7 @@ interface AuthState {
   loadFromStorage: () => void;
   updateUser: (data: Partial<User>) => void;
   checkAuth: () => Promise<void>;
+  markTourSeen: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -93,6 +95,19 @@ export const useAuthStore = create<AuthState>((set) => ({
       localStorage.setItem('user', JSON.stringify(data));
     } catch (err) {
       console.error('Failed to fetch user:', err);
+    }
+  },
+
+  markTourSeen: async () => {
+    try {
+      await api.post('/auth/tour-seen');
+      set((state) => {
+        const updated = state.user ? { ...state.user, has_seen_tour: true } : null;
+        if (updated) localStorage.setItem('user', JSON.stringify(updated));
+        return { user: updated };
+      });
+    } catch (err) {
+      console.error('Failed to mark tour as seen:', err);
     }
   },
 }));
