@@ -7,7 +7,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useToast } from '@/components/ui/ToastProvider';
 import { useCartStore } from '@/store/cartStore';
 import api from '@/lib/api';
-import { FaWallet, FaCreditCard } from 'react-icons/fa6';
+import { FaWallet, FaCreditCard, FaLock } from 'react-icons/fa6';
 import { AnimatedButton, PageTransition } from '@/components/ui/Animations';
 import { theme } from '@/lib/theme';
 import EditCartModal from '@/components/ui/EditCartModal';
@@ -296,57 +296,68 @@ export default function CartPage() {
       </PageTransition>
     </DashboardLayout>
 
-    {/* Invoice Modal */}
+    {/* Premium Invoice Modal */}
     {showInvoice && (
-      <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
-        <div style={{ background: theme.color.surface, borderRadius: 24, width: "100%", maxWidth: 500, padding: 32, boxShadow: theme.shadow.lg, position: "relative", animation: "slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)" }}>
-          <button onClick={() => setShowInvoice(false)} style={{ position: "absolute", top: 24, right: 24, background: theme.color.surface2, border: "none", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: theme.color.text2 }}>
-            <X size={20} />
+      <div style={{ position: "fixed", inset: 0, background: "rgba(10, 12, 16, 0.85)", backdropFilter: "blur(16px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20, animation: "fadeIn 0.3s ease-out" }}>
+        <div style={{ background: "linear-gradient(180deg, #1A1D24 0%, #13151A 100%)", borderRadius: 28, width: "100%", maxWidth: 460, padding: 0, boxShadow: "0 0 0 1px rgba(255,255,255,0.05), 0 32px 64px rgba(0,0,0,0.5)", position: "relative", overflow: "hidden", animation: "slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)" }}>
+          
+          {/* Top Golden Accent Line */}
+          <div style={{ height: 4, width: "100%", background: "linear-gradient(90deg, #D4AF37, #F1B945, #D4AF37)" }} />
+
+          <button onClick={() => setShowInvoice(false)} style={{ position: "absolute", top: 24, right: 24, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#A0AEC0", transition: "all 0.2s" }} className="hover:bg-white/10 hover:text-white">
+            <X size={18} />
           </button>
           
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
-            <div style={{ display: "inline-flex", background: theme.color.success + "15", color: theme.color.success, padding: "10px 20px", borderRadius: 30, fontSize: 14, fontWeight: 800, marginBottom: 16 }}>
-              Slots Reserved Successfully
-            </div>
-            <h2 style={{ fontSize: 24, fontWeight: 900, color: theme.color.text1, fontFamily: theme.font.display, marginBottom: 8 }}>Checkout Invoice</h2>
-            <p style={{ color: theme.color.text3, fontSize: 15 }}>Complete your payment to secure these slots permanently.</p>
-          </div>
-
-          {timeLeft !== null && (
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, background: theme.color.error + "10", border: `1px solid ${theme.color.error}`, padding: "16px 20px", borderRadius: 16 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <Timer size={20} color={theme.color.error} />
-                <div style={{ color: theme.color.error, fontWeight: 800, fontSize: 15 }}>Time Remaining</div>
+          <div style={{ padding: "40px 32px 32px" }}>
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(212, 175, 55, 0.1)", border: "1px solid rgba(212, 175, 55, 0.2)", color: "#F1B945", padding: "8px 16px", borderRadius: 30, fontSize: 13, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", marginBottom: 20 }}>
+                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#F1B945", boxShadow: "0 0 8px #F1B945" }} />
+                Slots Reserved
               </div>
-              <div className="mono" style={{ fontSize: 24, fontWeight: 900, color: theme.color.error, background: "#fff", padding: "8px 16px", borderRadius: 8, boxShadow: theme.shadow.sm }}>
-                {pad(mins)}:{pad(secs)}
+              <h2 style={{ fontSize: 28, fontWeight: 800, color: "#FFFFFF", fontFamily: theme.font.display, marginBottom: 8, letterSpacing: "-0.5px" }}>Checkout Invoice</h2>
+              <p style={{ color: "#A0AEC0", fontSize: 15, lineHeight: 1.5 }}>Complete your payment now to secure these premium slots permanently.</p>
+            </div>
+
+            {timeLeft !== null && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 32, background: "rgba(239, 68, 68, 0.05)", border: "1px solid rgba(239, 68, 68, 0.2)", padding: "16px 20px", borderRadius: 16 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <Timer size={20} color="#EF4444" />
+                  <div style={{ color: "#EF4444", fontWeight: 700, fontSize: 15, letterSpacing: "0.02em" }}>Time Remaining</div>
+                </div>
+                <div className="mono" style={{ fontSize: 24, fontWeight: 800, color: "#EF4444", textShadow: "0 0 12px rgba(239, 68, 68, 0.4)" }}>
+                  {pad(mins)}:{pad(secs)}
+                </div>
+              </div>
+            )}
+
+            <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 20, padding: 24, marginBottom: 32 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16, color: "#A0AEC0", fontSize: 15 }}>
+                <span style={{ fontWeight: 500 }}>Total Airtime</span>
+                <span className="mono" style={{ fontWeight: 700, color: "#E2E8F0" }}>{cart.length} block(s)</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16, color: "#A0AEC0", fontSize: 15 }}>
+                <span style={{ fontWeight: 500 }}>Screen</span>
+                <span style={{ fontWeight: 600, color: "#E2E8F0" }}>Bems Junction, Umuahia</span>
+              </div>
+              <div style={{ height: 1, background: "rgba(255,255,255,0.08)", margin: "20px 0" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontWeight: 700, fontSize: 16, color: "#A0AEC0", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Due</span>
+                <span className="mono" style={{ color: "#F1B945", fontWeight: 800, fontSize: 32, textShadow: "0 0 24px rgba(212, 175, 55, 0.3)" }}>{naira(cartTotal)}</span>
               </div>
             </div>
-          )}
 
-          <div style={{ background: theme.color.surface2, borderRadius: 16, padding: 24, marginBottom: 24 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, color: theme.color.text2 }}>
-              <span style={{ fontWeight: 600 }}>Total Airtime</span>
-              <span className="mono" style={{ fontWeight: 700, color: theme.color.text1 }}>{cart.length} block(s)</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <AnimatedButton onClick={() => handlePay('monnify')} disabled={paying} style={{ background: "linear-gradient(135deg, #F1B945 0%, #D4AF37 100%)", color: "#1A1A1A", border: "none", padding: "18px", borderRadius: 14, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: "flex", alignItems: "center", justifyContent: "center", gap: 12, boxShadow: "0 12px 24px rgba(212, 175, 55, 0.25)", transition: "all 0.2s" }}>
+                <FaCreditCard size={20} /> Pay with Card / Bank
+              </AnimatedButton>
+              <AnimatedButton onClick={() => handlePay('wallet')} disabled={paying} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#FFFFFF", padding: "18px", borderRadius: 14, fontSize: 16, fontWeight: 700, cursor: paying ? 'not-allowed' : 'pointer', display: "flex", alignItems: "center", justifyContent: "center", gap: 12, transition: "all 0.2s" }} className="hover:bg-white/10">
+                <FaWallet size={20} color="#A0AEC0" /> Pay from Wallet
+              </AnimatedButton>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, color: theme.color.text2 }}>
-              <span style={{ fontWeight: 600 }}>Screen</span>
-              <span style={{ fontWeight: 700, color: theme.color.text1 }}>Bems Junction, Umuahia</span>
+            
+            <div style={{ textAlign: "center", marginTop: 24, fontSize: 12, color: "#718096", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              <FaLock size={10} /> Secured by Monnify
             </div>
-            <div style={{ height: 1, background: theme.color.border, margin: "16px 0" }} />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontWeight: 800, fontSize: 18, color: theme.color.text1 }}>Total Due</span>
-              <span className="mono" style={{ color: theme.color.goldDark, fontWeight: 900, fontSize: 24 }}>{naira(cartTotal)}</span>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <AnimatedButton onClick={() => handlePay('wallet')} disabled={paying} style={{ background: theme.color.charcoal900, color: '#fff', border: 'none', padding: '18px', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-              <FaWallet size={20} /> Pay from Wallet
-            </AnimatedButton>
-            <AnimatedButton onClick={() => handlePay('monnify')} disabled={paying} style={{ background: theme.color.goldLight, color: theme.color.goldDark, border: `2px solid ${theme.color.goldMid}`, padding: '18px', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-              <FaCreditCard size={20} /> Pay with Card / Bank
-            </AnimatedButton>
           </div>
         </div>
       </div>
