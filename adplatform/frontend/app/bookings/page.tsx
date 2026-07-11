@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Search, CalendarCheck, Mic, CreditCard, Wallet } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -13,7 +13,7 @@ import { Booking } from '@/types';
 import { useToast } from '@/components/ui/ToastProvider';
 import { theme } from '@/lib/theme';
 
-export default function BookingsPage() {
+function BookingsContent() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [podcastBookings, setPodcastBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -283,5 +283,13 @@ export default function BookingsPage() {
         </div>
       </PageTransition>
     </DashboardLayout>
+  );
+}
+
+export default function BookingsPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 48, textAlign: 'center' }}>Loading...</div>}>
+      <BookingsContent />
+    </Suspense>
   );
 }
