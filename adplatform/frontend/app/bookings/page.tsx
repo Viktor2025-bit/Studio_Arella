@@ -142,36 +142,70 @@ export default function BookingsPage() {
             </div>
           </div>
 
-          <div style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: 16, overflow: 'hidden' }}>
+          <div style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: 24, boxShadow: theme.shadow.sm, overflow: 'hidden' }}>
             <div style={{ overflowX: 'auto' }}>
               
               {/* SCREENS TABLE */}
               {activeTab === 'screens' && (
                 !loading && filteredScreens.length === 0 ? (
-                  <div style={{ padding: 24 }}><EmptyState icon={CalendarCheck} title="No screen bookings found" subtitle="Bookings you make will show up here." /></div>
+                  <div style={{ padding: 48, textAlign: 'center' }}><EmptyState icon={CalendarCheck} title="No screen bookings found" subtitle="Bookings you make will show up here." /></div>
                 ) : (
                   <Table>
                     <TableHead>
-                      {['Booking #', 'Schedule', 'Screens', 'Impression', 'View', 'Interval', 'Cost', 'Total', 'Status'].map((h) => <TableHeaderCell key={h}>{h}</TableHeaderCell>)}
+                      {['Campaign Info', 'Schedule', 'Configuration', 'Performance', 'Billing', 'Status'].map((h) => <TableHeaderCell key={h}>{h}</TableHeaderCell>)}
                     </TableHead>
                     <TableBody>
                       {loading ? (
-                        <tr><td colSpan={9} style={{ padding: '48px 20px', textAlign: 'center', color: theme.color.text3 }}>Loading...</td></tr>
+                        <tr><td colSpan={6} style={{ padding: '64px 20px', textAlign: 'center', color: theme.color.text3 }}>Loading your bookings...</td></tr>
                       ) : filteredScreens.map((b) => (
                         <TableRow key={b.id}>
-                          <TableCell><span style={{ fontWeight: 600 }}>{b.booking_number}</span></TableCell>
                           <TableCell>
-                            <div style={{ fontSize: 12, color: theme.color.text2 }}>
-                              {b.start_time ? new Date(b.start_time).toLocaleString('en', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'} <br/>
-                              {b.end_time ? `→ ${new Date(b.end_time).toLocaleString('en', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}` : ''}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                               <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                 <CalendarCheck size={20} color={theme.color.goldDark} />
+                               </div>
+                               <div>
+                                 <div style={{ fontWeight: 800, color: theme.color.text1, fontSize: 14, letterSpacing: '-0.2px' }}>{b.booking_number}</div>
+                                 <div style={{ fontSize: 12, color: theme.color.text3, marginTop: 2 }}>Screen Campaign</div>
+                               </div>
                             </div>
                           </TableCell>
-                          <TableCell>{String(b.screen_count).padStart(2, '0')}</TableCell>
-                          <TableCell>{String(b.impressions).padStart(2, '0')}</TableCell>
-                          <TableCell>{b.views}</TableCell>
-                          <TableCell>{String(b.interval_seconds).padStart(2, '0')}</TableCell>
-                          <TableCell>₦{b.cost_per_sec}/Sec</TableCell>
-                          <TableCell>₦{Number(b.total_cost).toLocaleString()}</TableCell>
+                          <TableCell>
+                            <div style={{ fontSize: 13, color: theme.color.text1, fontWeight: 600 }}>
+                              {b.start_time ? new Date(b.start_time).toLocaleString('en', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'}
+                            </div>
+                            <div style={{ fontSize: 12, color: theme.color.text3, marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <span style={{ color: theme.color.text4 }}>to</span> {b.end_time ? new Date(b.end_time).toLocaleString('en', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                               <div style={{ fontSize: 12, color: theme.color.text2, display: 'flex', justifyContent: 'space-between', width: 100 }}>
+                                 <span style={{ color: theme.color.text3 }}>Screens:</span> 
+                                 <span style={{ fontWeight: 700, color: theme.color.text1 }}>{String(b.screen_count).padStart(2, '0')}</span>
+                               </div>
+                               <div style={{ fontSize: 12, color: theme.color.text2, display: 'flex', justifyContent: 'space-between', width: 100 }}>
+                                 <span style={{ color: theme.color.text3 }}>Interval:</span> 
+                                 <span style={{ fontWeight: 700, color: theme.color.text1 }}>{b.interval_seconds}s</span>
+                               </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                               <div style={{ fontSize: 12, color: theme.color.text2, display: 'flex', justifyContent: 'space-between', width: 100 }}>
+                                 <span style={{ color: theme.color.text3 }}>Impressions:</span> 
+                                 <span style={{ fontWeight: 700, color: theme.color.text1 }}>{String(b.impressions).padStart(2, '0')}</span>
+                               </div>
+                               <div style={{ fontSize: 12, color: theme.color.text2, display: 'flex', justifyContent: 'space-between', width: 100 }}>
+                                 <span style={{ color: theme.color.text3 }}>Views:</span> 
+                                 <span style={{ fontWeight: 700, color: theme.color.text1 }}>{b.views}</span>
+                               </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div style={{ fontWeight: 800, color: theme.color.text1, fontSize: 15 }}>₦{Number(b.total_cost).toLocaleString()}</div>
+                            <div style={{ fontSize: 11, color: theme.color.text3, marginTop: 4 }}>₦{Number(b.cost_per_sec).toFixed(2)}/Sec</div>
+                          </TableCell>
                           <TableCell><StatusBadge status={b.status} /></TableCell>
                         </TableRow>
                       ))}
@@ -183,36 +217,53 @@ export default function BookingsPage() {
               {/* PODCASTS TABLE */}
               {activeTab === 'podcasts' && (
                 !loading && filteredPodcasts.length === 0 ? (
-                  <div style={{ padding: 24 }}><EmptyState icon={Mic} title="No podcast bookings found" subtitle="Your podcast reservations will show up here." /></div>
+                  <div style={{ padding: 48, textAlign: 'center' }}><EmptyState icon={Mic} title="No podcast bookings found" subtitle="Your podcast reservations will show up here." /></div>
                 ) : (
                   <Table>
                     <TableHead>
-                      {['Booking #', 'Package', 'Time Slot', 'Duration', 'Total Cost', 'Status', 'Action'].map((h) => <TableHeaderCell key={h}>{h}</TableHeaderCell>)}
+                      {['Booking Info', 'Schedule', 'Duration', 'Billing', 'Status', 'Action'].map((h) => <TableHeaderCell key={h}>{h}</TableHeaderCell>)}
                     </TableHead>
                     <TableBody>
                       {loading ? (
-                        <tr><td colSpan={7} style={{ padding: '48px 20px', textAlign: 'center', color: theme.color.text3 }}>Loading...</td></tr>
+                        <tr><td colSpan={6} style={{ padding: '64px 20px', textAlign: 'center', color: theme.color.text3 }}>Loading your bookings...</td></tr>
                       ) : filteredPodcasts.map((b) => (
                         <TableRow key={b.id}>
-                          <TableCell><span style={{ fontWeight: 600 }}>{b.booking_number}</span></TableCell>
-                          <TableCell>{b.package_type}</TableCell>
                           <TableCell>
-                            <div style={{ fontSize: 12, color: theme.color.text2 }}>
-                              {new Date(b.start_time).toLocaleString('en', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })} <br/>
-                              → {new Date(b.end_time).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                               <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                 <Mic size={20} color={theme.color.goldDark} />
+                               </div>
+                               <div>
+                                 <div style={{ fontWeight: 800, color: theme.color.text1, fontSize: 14, letterSpacing: '-0.2px' }}>{b.booking_number}</div>
+                                 <div style={{ fontSize: 12, color: theme.color.text3, marginTop: 2, textTransform: 'capitalize' }}>{b.package_type} Package</div>
+                               </div>
                             </div>
                           </TableCell>
-                          <TableCell>{b.duration_minutes / 60} hr{b.duration_minutes / 60 > 1 ? 's' : ''}</TableCell>
-                          <TableCell>₦{Number(b.total_cost).toLocaleString()}</TableCell>
+                          <TableCell>
+                            <div style={{ fontSize: 13, color: theme.color.text1, fontWeight: 600 }}>
+                              {new Date(b.start_time).toLocaleString('en', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                            <div style={{ fontSize: 12, color: theme.color.text3, marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <span style={{ color: theme.color.text4 }}>to</span> {new Date(b.end_time).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div style={{ fontSize: 14, fontWeight: 700, color: theme.color.text1 }}>
+                              {b.duration_minutes / 60} hr{b.duration_minutes / 60 > 1 ? 's' : ''}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div style={{ fontWeight: 800, color: theme.color.text1, fontSize: 15 }}>₦{Number(b.total_cost).toLocaleString()}</div>
+                          </TableCell>
                           <TableCell><StatusBadge status={b.status} /></TableCell>
                           <TableCell>
                             {b.status === 'pending' && (
                               <div style={{ display: 'flex', gap: 8 }}>
-                                <button onClick={() => handlePay(b.id, 'wallet')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: theme.color.charcoal900, color: '#fff', borderRadius: 6, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer' }} title="Pay from Wallet">
-                                  <Wallet size={12} /> Wallet
+                                <button onClick={() => handlePay(b.id, 'wallet')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: theme.color.charcoal900, color: '#fff', borderRadius: 8, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer', transition: 'all 0.2s' }} className="hover:opacity-90" title="Pay from Wallet">
+                                  <Wallet size={14} /> Wallet
                                 </button>
-                                <button onClick={() => handlePay(b.id, 'monnify')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: 'rgba(212,175,55,0.1)', color: theme.color.goldDark, border: `1px solid rgba(212,175,55,0.4)`, borderRadius: 6, fontSize: 12, fontWeight: 700, cursor: 'pointer' }} title="Pay with Card">
-                                  <CreditCard size={12} /> Card
+                                <button onClick={() => handlePay(b.id, 'monnify')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: 'rgba(212,175,55,0.1)', color: theme.color.goldDark, border: `1px solid rgba(212,175,55,0.4)`, borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s' }} className="hover:bg-gold/20" title="Pay with Card">
+                                  <CreditCard size={14} /> Card
                                 </button>
                               </div>
                             )}
