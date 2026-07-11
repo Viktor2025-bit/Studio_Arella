@@ -142,7 +142,7 @@ function PodcastScheduler() {
       } else {
         const res = await api.post('/payments/wallet', { booking_id: bookingId, booking_type: 'podcast' });
         toast(res.data.message || 'Payment successful!', 'success');
-        router.push('/bookings');
+        router.push('/bookings?tab=podcasts');
       }
     } catch (err: any) {
       toast(err?.response?.data?.message || 'Payment failed', 'error');

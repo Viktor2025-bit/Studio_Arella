@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Search, CalendarCheck, Mic, CreditCard, Wallet } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { PageTransition } from '@/components/ui/Animations';
@@ -18,7 +19,9 @@ export default function BookingsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
-  const [activeTab, setActiveTab] = useState<'screens' | 'podcasts'>('screens');
+  const searchParams = useSearchParams();
+  const tabParam = searchParams?.get('tab');
+  const [activeTab, setActiveTab] = useState<'screens' | 'podcasts'>(tabParam === 'podcasts' ? 'podcasts' : 'screens');
   const { toast } = useToast();
 
   const fetchScreens = async () => {
