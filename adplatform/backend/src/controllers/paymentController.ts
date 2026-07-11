@@ -13,6 +13,36 @@ const MONNIFY_BASE        = process.env.NODE_ENV === 'production'
   ? 'api.monnify.com'
   : 'sandbox.monnify.com';
 
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY as string;
+
+// ── Helper: raw HTTPS request to Paystack ────────────────────────────────────
+const paystackReq = (method: string, path: string, body?: any): Promise<any> =>
+  new Promise((resolve, reject) => {
+    const payload = body ? JSON.stringify(body) : undefined;
+    const opts = {
+      hostname: 'api.paystack.co',
+      port: 443,
+      path,
+      method,
+      headers: {
+        Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+        'Content-Type': 'application/json',
+        ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}),
+      },
+    };
+    const req = https.request(opts, (res) => {
+      let raw = '';
+      res.on('data', c => raw += c);
+      res.on('end', () => {
+        try { resolve(JSON.parse(raw)); }
+        catch { reject(new Error(`Bad JSON from Paystack: ${raw}`)); }
+      });
+    });
+    req.on('error', reject);
+    if (payload) req.write(payload);
+    req.end();
+  });
+
 // ── Helper: raw HTTPS request to Monnify ─────────────────────────────────────
 const monnifyReq = (method: string, path: string, body?: any, token?: string): Promise<any> =>
   new Promise((resolve, reject) => {
@@ -559,3 +589,211 @@ async function processConfirmedPayment(reference: string, meta: any, amountPaid:
     client.release();
   }
 }
+
+// ── Paystack: Initialize booking payment ──────────────────────────────────────
+export const initializePaystackPayment: RequestHandler = async (req, res) => {
+  const authReq = req as AuthRequest;
+  try {
+    const { booking_id, booking_type } = req.body;
+
+    // 1. Get booking
+    let booking;
+    if (booking_type === 'podcast') {
+      const resQuery = await pool.query(
+        'SELECT * FROM podcast_bookings WHERE id = $1 AND user_id = $2 AND status = $3',
+        [booking_id, authReq.user?.id, 'pending']
+      );
+      if (resQuery.rows.length === 0) { res.status(404).json({ message: 'Booking not found or already paid' }); return; }
+      booking = resQuery.rows[0];
+      if (Date.now() - new Date(booking.created_at).getTime() > 5 * 60 * 1000) {
+        res.status(400).json({ message: 'Reservation expired (5 min limit). Please re-book your slot.' }); return;
+      }
+    } else {
+      const bookingRes = await pool.query(
+        'SELECT * FROM bookings WHERE id = $1 AND user_id = $2 AND status = $3',
+        [booking_id, authReq.user?.id, 'pending_payment']
+      );
+      if (bookingRes.rows.length === 0) { res.status(404).json({ message: 'Booking not found or already paid' }); return; }
+      booking = bookingRes.rows[0];
+    }
+
+    // 2. Check slot locks for ad bookings
+    if (booking_type !== 'podcast') {
+      const slotsRes = await pool.query(
+        "SELECT id FROM booking_slots WHERE booking_id = $1 AND status = 'locked' AND locked_until >= NOW()",
+        [booking_id]
+      );
+      if (slotsRes.rows.length === 0) {
+        res.status(400).json({ message: 'Cart expired. Please re-select your slots.' }); return;
+      }
+    }
+
+    const user = await pool.query('SELECT name, email FROM users WHERE id = $1', [authReq.user?.id]);
+    const amount = Math.round(parseFloat(booking.total_cost) * 100); // Paystack uses kobo
+    const reference = `PS-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+    const callbackUrl = booking_type === 'podcast'
+      ? `${process.env.FRONTEND_URL}/podcast/payment-callback`
+      : `${process.env.FRONTEND_URL}/bookings/payment-callback`;
+
+    const paystackRes = await paystackReq('POST', '/transaction/initialize', {
+      email: user.rows[0].email,
+      amount,
+      reference,
+      callback_url: callbackUrl,
+      currency: 'NGN',
+      metadata: {
+        user_id: authReq.user?.id,
+        booking_id,
+        type: booking_type === 'podcast' ? 'podcast_booking' : 'booking',
+        cancel_action: `${process.env.FRONTEND_URL}/bookings`,
+        custom_fields: [
+          { display_name: 'Customer', variable_name: 'customer_name', value: user.rows[0].name },
+          { display_name: 'Booking Ref', variable_name: 'booking_ref', value: booking.booking_number },
+        ],
+      },
+    });
+
+    if (!paystackRes.status) {
+      res.status(400).json({ message: paystackRes.message || 'Paystack error' }); return;
+    }
+
+    res.json({
+      checkout_url: paystackRes.data.authorization_url,
+      payment_reference: reference,
+      access_code: paystackRes.data.access_code,
+      gateway: 'paystack',
+    });
+  } catch (err) {
+    console.error('Paystack init error:', err);
+    res.status(500).json({ message: 'Payment initialization failed' });
+  }
+};
+
+// ── Paystack: Verify payment (client-side callback) ───────────────────────────
+export const verifyPaystackPayment: RequestHandler = async (req, res) => {
+  try {
+    const { reference } = req.params;
+
+    const verifyRes = await paystackReq('GET', `/transaction/verify/${encodeURIComponent(reference)}`);
+
+    if (!verifyRes.status || verifyRes.data?.status !== 'success') {
+      res.status(400).json({ message: 'Payment not completed', gateway_status: verifyRes.data?.status });
+      return;
+    }
+
+    const txn = verifyRes.data;
+    const meta = txn.metadata || {};
+
+    // Idempotency check
+    if (meta.type === 'podcast_booking') {
+      const existing = await pool.query(
+        "SELECT id FROM podcast_bookings WHERE id = $1 AND status = 'confirmed'",
+        [meta.booking_id]
+      );
+      if (existing.rows.length > 0) { res.json({ already_confirmed: true, message: 'Booking already confirmed.' }); return; }
+    } else {
+      const existing = await pool.query(
+        "SELECT id FROM bookings WHERE id = $1 AND status = 'active'",
+        [meta.booking_id]
+      );
+      if (existing.rows.length > 0) { res.json({ already_confirmed: true, message: 'Booking already confirmed.' }); return; }
+    }
+
+    await processConfirmedPayment(reference, meta, txn.amount / 100); // convert kobo → naira
+    res.json({ success: true, message: 'Payment confirmed and booking activated.' });
+  } catch (err) {
+    console.error('Paystack verify error:', err);
+    res.status(500).json({ message: 'Verification failed' });
+  }
+};
+
+// ── Paystack: Webhook (server-to-server) ──────────────────────────────────────
+export const paystackWebhook: RequestHandler = async (req, res) => {
+  try {
+    // Validate Paystack HMAC signature
+    const hash = crypto
+      .createHmac('sha512', PAYSTACK_SECRET_KEY)
+      .update(JSON.stringify(req.body))
+      .digest('hex');
+
+    if (hash !== req.headers['x-paystack-signature']) {
+      res.status(401).send('Unauthorized'); return;
+    }
+
+    // Always respond 200 immediately
+    res.status(200).send('OK');
+
+    const event = req.body;
+    if (event.event === 'charge.success') {
+      const data = event.data;
+      const meta = data.metadata || {};
+      const ref = data.reference;
+      const amountPaid = data.amount / 100; // kobo → naira
+
+      if (meta.type === 'topup') {
+        const existing = await pool.query(
+          "SELECT id FROM transactions WHERE reference = $1 AND type = 'credit'", [ref]
+        );
+        if (existing.rows.length === 0) {
+          await pool.query("UPDATE users SET credits = credits + $1 WHERE id = $2", [meta.amount, meta.user_id]);
+          await pool.query(
+            "INSERT INTO transactions (user_id, type, source, amount, description, reference) VALUES ($1, 'credit', 'topup', $2, 'Credit top-up via Paystack', $3)",
+            [meta.user_id, meta.amount, ref]
+          );
+          createNotification({
+            user_id: meta.user_id,
+            type: 'payment_received',
+            title: 'Credits added!',
+            body: `₦${Number(meta.amount).toLocaleString()} has been added to your Studio Arella balance.`,
+            link: '/finances',
+          });
+        }
+      } else if (meta.booking_id) {
+        await processConfirmedPayment(ref, meta, amountPaid);
+      }
+    }
+  } catch (err) {
+    console.error('Paystack webhook error:', err);
+    res.status(200).send('OK'); // Always 200 to Paystack
+  }
+};
+
+// ── Paystack: Initialize credit top-up ───────────────────────────────────────
+export const initializePaystackCreditPayment: RequestHandler = async (req, res) => {
+  const authReq = req as AuthRequest;
+  try {
+    const { amount } = req.body;
+    if (!amount || Number(amount) < 1000) {
+      res.status(400).json({ message: 'Minimum top-up is ₦1,000' }); return;
+    }
+
+    const user = await pool.query('SELECT name, email FROM users WHERE id = $1', [authReq.user?.id]);
+    const reference = `PSTOPUP-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+
+    const paystackRes = await paystackReq('POST', '/transaction/initialize', {
+      email: user.rows[0].email,
+      amount: Math.round(Number(amount) * 100), // kobo
+      reference,
+      callback_url: `${process.env.FRONTEND_URL}/finances/payment-callback`,
+      currency: 'NGN',
+      metadata: {
+        user_id: authReq.user?.id,
+        type: 'topup',
+        amount,
+      },
+    });
+
+    if (!paystackRes.status) {
+      res.status(400).json({ message: paystackRes.message || 'Paystack error' }); return;
+    }
+
+    res.json({
+      checkout_url: paystackRes.data.authorization_url,
+      payment_reference: reference,
+      gateway: 'paystack',
+    });
+  } catch (err) {
+    console.error('Paystack credit init error:', err);
+    res.status(500).json({ message: 'Payment initialization failed' });
+  }
+};

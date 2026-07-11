@@ -143,13 +143,16 @@ export default function CartPage() {
     }
   };
 
-  const handlePay = async (method: 'monnify' | 'wallet') => {
+  const handlePay = async (method: 'monnify' | 'paystack' | 'wallet') => {
     if (!bookingId) return;
     setPaying(true);
     try {
       if (method === 'monnify') {
         const res = await api.post('/payments/initialize', { booking_id: bookingId });
         window.location.href = res.data.checkout_url || res.data.authorization_url;
+      } else if (method === 'paystack') {
+        const res = await api.post('/payments/paystack/initialize', { booking_id: bookingId });
+        window.location.href = res.data.checkout_url;
       } else {
         const res = await api.post('/payments/wallet', { booking_id: bookingId });
         toast(res.data.message || 'Payment successful!', 'success');
@@ -346,17 +349,23 @@ export default function CartPage() {
               </div>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              <AnimatedButton onClick={() => handlePay('monnify')} disabled={paying} style={{ background: "linear-gradient(135deg, #F1B945 0%, #D4AF37 100%)", color: "#1A1A1A", border: "none", padding: "18px", borderRadius: 14, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: "flex", alignItems: "center", justifyContent: "center", gap: 12, boxShadow: "0 12px 24px rgba(212, 175, 55, 0.25)", transition: "all 0.2s" }}>
-                <FaCreditCard size={20} /> Pay with Card / Bank
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {/* Paystack */}
+              <AnimatedButton onClick={() => handlePay('paystack')} disabled={paying} style={{ background: "linear-gradient(135deg, #00C3FF 0%, #0052CC 100%)", color: "#fff", border: "none", padding: "18px", borderRadius: 14, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: "flex", alignItems: "center", justifyContent: "center", gap: 12, boxShadow: "0 12px 24px rgba(0,82,204,0.25)", transition: "all 0.2s" }}>
+                <FaCreditCard size={20} /> Pay with Paystack
               </AnimatedButton>
+              {/* Monnify */}
+              <AnimatedButton onClick={() => handlePay('monnify')} disabled={paying} style={{ background: "linear-gradient(135deg, #F1B945 0%, #D4AF37 100%)", color: "#1A1A1A", border: "none", padding: "18px", borderRadius: 14, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: "flex", alignItems: "center", justifyContent: "center", gap: 12, boxShadow: "0 12px 24px rgba(212, 175, 55, 0.25)", transition: "all 0.2s" }}>
+                <FaCreditCard size={20} /> Pay with Monnify
+              </AnimatedButton>
+              {/* Wallet */}
               <AnimatedButton onClick={() => handlePay('wallet')} disabled={paying} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#FFFFFF", padding: "18px", borderRadius: 14, fontSize: 16, fontWeight: 700, cursor: paying ? 'not-allowed' : 'pointer', display: "flex", alignItems: "center", justifyContent: "center", gap: 12, transition: "all 0.2s" }} className="hover:bg-white/10">
                 <FaWallet size={20} color="#A0AEC0" /> Pay from Wallet
               </AnimatedButton>
             </div>
-            
-            <div style={{ textAlign: "center", marginTop: 24, fontSize: 12, color: "#718096", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-              <FaLock size={10} /> Secured by Monnify
+
+            <div style={{ textAlign: "center", marginTop: 16, fontSize: 12, color: "#718096", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              <FaLock size={10} /> Secured by Paystack &amp; Monnify
             </div>
           </div>
         </div>

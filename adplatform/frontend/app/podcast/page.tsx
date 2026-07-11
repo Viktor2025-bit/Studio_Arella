@@ -132,13 +132,16 @@ function PodcastScheduler() {
     }
   };
 
-  const handlePay = async (method: 'monnify' | 'wallet') => {
+  const handlePay = async (method: 'monnify' | 'paystack' | 'wallet') => {
     if (!bookingId) return;
     setPaying(true);
     try {
       if (method === 'monnify') {
         const res = await api.post('/payments/initialize', { booking_id: bookingId, booking_type: 'podcast' });
         window.location.href = res.data.checkout_url || res.data.authorization_url;
+      } else if (method === 'paystack') {
+        const res = await api.post('/payments/paystack/initialize', { booking_id: bookingId, booking_type: 'podcast' });
+        window.location.href = res.data.checkout_url;
       } else {
         const res = await api.post('/payments/wallet', { booking_id: bookingId, booking_type: 'podcast' });
         toast(res.data.message || 'Payment successful!', 'success');
@@ -413,20 +416,27 @@ function PodcastScheduler() {
                   <div style={{ display: "flex", gap: 20, flexDirection: "column" }}>
                     {bookingId ? (
                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                         <div style={{ textAlign: "center", color: theme.color.success, fontWeight: 800, marginBottom: 8, fontSize: 16 }}>Slots reserved successfully!</div>
-                         <div style={{ textAlign: "center", color: theme.color.error, fontWeight: 700, fontSize: 13, background: theme.color.errorLight, padding: 8, borderRadius: 8 }}>
-                           <AlertTriangle size={14} style={{ display: 'inline', marginBottom: 2 }} /> This reservation will expire in 5 minutes. Please pay immediately to secure your slot.
+                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                         <div style={{ textAlign: 'center', color: theme.color.success, fontWeight: 800, marginBottom: 4, fontSize: 16 }}>Slots reserved successfully!</div>
+                         <div style={{ textAlign: 'center', color: theme.color.error, fontWeight: 700, fontSize: 13, background: theme.color.errorLight, padding: 8, borderRadius: 8 }}>
+                           <AlarmCheck size={14} style={{ display: 'inline', marginBottom: 2 }} /> This reservation expires in 5 minutes. Pay immediately!
                          </div>
+                         {/* Paystack - recommended */}
+                         <AnimatedButton onClick={() => handlePay('paystack')} disabled={paying} style={{ background: 'linear-gradient(135deg, #00C3FF 0%, #0052CC 100%)', color: '#fff', border: 'none', padding: '18px', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                           <FaCreditCard size={20} /> Pay with Paystack
+                         </AnimatedButton>
+                         {/* Monnify */}
+                         <AnimatedButton onClick={() => handlePay('monnify')} disabled={paying} style={{ background: theme.color.goldLight, color: theme.color.goldDark, border: `2px solid ${theme.color.goldMid}`, padding: '18px', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                           <FaCreditCard size={20} /> Pay with Monnify
+                         </AnimatedButton>
+                         {/* Wallet */}
                          <AnimatedButton onClick={() => handlePay('wallet')} disabled={paying} style={{ background: theme.color.charcoal900, color: '#fff', border: 'none', padding: '18px', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
                            <FaWallet size={20} /> Pay from Wallet
-                         </AnimatedButton>
-                         <AnimatedButton onClick={() => handlePay('monnify')} disabled={paying} style={{ background: theme.color.goldLight, color: theme.color.goldDark, border: `2px solid ${theme.color.goldMid}`, padding: '18px', borderRadius: 12, fontSize: 16, fontWeight: 800, cursor: paying ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                           <FaCreditCard size={20} /> Pay with Card / Bank
                          </AnimatedButton>
                          <button onClick={() => router.push('/bookings')} style={{ background: 'transparent', color: theme.color.text3, border: 'none', padding: '10px', fontSize: 14, fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}>
                            Pay Later (Go to My Bookings)
                          </button>
-                       </div>
+                       </div></div>
                     ) : (
                       <AnimatedButton onClick={handleReserve} disabled={reserving} style={{ width: "100%", padding: "18px 0", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontWeight: 800, fontSize: 18, cursor: reserving ? 'not-allowed' : 'pointer', opacity: reserving ? 0.7 : 1, display: "flex", gap: 10, alignItems: "center", justifyContent: "center", boxShadow: theme.shadow.gold }}>
                         {reserving ? 'Reserving Slots...' : <>Reserve & Proceed to Payment</>}

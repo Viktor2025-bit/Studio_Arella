@@ -34,7 +34,12 @@ function PaymentCallbackContent() {
       return;
     }
 
-    api.get(`/payments/verify/${reference}`)
+    // Auto-detect gateway from reference prefix
+    const verifyUrl = reference.startsWith('PS-')
+      ? `/payments/paystack/verify/${reference}`
+      : `/payments/verify/${reference}`;
+
+    api.get(verifyUrl)
       .then(res => {
         setStatus('success');
         setBooking(res.data.booking);
