@@ -127,7 +127,7 @@ export default function BookingsPage() {
             </div>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-              {['all', 'pending', 'active', 'confirmed', 'ended', 'cancelled'].map((f) => (
+              {['all', 'pending', 'active', 'ended', 'cancelled'].map((f) => (
                 <button 
                   key={f} 
                   onClick={() => setFilter(f)} 
