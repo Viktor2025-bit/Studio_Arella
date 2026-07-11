@@ -132,7 +132,7 @@ export default function FinancesPage() {
                 <tbody>
                   {loading ? Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i}>{Array.from({ length: 5 }).map((_, j) => <td key={j} style={{ padding: '14px 18px' }}><Skeleton height={13} width={70} /></td>)}</tr>
-                  ) : transactions.length === 0 ? (
+                  )) : transactions.length === 0 ? (
                     <tr><td colSpan={5} style={{ padding: '80px 20px', textAlign: 'center' }}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 72, height: 72, borderRadius: 20, background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)', marginBottom: 20 }}>
                         <DollarSign size={28} color={theme.color.goldDark} />
