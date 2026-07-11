@@ -8,6 +8,7 @@ import api from '@/lib/api';
 import { FaArrowRight, FaCalendarDays, FaCircleCheck, FaCircleXmark } from 'react-icons/fa6';
 
 const F = "'Quicksand', sans-serif";
+import { useCartStore } from '@/store/cartStore';
 
 export default function PaymentCallbackPage() {
   return (
@@ -23,6 +24,7 @@ function PaymentCallbackContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'failed'>('loading');
   const [booking, setBooking] = useState<any>(null);
   const [message, setMessage] = useState('');
+  const { clearCart } = useCartStore();
 
   useEffect(() => {
     const reference = params.get('paymentReference') || params.get('reference') || params.get('trxref');
@@ -37,6 +39,7 @@ function PaymentCallbackContent() {
         setStatus('success');
         setBooking(res.data.booking);
         setMessage(res.data.message);
+        clearCart();
       })
       .catch(err => {
         setStatus('failed');
