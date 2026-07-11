@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { theme } from '@/lib/theme';
 
 const F = theme.font.body;
-const card = { background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: theme.radius.lg } as React.CSSProperties;
+const card = { background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: 24, boxShadow: '0 4px 24px rgba(0,0,0,0.03)', overflow: 'hidden' } as React.CSSProperties;
 
 const AD_TYPES = [
   { id: 'image', icon: FaImage, label: 'Image/Flyer', desc: 'Static image or designed flyer', color: theme.color.gold },
@@ -97,32 +97,34 @@ export default function RequestCreativePage() {
       <PageTransition>
         <div style={{ fontFamily: F, maxWidth: 680, margin: '0 auto' }}>
           {/* Header */}
-          <div style={{ marginBottom: 28 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <FaPaintbrush size={18} color={theme.color.goldMid} />
-              <h1 style={{ fontFamily: theme.font.display, fontSize: 26, fontWeight: 600, color: theme.color.text1, margin: 0, letterSpacing: '-0.2px' }}>Request Ad Creative</h1>
+          <div style={{ marginBottom: 36, textAlign: 'center' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, borderRadius: 20, background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.2)', marginBottom: 16 }}>
+              <FaPaintbrush size={28} color={theme.color.goldDark} />
             </div>
-            <p style={{ fontSize: 13, color: theme.color.text2, margin: 0, lineHeight: 1.6 }}>
+            <h1 style={{ fontFamily: theme.font.display, fontSize: 32, fontWeight: 700, color: theme.color.text1, margin: '0 0 10px', letterSpacing: '-0.5px' }}>Request Ad Creative</h1>
+            <p style={{ fontSize: 15, color: theme.color.text2, margin: '0 auto', maxWidth: 480, lineHeight: 1.6 }}>
               Don&apos;t have an ad ready? Our team will create one for you. Fill in the brief below and we&apos;ll be in touch within 24 hours.
             </p>
           </div>
 
           {/* Info banner */}
-          <div style={{ ...card, padding: '14px 18px', marginBottom: 24, background: theme.color.goldLight, border: `1px solid ${theme.color.goldMid}`, display: 'flex', gap: 12 }}>
-            <FaUsers size={16} color={theme.color.goldDark} style={{ marginTop: 2, flexShrink: 0 }} />
+          <div style={{ padding: '20px 24px', marginBottom: 32, background: 'linear-gradient(135deg, rgba(212,175,55,0.12) 0%, rgba(212,175,55,0.03) 100%)', border: `1px solid rgba(212,175,55,0.3)`, borderRadius: 20, display: 'flex', gap: 16, alignItems: 'flex-start', boxShadow: '0 4px 20px rgba(212,175,55,0.05)' }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'rgba(212,175,55,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <FaUsers size={18} color={theme.color.goldDark} />
+            </div>
             <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: theme.color.text1, margin: '0 0 3px' }}>Bems Creative Team</p>
-              <p style={{ fontSize: 12, color: theme.color.text2, margin: 0, lineHeight: 1.5 }}>
+              <p style={{ fontSize: 15, fontWeight: 800, color: theme.color.text1, margin: '0 0 6px', letterSpacing: '-0.2px' }}>Bems Creative Team</p>
+              <p style={{ fontSize: 13, color: theme.color.text2, margin: 0, lineHeight: 1.6 }}>
                 We have a team that will come to you, or work with you remotely, to create your ad or flyer — ensuring your best work is showcased on the screen.
               </p>
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             {/* Business info */}
-            <div style={{ ...card, padding: 24 }}>
-              <p style={{ fontWeight: 700, color: theme.color.text1, margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: 11 }}>Your Business</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div style={{ ...card, padding: 32 }}>
+              <p style={{ fontWeight: 800, color: theme.color.text2, margin: '0 0 20px', textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 12 }}>Your Business</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                 <Input
                   label="Business Name *"
                   value={form.business_name}
@@ -140,40 +142,47 @@ export default function RequestCreativePage() {
             </div>
 
             {/* Ad type */}
-            <div style={{ ...card, padding: 24 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: theme.color.text2, margin: '0 0 14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Type of Ad</p>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
+            <div style={{ ...card, padding: 32 }}>
+              <p style={{ fontSize: 12, fontWeight: 800, color: theme.color.text2, margin: '0 0 20px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Type of Ad</p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16 }}>
                 {AD_TYPES.map(({ id, icon: Icon, label, desc, color }) => (
                   <motion.button
                     key={id}
+                    whileHover={{ y: -4, boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => setForm({ ...form, ad_type: id })}
                     style={{
-                      padding: '14px 12px', background: form.ad_type === id ? `${color}1A` : theme.color.surface2,
+                      padding: '24px 16px', 
+                      background: form.ad_type === id ? `linear-gradient(145deg, ${color}1A, ${color}05)` : theme.color.surface2,
                       border: `1.5px solid ${form.ad_type === id ? color : theme.color.border2}`,
-                      borderRadius: 12, cursor: 'pointer', textAlign: 'center', fontFamily: F,
+                      borderRadius: 16, cursor: 'pointer', textAlign: 'center', fontFamily: F,
+                      transition: 'all 0.3s ease'
                     }}
                   >
-                    <Icon size={20} color={form.ad_type === id ? color : theme.color.text3} style={{ margin: '0 auto 6px', display: 'block' }} />
-                    <p style={{ fontSize: 12, fontWeight: 700, color: form.ad_type === id ? color : theme.color.text2, margin: '0 0 2px' }}>{label}</p>
-                    <p style={{ fontSize: 10, color: theme.color.text3, margin: 0 }}>{desc}</p>
+                    <div style={{ width: 48, height: 48, borderRadius: '50%', background: form.ad_type === id ? color : theme.color.border, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', transition: 'all 0.3s ease' }}>
+                      <Icon size={20} color={form.ad_type === id ? '#fff' : theme.color.text3} />
+                    </div>
+                    <p style={{ fontSize: 14, fontWeight: 800, color: form.ad_type === id ? color : theme.color.text2, margin: '0 0 6px', transition: 'all 0.3s ease' }}>{label}</p>
+                    <p style={{ fontSize: 12, color: theme.color.text3, margin: 0, lineHeight: 1.4 }}>{desc}</p>
                   </motion.button>
                 ))}
               </div>
             </div>
 
             {/* Ad brief */}
-            <div style={{ ...card, padding: 24 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: theme.color.text2, margin: '0 0 14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ad Brief</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ ...card, padding: 32 }}>
+              <p style={{ fontSize: 12, fontWeight: 800, color: theme.color.text2, margin: '0 0 20px', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Ad Brief</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                 <div>
-                  <label style={{ fontSize: 11, color: theme.color.text2, display: 'block', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>What should the ad say/show? *</label>
+                  <label style={{ fontSize: 12, color: theme.color.text2, display: 'block', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>What should the ad say/show? *</label>
                   <textarea
                     value={form.description}
                     onChange={e => setForm({ ...form, description: e.target.value })}
                     placeholder="e.g. Promote our grand opening sale — 50% off all items, valid this weekend only. Should include our logo, address and phone number."
                     rows={4}
-                    style={{ width: '100%', background: theme.color.surface, border: `1px solid ${theme.color.border}`, color: theme.color.text1, borderRadius: 10, padding: '11px 14px', fontSize: 13, fontFamily: F, outline: 'none', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6 }}
+                    style={{ width: '100%', background: theme.color.surface2, border: `1px solid ${theme.color.border}`, color: theme.color.text1, borderRadius: 12, padding: '14px 16px', fontSize: 14, fontFamily: F, outline: 'none', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.6, transition: 'all 0.2s' }}
+                    onFocus={(e) => { e.target.style.background = theme.color.surface; e.target.style.borderColor = theme.color.goldMid; e.target.style.boxShadow = `0 0 0 4px rgba(212,175,55,0.1)`; }}
+                    onBlur={(e) => { e.target.style.background = theme.color.surface2; e.target.style.borderColor = theme.color.border; e.target.style.boxShadow = 'none'; }}
                   />
                 </div>
                 <Input
@@ -182,7 +191,7 @@ export default function RequestCreativePage() {
                   onChange={e => setForm({ ...form, target_audience: e.target.value })}
                   placeholder="e.g. Young adults, local shoppers, students, drivers passing Bems Junction"
                 />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
                   <Input
                     label="Preferred ad dates (optional)"
                     value={form.preferred_dates}
@@ -190,15 +199,20 @@ export default function RequestCreativePage() {
                     placeholder="e.g. This Saturday, or any weekday next week"
                   />
                   <div>
-                    <label style={{ fontSize: 11, color: theme.color.text2, display: 'block', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Design budget range</label>
-                    <select
-                      value={form.budget_range}
-                      onChange={e => setForm({ ...form, budget_range: e.target.value })}
-                      style={{ width: '100%', background: theme.color.surface, border: `1px solid ${theme.color.border}`, color: form.budget_range ? theme.color.text1 : theme.color.text3, borderRadius: 10, padding: '11px 14px', fontSize: 13, fontFamily: F, outline: 'none', boxSizing: 'border-box', cursor: 'pointer' }}
-                    >
-                      <option value="">Select range</option>
-                      {BUDGET_RANGES.map(b => <option key={b} value={b}>{b}</option>)}
-                    </select>
+                    <label style={{ fontSize: 12, color: theme.color.text2, display: 'block', marginBottom: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Design budget range</label>
+                    <div style={{ position: 'relative' }}>
+                      <select
+                        value={form.budget_range}
+                        onChange={e => setForm({ ...form, budget_range: e.target.value })}
+                        style={{ width: '100%', appearance: 'none', background: theme.color.surface2, border: `1px solid ${theme.color.border}`, color: form.budget_range ? theme.color.text1 : theme.color.text3, borderRadius: 12, padding: '14px 16px', fontSize: 14, fontFamily: F, outline: 'none', boxSizing: 'border-box', cursor: 'pointer', transition: 'all 0.2s' }}
+                        onFocus={(e) => { e.target.style.background = theme.color.surface; e.target.style.borderColor = theme.color.goldMid; e.target.style.boxShadow = `0 0 0 4px rgba(212,175,55,0.1)`; }}
+                        onBlur={(e) => { e.target.style.background = theme.color.surface2; e.target.style.borderColor = theme.color.border; e.target.style.boxShadow = 'none'; }}
+                      >
+                        <option value="">Select a range</option>
+                        {BUDGET_RANGES.map(b => <option key={b} value={b}>{b}</option>)}
+                      </select>
+                      <div style={{ position: 'absolute', right: 16, top: 16, pointerEvents: 'none', borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: `5px solid ${theme.color.text3}` }}></div>
+                    </div>
                   </div>
                 </div>
                 <Input
@@ -209,10 +223,12 @@ export default function RequestCreativePage() {
                 />
               </div>
             </div>
-
-            <Button onClick={handleSubmit} loading={submitting} loadingText="Submitting..." variant="primary" style={{ width: '100%', padding: '14px', fontSize: 15 }}>
-              <FaPaintbrush size={15} /> Submit Creative Brief
-            </Button>
+            
+            <div style={{ marginTop: 8 }}>
+              <Button onClick={handleSubmit} loading={submitting} loadingText="Submitting..." variant="primary" style={{ width: '100%', padding: '18px', fontSize: 16, fontWeight: 800, borderRadius: 16, boxShadow: `0 8px 24px rgba(212,175,55,0.25)` }}>
+                <FaPaintbrush size={16} /> Submit Creative Brief
+              </Button>
+            </div>
           </div>
         </div>
       </PageTransition>
