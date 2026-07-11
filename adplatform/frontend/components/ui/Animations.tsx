@@ -70,17 +70,19 @@ interface AnimatedButtonProps {
   dotsColor?: string;
   style?: React.CSSProperties;
   type?: 'button' | 'submit' | 'reset';
+  className?: string;
 }
 
 /** @deprecated use `Button` instead — kept during the design revamp migration. */
 export function AnimatedButton({
   children, onClick, disabled, loading, loadingText,
-  dotsColor = 'rgba(255,255,255,0.9)', style, type = 'button',
+  dotsColor = 'rgba(255,255,255,0.9)', style, type = 'button', className,
 }: AnimatedButtonProps) {
   const isDisabled = disabled || loading;
 
   return (
     <motion.button
+      className={className}
       type={type}
       onClick={!isDisabled ? onClick : undefined}
       disabled={isDisabled}
