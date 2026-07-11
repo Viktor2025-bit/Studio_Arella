@@ -111,45 +111,54 @@ export default function FinancesPage() {
           </FadeCard>
 
           {/* Transactions */}
-          <FadeCard delay={0.28} style={{ ...card, overflow: 'hidden' }}>
-            <div style={{ padding: '16px 20px', borderBottom: `1px solid ${theme.color.border2}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <p style={{ fontSize: 14, fontWeight: 800, color: theme.color.text1, margin: 0 }}>Transaction History</p>
-              <span style={{ fontSize: 12, color: theme.color.text3 }}>{transactions.length} records</span>
+          {/* Transactions */}
+          <FadeCard delay={0.28} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: 24, boxShadow: '0 4px 24px rgba(0,0,0,0.03)', overflow: 'hidden' }}>
+            <div style={{ padding: '24px 28px', borderBottom: `1px solid ${theme.color.border2}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <p style={{ fontSize: 16, fontWeight: 800, color: theme.color.text1, margin: 0, letterSpacing: '-0.2px' }}>Transaction History</p>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: theme.color.surface2, padding: '4px 12px', borderRadius: 20 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: theme.color.goldDark }}></span>
+                <span style={{ fontSize: 12, fontWeight: 700, color: theme.color.text2 }}>{transactions.length} records</span>
+              </div>
             </div>
             <div className="responsive-table-wrapper" style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', fontSize: 13, borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: theme.color.surface2 }}>
                     {['Date', 'Type', 'Source', 'Amount', 'Reference'].map(h => (
-                      <th key={h} style={{ textAlign: 'left', padding: '10px 18px', color: theme.color.text3, fontWeight: 700, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: `1px solid ${theme.color.border2}` }}>{h}</th>
+                      <th key={h} style={{ textAlign: 'left', padding: '14px 28px', color: theme.color.text3, fontWeight: 800, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: `1px solid ${theme.color.border2}` }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? Array.from({ length: 4 }).map((_, i) => (
                     <tr key={i}>{Array.from({ length: 5 }).map((_, j) => <td key={j} style={{ padding: '14px 18px' }}><Skeleton height={13} width={70} /></td>)}</tr>
-                  )) : transactions.length === 0 ? (
-                    <tr><td colSpan={5} style={{ padding: '60px 20px', textAlign: 'center' }}>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, borderRadius: '50%', background: theme.color.surface2, marginBottom: 16 }}>
-                        <DollarSign size={24} color={theme.color.text4} />
+                  ) : transactions.length === 0 ? (
+                    <tr><td colSpan={5} style={{ padding: '80px 20px', textAlign: 'center' }}>
+                      <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 72, height: 72, borderRadius: 20, background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.2)', marginBottom: 20 }}>
+                        <DollarSign size={28} color={theme.color.goldDark} />
                       </div>
-                      <p style={{ fontSize: 15, fontWeight: 700, color: theme.color.text1, margin: '0 0 4px' }}>No transactions yet</p>
-                      <p style={{ fontSize: 13, color: theme.color.text3, margin: 0 }}>When you add credits or book a slot, it will appear here.</p>
+                      <p style={{ fontSize: 16, fontWeight: 800, color: theme.color.text1, margin: '0 0 6px', letterSpacing: '-0.2px' }}>No transactions yet</p>
+                      <p style={{ fontSize: 14, color: theme.color.text3, margin: 0, maxWidth: 300, marginInline: 'auto' }}>When you add credits or book a slot, your history will appear here.</p>
                     </td></tr>
                   ) : transactions.map(t => (
-                    <motion.tr key={t.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} whileHover={{ background: theme.color.surface2 }}>
-                      <td style={{ padding: '12px 18px', color: theme.color.text3, fontSize: 12, borderBottom: `1px solid ${theme.color.border2}` }}>{new Date(t.created_at).toLocaleDateString('en', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
-                      <td style={{ padding: '12px 18px', borderBottom: `1px solid ${theme.color.border2}` }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <motion.tr key={t.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} whileHover={{ background: theme.color.surface2 }} transition={{ duration: 0.15 }}>
+                      <td style={{ padding: '18px 24px', color: theme.color.text3, fontSize: 13, borderBottom: `1px solid ${theme.color.border2}` }}>
+                        <div style={{ fontWeight: 600, color: theme.color.text1 }}>{new Date(t.created_at).toLocaleDateString('en', { month: 'short', day: '2-digit', year: 'numeric' })}</div>
+                        <div style={{ fontSize: 11, color: theme.color.text4, marginTop: 4 }}>{new Date(t.created_at).toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' })}</div>
+                      </td>
+                      <td style={{ padding: '18px 24px', borderBottom: `1px solid ${theme.color.border2}` }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: t.type === 'credit' ? 'rgba(39, 174, 96, 0.08)' : 'rgba(235, 87, 87, 0.08)', border: `1px solid ${t.type === 'credit' ? 'rgba(39, 174, 96, 0.2)' : 'rgba(235, 87, 87, 0.2)'}`, padding: '4px 10px', borderRadius: 12 }}>
                           {t.type === 'credit' ? <FaArrowTrendUp size={12} color={theme.color.success} /> : <FaArrowTrendDown size={12} color={theme.color.error} />}
-                          <span style={{ fontSize: 11, fontWeight: 700, color: t.type === 'credit' ? '#2F6A3B' : '#8F3226', background: t.type === 'credit' ? theme.color.successLight : theme.color.errorLight, padding: '2px 8px', borderRadius: 100, textTransform: 'capitalize' }}>{t.type}</span>
+                          <span style={{ fontSize: 11, fontWeight: 800, color: t.type === 'credit' ? '#2F6A3B' : '#8F3226', textTransform: 'capitalize', letterSpacing: '0.05em' }}>{t.type}</span>
                         </div>
                       </td>
-                      <td style={{ padding: '12px 18px', color: theme.color.text2, borderBottom: `1px solid ${theme.color.border2}`, textTransform: 'capitalize' }}>{t.source}</td>
-                      <td style={{ padding: '12px 18px', fontWeight: 800, color: t.type === 'credit' ? theme.color.success : theme.color.error, borderBottom: `1px solid ${theme.color.border2}` }}>
-                        {t.type === 'credit' ? '+' : '-'}₦{Number(t.amount).toLocaleString()}
+                      <td style={{ padding: '18px 24px', color: theme.color.text2, borderBottom: `1px solid ${theme.color.border2}`, textTransform: 'capitalize', fontWeight: 600, fontSize: 13 }}>{t.source}</td>
+                      <td style={{ padding: '18px 24px', borderBottom: `1px solid ${theme.color.border2}` }}>
+                        <div style={{ fontWeight: 800, fontSize: 15, color: t.type === 'credit' ? theme.color.success : theme.color.error, letterSpacing: '-0.2px' }}>
+                          {t.type === 'credit' ? '+' : '-'}₦{Number(t.amount).toLocaleString()}
+                        </div>
                       </td>
-                      <td style={{ padding: '12px 18px', color: theme.color.text4, fontSize: 11, fontFamily: 'monospace', borderBottom: `1px solid ${theme.color.border2}` }}>{t.reference || '—'}</td>
+                      <td style={{ padding: '18px 24px', color: theme.color.text4, fontSize: 12, fontFamily: 'monospace', borderBottom: `1px solid ${theme.color.border2}` }}>{t.reference || '—'}</td>
                     </motion.tr>
                   ))}
                 </tbody>
