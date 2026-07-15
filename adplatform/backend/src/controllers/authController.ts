@@ -66,9 +66,9 @@ export const register: RequestHandler = async (req, res) => {
       user: { ...user, email_verified: false },
       message: 'Account created! Please check your email to verify your account.',
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error('Register error:', err);
-    res.status(500).json({ message: 'Registration failed. Please try again.' });
+    res.status(500).json({ message: err.message || 'Registration failed. Please try again.', error: err.toString() });
   }
 };
 
