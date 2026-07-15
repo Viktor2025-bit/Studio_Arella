@@ -18,7 +18,7 @@ const signToken = (payload: object) =>
 export const register: RequestHandler = async (req, res) => {
   const authReq = req as AuthRequest;
   try {
-    const { first_name, last_name, email, password, business_name, phone } = req.body;
+    const { first_name, last_name, email, password, business_name, phone, role } = req.body;
 
     if (!first_name || !last_name || !email || !password) {
       res.status(400).json({ message: 'First name, last name, email, and password are required' });
@@ -37,11 +37,15 @@ export const register: RequestHandler = async (req, res) => {
 
     const fullName = `${first_name.trim()} ${last_name.trim()}`;
     const hashed = await bcrypt.hash(password, 12);
+    
+    // Default to advertiser if role is missing or invalid
+    const userRole = (role === 'screen_owner' || role === 'advertiser' || role === 'admin') ? role : 'advertiser';
+
     const result = await pool.query(
        `INSERT INTO users (name, first_name, last_name, email, password, role, business_name, phone, email_verified)
-        VALUES ($1, $2, $3, $4, $5, 'advertiser', $6, $7, false)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, false)
         RETURNING id, name, first_name, last_name, email, role, credits, business_name, phone, terms_accepted`,
-      [fullName, first_name.trim(), last_name.trim(), email, hashed, business_name || null, phone || null]
+      [fullName, first_name.trim(), last_name.trim(), email, hashed, userRole, business_name || null, phone || null]
     );
     const user = result.rows[0];
 
