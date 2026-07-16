@@ -91,7 +91,7 @@ export default function RegisterPage() {
     if (form.password !== form.confirm_password) { toast('Passwords do not match', 'error'); return; }
     try {
       await register(form.first_name, form.last_name, form.email, form.password, form.business_name || undefined, form.phone || undefined);
-      router.push('/onboarding');
+      router.push(`/auth/verify-email-pending?email=${encodeURIComponent(form.email)}`);
     } catch (err: any) {
       console.error('Registration error:', err);
       console.error('Response data:', err?.response?.data);

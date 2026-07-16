@@ -3,11 +3,43 @@ import pool from '../db/pool';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import dns from 'dns';
+import { promisify } from 'util';
 import { AuthRequest } from '../middleware/auth';
 import {
   sendVerificationEmail, sendWelcomeEmail,
   sendPasswordResetEmail,
 } from '../services/emailService';
+
+const resolveMx = promisify(dns.resolveMx);
+
+// Known disposable / temp email domains to block
+const DISPOSABLE_DOMAINS = new Set([
+  'mailinator.com','guerrillamail.com','10minutemail.com','tempmail.com',
+  'throwam.com','yopmail.com','sharklasers.com','guerrillamailblock.com',
+  'grr.la','guerrillamail.info','spam4.me','trashmail.com','trashmail.me',
+  'dispostable.com','fakeinbox.com','maildrop.cc','spamgourmet.com',
+  'getairmail.com','filzmail.com','mailnull.com','spamcorners.com',
+  'mt2015.com','binkmail.com','bob.email','clrmail.com','dcctb.com',
+]);
+
+// Validate that the email domain has real MX records
+async function validateEmailDomain(email: string): Promise<{ valid: boolean; reason?: string }> {
+  const domain = email.split('@')[1]?.toLowerCase();
+  if (!domain) return { valid: false, reason: 'Invalid email format' };
+  if (DISPOSABLE_DOMAINS.has(domain)) {
+    return { valid: false, reason: 'Temporary or disposable email addresses are not allowed. Please use a real email.' };
+  }
+  try {
+    const records = await resolveMx(domain);
+    if (!records || records.length === 0) {
+      return { valid: false, reason: `The email domain "${domain}" does not exist or cannot receive emails.` };
+    }
+    return { valid: true };
+  } catch {
+    return { valid: false, reason: `The email domain "${domain}" does not exist or cannot receive emails.` };
+  }
+}
 
 const signToken = (payload: object) =>
   jwt.sign(payload, process.env.JWT_SECRET as string, {
@@ -26,6 +58,13 @@ export const register: RequestHandler = async (req, res) => {
     }
     if (password.length < 6) {
       res.status(400).json({ message: 'Password must be at least 6 characters' });
+      return;
+    }
+
+    // Validate email domain (MX check + disposable email block)
+    const emailCheck = await validateEmailDomain(email);
+    if (!emailCheck.valid) {
+      res.status(400).json({ message: emailCheck.reason });
       return;
     }
 
