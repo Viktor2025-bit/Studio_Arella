@@ -93,7 +93,14 @@ export default function RegisterPage() {
       await register(form.first_name, form.last_name, form.email, form.password, form.business_name || undefined, form.phone || undefined);
       router.push('/onboarding');
     } catch (err: any) {
-      toast(err?.response?.data?.message || 'Registration failed. Please try again.', 'error');
+      console.error('Registration error:', err);
+      console.error('Response data:', err?.response?.data);
+      console.error('Status:', err?.response?.status);
+      const msg = err?.response?.data?.message 
+        || err?.response?.data?.error 
+        || err?.message 
+        || 'Registration failed. Please try again.';
+      toast(msg, 'error');
     }
   };
 
