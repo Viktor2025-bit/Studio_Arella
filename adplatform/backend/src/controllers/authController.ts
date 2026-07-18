@@ -207,11 +207,33 @@ export const getMe: RequestHandler = async (req, res) => {
       [authReq.user?.id]
     );
     if (!result.rows[0]) { res.status(404).json({ message: 'User not found' }); return; }
-    res.json(result.rows[0]);
+    
+    const user = result.rows[0];
+
+    // If has_seen_tour is false/null, check if user has any existing activity.
+    // Existing users (with bookings or created before the column existed) should
+    // not see the tour — automatically mark them as seen.
+    if (!user.has_seen_tour) {
+      const bookingCheck = await pool.query(
+        `SELECT 1 FROM bookings WHERE user_id = $1
+         UNION ALL
+         SELECT 1 FROM podcast_bookings WHERE user_id = $1
+         LIMIT 1`,
+        [user.id]
+      );
+      if (bookingCheck.rows.length > 0) {
+        // Active user — silently mark tour as seen
+        await pool.query('UPDATE users SET has_seen_tour = true WHERE id = $1', [user.id]);
+        user.has_seen_tour = true;
+      }
+    }
+
+    res.json(user);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
 
 // ── Update profile ────────────────────────────────────────────────────────────
 export const updateProfile: RequestHandler = async (req, res) => {
