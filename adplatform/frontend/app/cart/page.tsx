@@ -11,6 +11,7 @@ import { FaWallet, FaCreditCard, FaLock } from 'react-icons/fa6';
 import { AnimatedButton, PageTransition } from '@/components/ui/Animations';
 import { theme } from '@/lib/theme';
 import EditCartModal from '@/components/ui/EditCartModal';
+import CampaignPicker from '@/components/ui/CampaignPicker';
 import { CartItem } from '@/store/cartStore';
 
 const SCREEN_ID = '00000000-0000-0000-0000-000000000001';
@@ -43,6 +44,7 @@ export default function CartPage() {
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [lockedUntil, setLockedUntil] = useState<number | null>(null);
   const [showInvoice, setShowInvoice] = useState(false);
+  const [campaignId, setCampaignId] = useState<string | null>(null);
 
   const [editingItem, setEditingItem] = useState<CartItem | null>(null);
   const [initialTab, setInitialTab] = useState<'time' | 'period'>('time');
@@ -131,7 +133,8 @@ export default function CartPage() {
       const res = await api.post('/bookings/reserve', {
         screen_id: SCREEN_ID,
         ad_id: selectedCreative.id,
-        slots: slots
+        slots: slots,
+        campaign_id: campaignId || undefined,
       });
       setBookingId(res.data.booking_id);
       setLockedUntil(new Date(res.data.locked_until).getTime());
@@ -289,6 +292,9 @@ export default function CartPage() {
               </div>
 
               <div style={{ display: "flex", gap: 20, flexDirection: "column" }}>
+                <div style={{ background: theme.color.surface, borderRadius: 16, padding: 20, border: `1px solid ${theme.color.border}` }}>
+                  <CampaignPicker value={campaignId} onChange={setCampaignId} />
+                </div>
                 <AnimatedButton onClick={handleReserve} disabled={reserving} style={{ width: "100%", padding: "18px 0", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontWeight: 800, fontSize: 18, cursor: reserving ? 'not-allowed' : 'pointer', opacity: reserving ? 0.7 : 1, display: "flex", gap: 10, alignItems: "center", justifyContent: "center", boxShadow: theme.shadow.gold }}>
                   {reserving ? 'Reserving Slots...' : <>Proceed to Checkout</>}
                 </AnimatedButton>

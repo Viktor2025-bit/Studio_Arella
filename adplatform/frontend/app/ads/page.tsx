@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fa6';
 import Link from 'next/link';
 import { BsFiletypeGif } from 'react-icons/bs';
+import CampaignPicker from '@/components/ui/CampaignPicker';
 import { theme } from '@/lib/theme';
 
 const F = theme.font.body;
@@ -138,6 +139,7 @@ export default function AdsPage() {
   const [videoDuration, setVideoDuration] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [campaignId, setCampaignId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const inputStyle: React.CSSProperties = {
@@ -167,6 +169,9 @@ export default function AdsPage() {
       if (videoDuration > 0) {
         formData.append('duration_seconds', Math.ceil(videoDuration).toString());
       }
+      if (campaignId) {
+        formData.append('campaign_id', campaignId);
+      }
 
       const token = localStorage.getItem('token');
 
@@ -193,6 +198,7 @@ export default function AdsPage() {
       setShowModal(false);
       setSelectedFile(null);
       setTitle('');
+      setCampaignId(null);
       setUploadProgress(0);
       fetchAds();
     } catch (err: any) {
@@ -405,7 +411,7 @@ export default function AdsPage() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                     <h2 style={{ fontFamily: theme.font.display, fontSize: 20, fontWeight: 600, color: theme.color.text1, margin: 0 }}>Upload Ad Creative</h2>
                     {!uploading && (
-                      <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.color.text3, display: 'flex', padding: 4 }}>
+                      <button onClick={() => { setShowModal(false); setCampaignId(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: theme.color.text3, display: 'flex', padding: 4 }}>
                         <FaXmark size={18} />
                       </button>
                     )}
@@ -443,6 +449,11 @@ export default function AdsPage() {
                           {uploading && <UploadProgress progress={uploadProgress} />}
                         </div>
                       )}
+                    </div>
+
+                    {/* Campaign picker — optional */}
+                    <div style={{ borderTop: `1px solid ${theme.color.border2}`, paddingTop: 16 }}>
+                      <CampaignPicker value={campaignId} onChange={setCampaignId} />
                     </div>
 
                   </div>
