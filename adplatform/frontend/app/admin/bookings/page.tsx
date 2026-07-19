@@ -9,7 +9,7 @@ import { CalendarCheck, Search } from 'lucide-react';
 import { theme } from '@/lib/theme';
 
 const F = theme.font.body;
-const card = { background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: theme.radius.lg, overflow: 'hidden' } as React.CSSProperties;
+const card = { background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: theme.radius.lg, overflow: 'hidden', boxShadow: theme.shadow.sm } as React.CSSProperties;
 
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
@@ -32,17 +32,26 @@ export default function AdminBookingsPage() {
   return (
     <PageTransition>
       <div style={{ fontFamily: F }}>
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-            <CalendarCheck size={18} color={theme.color.gold} />
-            <h1 style={{ fontFamily: theme.font.display, fontSize: 24, fontWeight: 600, color: theme.color.text1, margin: 0 }}>All Bookings</h1>
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            <div style={{ padding: '8px', background: theme.color.goldLight, borderRadius: theme.radius.md, display: 'flex' }}>
+              <CalendarCheck size={20} color={theme.color.goldDark} />
+            </div>
+            <h1 style={{ fontFamily: theme.font.display, fontSize: 26, fontWeight: 700, color: theme.color.text1, margin: 0, letterSpacing: '-0.02em' }}>All Bookings</h1>
           </div>
-          <p style={{ fontSize: 13, color: theme.color.text3, margin: 0 }}>{bookings.length} total bookings on the platform</p>
+          <p style={{ fontSize: 14, color: theme.color.text3, margin: 0 }}>{bookings.length} total bookings on the platform</p>
         </div>
 
-        <div style={{ position: 'relative', marginBottom: 16, maxWidth: 360 }}>
-          <Search size={14} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: theme.color.text3 }} />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search bookings..." style={{ width: '100%', paddingLeft: 36, paddingRight: 14, paddingTop: 10, paddingBottom: 10, background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: 10, color: theme.color.text1, fontSize: 13, outline: 'none', fontFamily: F, boxSizing: 'border-box' }} />
+        <div style={{ position: 'relative', marginBottom: 24, maxWidth: 400 }}>
+          <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: theme.color.text3 }} />
+          <input 
+            value={search} 
+            onChange={e => setSearch(e.target.value)} 
+            placeholder="Search bookings..." 
+            style={{ width: '100%', paddingLeft: 42, paddingRight: 16, paddingTop: 12, paddingBottom: 12, background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: theme.radius.md, color: theme.color.text1, fontSize: 14, outline: 'none', fontFamily: F, boxSizing: 'border-box', transition: 'all 0.2s ease', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.02)' }} 
+            onFocus={e => { e.currentTarget.style.borderColor = theme.color.gold; e.currentTarget.style.boxShadow = `0 0 0 3px ${theme.color.goldLight}` }} 
+            onBlur={e => { e.currentTarget.style.borderColor = theme.color.border; e.currentTarget.style.boxShadow = 'inset 0 1px 2px rgba(0,0,0,0.02)' }}
+          />
         </div>
 
         <div style={card}>

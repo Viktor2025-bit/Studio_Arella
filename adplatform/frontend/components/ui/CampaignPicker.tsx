@@ -172,6 +172,7 @@ export default function CampaignPicker({ value, onChange }: Props) {
                         border: `1px solid ${theme.color.border}`, borderRadius: 10,
                         boxShadow: '0 8px 24px rgba(0,0,0,0.12)', maxHeight: 220, overflowY: 'auto',
                       }}
+                    
                     >
                       {loading ? (
                         <div style={{ padding: '14px 16px', color: theme.color.text4, fontSize: 13 }}>Loading campaigns...</div>
