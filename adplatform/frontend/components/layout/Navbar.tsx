@@ -34,9 +34,11 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <Link href="/cart" className="hide-on-mobile" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: theme.color.gold, color: '#1A1A1A', padding: '8px 16px', borderRadius: theme.radius.sm, fontSize: 12, fontWeight: 800, textDecoration: 'none', boxShadow: theme.shadow.gold }}>
-          <ShoppingCart size={14} strokeWidth={2.5} /> Cart
-        </Link>
+        {user?.role !== 'admin' && (
+          <Link href="/cart" className="hide-on-mobile" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: theme.color.gold, color: '#1A1A1A', padding: '8px 16px', borderRadius: theme.radius.sm, fontSize: 12, fontWeight: 800, textDecoration: 'none', boxShadow: theme.shadow.gold }}>
+            <ShoppingCart size={14} strokeWidth={2.5} /> Cart
+          </Link>
+        )}
 
         <button onClick={toggleTheme} className="hide-on-mobile" style={{ width: 38, height: 38, borderRadius: '50%', background: theme.color.surface2, border: `1px solid ${theme.color.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.15s', color: theme.color.text2 }}>
           {appTheme === 'dark' ? <FaSun size={15} /> : <FaMoon size={15} />}
@@ -63,12 +65,14 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                     <p style={{ fontSize: 12, color: theme.color.text4, margin: 0, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</p>
                   </div>
                   <div className="show-on-mobile" style={{ borderBottom: `1px solid ${theme.color.border2}`, marginBottom: 8, paddingBottom: 8 }}>
-                    <Link href="/cart" onClick={() => setDropOpen(false)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, color: theme.color.goldDark, textDecoration: 'none', borderRadius: theme.radius.md, transition: 'background 0.15s' }}
-                      onMouseOver={e => (e.currentTarget.style.background = theme.color.goldLight)}
-                      onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
-                      <ShoppingCart size={14} strokeWidth={2.5} /> Cart
-                    </Link>
+                    {user?.role !== 'admin' && (
+                      <Link href="/cart" onClick={() => setDropOpen(false)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, color: theme.color.goldDark, textDecoration: 'none', borderRadius: theme.radius.md, transition: 'background 0.15s' }}
+                        onMouseOver={e => (e.currentTarget.style.background = theme.color.goldLight)}
+                        onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
+                        <ShoppingCart size={14} strokeWidth={2.5} /> Cart
+                      </Link>
+                    )}
                     <button onClick={() => { toggleTheme(); setDropOpen(false); }}
                       style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, color: theme.color.text2, background: 'none', border: 'none', cursor: 'pointer', borderRadius: theme.radius.md, fontFamily: F, textAlign: 'left', transition: 'background 0.15s' }}
                       onMouseOver={e => { e.currentTarget.style.background = theme.color.surface2; e.currentTarget.style.color = theme.color.text1; }}
