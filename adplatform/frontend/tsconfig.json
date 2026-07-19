@@ -20,7 +20,7 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "react-icons/fa6": ["./node_modules/react-icons/fa6/index.d.ts"]
+      "react-icons/fa6": ["./node_modules/react-icons/fa6"]
     }
   },
   "include": [
