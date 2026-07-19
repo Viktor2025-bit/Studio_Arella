@@ -22,7 +22,7 @@ export const getPlatformStats : RequestHandler = async (req, res) => {
       pool.query('SELECT COUNT(*) FROM bookings'),
       pool.query('SELECT COUNT(*) FROM screens'),
       pool.query(`SELECT COALESCE(SUM(total_cost),0) as total FROM bookings WHERE status != 'cancelled'`),
-      pool.query(`SELECT id, name, email, role, credits, created_at FROM users ORDER BY created_at DESC LIMIT 10`),
+      pool.query(`SELECT id, name, email, role, COALESCE(credits, 0) as credits, created_at FROM users ORDER BY created_at DESC LIMIT 10`),
     ]);
 
     res.json({
