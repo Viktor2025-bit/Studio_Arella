@@ -91,8 +91,9 @@ export const createAd: RequestHandler = async (req, res) => {
       }
     }
 
-    const initialStatus = 'approved';
-    const reviewedAt = new Date();
+    const isVideoFile = file_type === 'video';
+    const initialStatus = isVideoFile ? 'pending' : 'approved';
+    const reviewedAt = isVideoFile ? null : new Date();
 
     const result = await pool.query(
       `INSERT INTO ads (user_id, campaign_id, title, media_url, file_url, file_type, file_size,
@@ -114,9 +115,31 @@ export const createAd: RequestHandler = async (req, res) => {
       ]
     );
 
+    const createdAd = result.rows[0];
+
+    // Trigger AI moderation webhook if it's a video
+    if (isVideoFile && file_url) {
+      try {
+        await fetch('https://bems003.app.n8n.cloud/webhook/moderate-video', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ad_id: createdAd.id,
+            title: createdAd.title,
+            media_url: createdAd.media_url,
+            user_id: createdAd.user_id
+          })
+        });
+      } catch (webhookErr) {
+        console.error('Failed to trigger moderation webhook:', webhookErr);
+      }
+    }
+
     res.status(201).json({
-      ad: result.rows[0],
-      message: 'Your creative has been uploaded successfully! It is now approved and ready to be used in your bookings.',
+      ad: createdAd,
+      message: isVideoFile 
+        ? 'Your video has been uploaded successfully and is currently being analyzed by AI for approval.'
+        : 'Your creative has been uploaded successfully! It is now approved and ready to be used in your bookings.',
     });
   } catch (err) {
     console.error('Upload error:', err);
