@@ -282,3 +282,33 @@ export async function sendAdminNewCreativeAlert(to: string, advertiserName: stri
     `),
   });
 }
+
+// ── 10. Admin Alert: New Creative Request ─────────────────────────────────────
+export async function sendCreativeRequestAdminAlert(
+  to: string, 
+  businessName: string, 
+  adType: string, 
+  description: string, 
+  contact: string
+) {
+  await transporter.sendMail({
+    from: FROM, to,
+    subject: `New Creative Request: ${businessName}`,
+    html: wrap(`
+      ${h1('New creative request received')}
+      ${p(`Hello Admin,`)}
+      ${p(`<strong>${businessName}</strong> just submitted a request for a new creative design.`)}
+      ${table(
+        row('Business Name', businessName) +
+        row('Ad Type', adType) +
+        row('Contact Phone', contact)
+      )}
+      <div style="background:#F9F7F5;border:1px solid #E5E7EB;border-radius:10px;padding:16px;margin:16px 0">
+        <p style="font-size:12px;color:#9CA3AF;margin:0 0 6px;text-transform:uppercase;letter-spacing:0.05em;font-weight:700">Ad Brief / Description</p>
+        <p style="font-size:14px;color:#374151;margin:0;line-height:1.6">${description}</p>
+      </div>
+      ${p('Please review this request and contact the client within 24 hours to proceed with the design process.')}
+      ${btn('View requests in dashboard', `${process.env.FRONTEND_URL}/admin/requests`)}
+    `),
+  });
+}

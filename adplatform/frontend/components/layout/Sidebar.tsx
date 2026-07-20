@@ -26,6 +26,7 @@ const adminNav = [
   { href: '/admin',           label: 'Overview',        icon: Shield },
   { href: '/admin/users',     label: 'All Users',       icon: LayoutDashboard },
   { href: '/admin/review',    label: 'Review Queue',    icon: Film },
+  { href: '/admin/requests',  label: 'Creative Req.',   icon: Paintbrush },
   { href: '/admin/campaigns', label: 'All Campaigns',   icon: Megaphone },
   { href: '/admin/bookings',  label: 'All Bookings',    icon: CalendarCheck },
   { href: '/admin/podcasts',  label: 'All Podcasts',    icon: Mic },

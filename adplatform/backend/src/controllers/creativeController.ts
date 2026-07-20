@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import pool from '../db/pool';
 import { AuthRequest } from '../middleware/auth';
+import { sendCreativeRequestAdminAlert } from '../services/emailService';
 
 
 export const submitCreativeRequest : RequestHandler = async (req, res) => {
@@ -42,13 +43,17 @@ export const submitCreativeRequest : RequestHandler = async (req, res) => {
       ]
     );
 
-    res.status(201).json({
-      message: 'Creative request submitted! The Bems team will contact you within 24 hours.',
-      request: result.rows[0],
-    });
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.SMTP_USER || 'kaluvictor130@gmail.com';
+    await sendCreativeRequestAdminAlert(
+      adminEmail,
+      business_name,
+      ad_type || 'image',
+      description,
+      contact_phone
+    ).catch(e => console.error('Failed to send admin creative alert:', e));
 
     res.status(201).json({
-      message: "Creative request submitted! The Bems team will contact you within 24 hours.",
+      message: 'Creative request submitted! The Bems team will contact you within 24 hours.',
       request: result.rows[0],
     });
   } catch (err: any) {
