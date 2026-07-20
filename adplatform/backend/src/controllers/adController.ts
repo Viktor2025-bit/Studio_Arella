@@ -120,7 +120,7 @@ export const createAd: RequestHandler = async (req, res) => {
     // Trigger AI moderation webhook if it's a video
     if (isVideoFile && file_url) {
       try {
-        await fetch('https://bems003.app.n8n.cloud/webhook/moderate-video', {
+        await fetch('https://bems003.app.n8n.cloud/webhook-test/moderate-video', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
