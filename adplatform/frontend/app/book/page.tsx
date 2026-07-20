@@ -659,10 +659,19 @@ function DoohScheduler() {
                       return (
                         <button key={i} onClick={() => { 
                             if (status === 'red' || isPast) return;
+                            let firstValidHour = 7;
+                            if (isSameDate(d, today)) {
+                               const currentHour = new Date().getHours();
+                               if (currentHour >= 7 && currentHour <= 20) {
+                                  firstValidHour = currentHour;
+                               } else if (currentHour > 20) {
+                                  firstValidHour = 20; // Fallback
+                               }
+                            }
                             setViewDate(d); 
-                            setSelectedHours([7]);
+                            setSelectedHours([firstValidHour]);
                             setDraftLoops(1);
-                            autoSelectSlot(d, 7);
+                            autoSelectSlot(d, firstValidHour);
                             setShowSlotModal(true);
                           }} className="day-cell"
                           style={{
