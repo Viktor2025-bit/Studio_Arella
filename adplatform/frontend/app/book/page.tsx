@@ -762,8 +762,9 @@ function DoohScheduler() {
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))", gap: 10 }}>
                       {hours.map((h) => {
                         const isSelected = selectedHours.includes(h);
+                        const isPastHour = isSameDate(viewDate, today) && h < new Date().getHours();
                         return (
-                          <button key={h} onClick={() => {
+                          <button key={h} disabled={isPastHour} onClick={() => {
                             let newHours = [...selectedHours];
                             if (isSelected) {
                               newHours = newHours.filter(x => x !== h);
@@ -781,12 +782,15 @@ function DoohScheduler() {
                             }
                           }}
                             style={{
-                              background: isSelected ? theme.color.gold : theme.color.surface2,
-                              color: isSelected ? theme.color.charcoal900 : theme.color.text1,
+                              background: isPastHour ? 'transparent' : isSelected ? theme.color.gold : theme.color.surface2,
+                              color: isPastHour ? theme.color.text4 : isSelected ? theme.color.charcoal900 : theme.color.text1,
                               fontWeight: isSelected ? 800 : 700,
-                              border: `1px solid ${isSelected ? theme.color.goldMid : theme.color.border}`,
-                              borderRadius: 999, padding: "12px 0", fontSize: 14, cursor: "pointer", transition: "all 0.2s ease",
-                              boxShadow: isSelected ? theme.shadow.gold : "0 2px 4px rgba(0,0,0,0.02)"
+                              border: `1px solid ${isPastHour ? theme.color.border2 : isSelected ? theme.color.goldMid : theme.color.border}`,
+                              borderRadius: 999, padding: "12px 0", fontSize: 14, 
+                              cursor: isPastHour ? "not-allowed" : "pointer", 
+                              transition: "all 0.2s ease",
+                              boxShadow: isSelected ? theme.shadow.gold : "0 2px 4px rgba(0,0,0,0.02)",
+                              opacity: isPastHour ? 0.4 : 1
                             }}>
                             {formatMin(h * 60)}
                           </button>
@@ -1046,6 +1050,8 @@ function DoohScheduler() {
                               const minOfDay = activeMinuteGridHour * 60 + m;
                               const bookings = bookingsForDate(localDateKey(viewDate));
                               const isBooked = isStartInsideBooking(minOfDay, bookings);
+                              const isPastMinute = isSameDate(viewDate, today) && minOfDay < (new Date().getHours() * 60 + new Date().getMinutes());
+                              const isDisabled = isBooked || isPastMinute;
                               
                               let isSelected = false;
                               const selectedStart = minuteSelections[activeMinuteGridHour] !== undefined ? minuteSelections[activeMinuteGridHour] : (selectedHours.length === 1 && draft && isSameDate(draft.date, viewDate) ? draft.startMin : null);
@@ -1060,18 +1066,18 @@ function DoohScheduler() {
                               return (
                                 <button key={m}
                                   onClick={() => {
-                                    if (isBooked) return;
+                                    if (isDisabled) return;
                                     setMinuteSelections(prev => ({ ...prev, [activeMinuteGridHour]: minOfDay }));
                                     setDraft({ date: viewDate, startMin: minOfDay, loops: draftLoops });
                                   }}
-                                  disabled={isBooked}
+                                  disabled={isDisabled}
                                   style={{
-                                    aspectRatio: "1.5", borderRadius: 10, border: `1px solid ${isSelected ? theme.color.goldMid : isBooked ? "transparent" : theme.color.border2}`,
-                                    background: isBooked ? theme.color.surface2 : isSelected ? theme.color.gold : theme.color.surface,
-                                    color: isBooked ? theme.color.text4 : isSelected ? theme.color.charcoal900 : theme.color.text2,
+                                    aspectRatio: "1.5", borderRadius: 10, border: `1px solid ${isSelected ? theme.color.goldMid : isDisabled ? "transparent" : theme.color.border2}`,
+                                    background: isDisabled ? theme.color.surface2 : isSelected ? theme.color.gold : theme.color.surface,
+                                    color: isDisabled ? theme.color.text4 : isSelected ? theme.color.charcoal900 : theme.color.text2,
                                     fontWeight: isSelected ? 800 : 600,
                                     fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center",
-                                    cursor: isBooked ? "not-allowed" : "pointer", opacity: isBooked ? 0.6 : 1, transition: "all 0.2s ease",
+                                    cursor: isDisabled ? "not-allowed" : "pointer", opacity: isDisabled ? (isPastMinute ? 0.3 : 0.6) : 1, transition: "all 0.2s ease",
                                     boxShadow: isSelected ? theme.shadow.gold : "0 1px 2px rgba(0,0,0,0.03)"
                                   }}
                                   className="mono">
