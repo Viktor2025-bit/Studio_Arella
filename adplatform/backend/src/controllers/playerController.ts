@@ -83,6 +83,37 @@ export const submitLogs = async (req: Request, res: Response): Promise<void> => 
             log.completion_status || 'completed'
           ]
         );
+
+        if ((log.completion_status || 'completed') === 'completed') {
+           const logDate = new Date(log.start_timestamp);
+           const logHour = logDate.getHours();
+           const todayStr = logDate.toISOString().split('T')[0];
+
+           let multiplier = 20;
+           if ((logHour >= 7 && logHour <= 9) || (logHour >= 16 && logHour <= 19)) multiplier = 45;
+           else if (logHour >= 23 || logHour <= 5) multiplier = 2;
+
+           const bookingRes = await client.query(
+             `UPDATE bookings SET views = views + 1, impressions = impressions + $1 WHERE id = $2 RETURNING campaign_id, user_id`,
+             [multiplier, log.booking_id]
+           );
+
+           if (bookingRes.rows.length > 0) {
+             const { campaign_id, user_id } = bookingRes.rows[0];
+             
+             if (campaign_id) {
+               await client.query(
+                 `UPDATE campaigns SET impressions = impressions + $1 WHERE id = $2`,
+                 [multiplier, campaign_id]
+               );
+             }
+
+             await client.query(`
+                INSERT INTO analytics (booking_id, campaign_id, user_id, impressions, views, date, hour)
+                VALUES ($1, $2, $3, $4, 1, $5, $6)
+             `, [log.booking_id, campaign_id, user_id, multiplier, todayStr, logHour]);
+           }
+        }
       }
       await client.query('COMMIT');
     } catch (e) {
