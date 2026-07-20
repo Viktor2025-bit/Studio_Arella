@@ -185,7 +185,7 @@ function BookingsContent() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                <div style={{ fontSize: 12, color: theme.color.text2, display: 'flex', justifyContent: 'space-between', width: 100 }}>
                                  <span style={{ color: theme.color.text3 }}>Screens:</span> 
-                                 <span style={{ fontWeight: 700, color: theme.color.text1 }}>{String(b.screen_count).padStart(2, '0')}</span>
+                                 <span style={{ fontWeight: 700, color: theme.color.text1 }}>{b.screen_count}</span>
                                </div>
                                <div style={{ fontSize: 12, color: theme.color.text2, display: 'flex', justifyContent: 'space-between', width: 100 }}>
                                  <span style={{ color: theme.color.text3 }}>Interval:</span> 
@@ -197,7 +197,7 @@ function BookingsContent() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                <div style={{ fontSize: 12, color: theme.color.text2, display: 'flex', justifyContent: 'space-between', width: 100 }}>
                                  <span style={{ color: theme.color.text3 }}>Impressions:</span> 
-                                 <span style={{ fontWeight: 700, color: theme.color.text1 }}>{String(b.impressions).padStart(2, '0')}</span>
+                                 <span style={{ fontWeight: 700, color: theme.color.text1 }}>{Number(b.impressions || 0).toLocaleString()}</span>
                                </div>
                                <div style={{ fontSize: 12, color: theme.color.text2, display: 'flex', justifyContent: 'space-between', width: 100 }}>
                                  <span style={{ color: theme.color.text3 }}>Views:</span> 
