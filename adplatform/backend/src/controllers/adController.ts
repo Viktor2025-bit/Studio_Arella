@@ -137,7 +137,7 @@ export const createAd: RequestHandler = async (req, res) => {
 
     res.status(201).json({
       ad: createdAd,
-      message: isVideoFile 
+      message: isVideoFile
         ? 'Your video has been uploaded successfully and is currently being analyzed by AI for approval.'
         : 'Your creative has been uploaded successfully! It is now approved and ready to be used in your bookings.',
     });

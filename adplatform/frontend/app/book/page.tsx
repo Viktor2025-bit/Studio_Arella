@@ -782,18 +782,19 @@ function DoohScheduler() {
                             let newHours = [...selectedHours];
                             if (isSelected) {
                               newHours = newHours.filter(x => x !== h);
+                              setMinuteSelections(prev => {
+                                const next = { ...prev };
+                                delete next[h];
+                                return next;
+                              });
+                              // Clear specific minute draft if they unselected the only hour
+                              if (newHours.length === 0) setDraft(null);
                             } else {
                               newHours.push(h);
+                              autoSelectSlot(viewDate, h);
                             }
                             newHours.sort((a,b) => a-b);
                             setSelectedHours(newHours);
-                            
-                            // If exactly 1 hour is selected, auto-select a slot so the minute grid works
-                            if (newHours.length === 1) {
-                               autoSelectSlot(viewDate, newHours[0]);
-                            } else {
-                               setDraft(null); // Clear specific minute draft if multiple hours
-                            }
                           }}
                             style={{
                               background: isPastHour ? 'transparent' : isSelected ? theme.color.gold : theme.color.surface2,
@@ -1063,9 +1064,14 @@ function DoohScheduler() {
                             {Array.from({ length: 60 }).map((_, m) => {
                               const minOfDay = activeMinuteGridHour * 60 + m;
                               const bookings = bookingsForDate(localDateKey(viewDate));
-                              const isBooked = isStartInsideBooking(minOfDay, bookings);
+                              const otherBookings = bookings.filter((b: any) => b.type !== 'cart');
+                              const cartBookings = bookings.filter((b: any) => b.type === 'cart');
+                              
+                              const isBookedByOther = isStartInsideBooking(minOfDay, otherBookings);
+                              const isInCart = isStartInsideBooking(minOfDay, cartBookings);
                               const isPastMinute = isSameDate(viewDate, today) && minOfDay < (new Date().getHours() * 60 + new Date().getMinutes());
-                              const isDisabled = isBooked || isPastMinute;
+                              
+                              const isDisabled = isBookedByOther || isPastMinute || isInCart;
                               
                               let isSelected = false;
                               const selectedStart = minuteSelections[activeMinuteGridHour] !== undefined ? minuteSelections[activeMinuteGridHour] : (selectedHours.length === 1 && draft && isSameDate(draft.date, viewDate) ? draft.startMin : null);
@@ -1086,13 +1092,16 @@ function DoohScheduler() {
                                   }}
                                   disabled={isDisabled}
                                   style={{
-                                    aspectRatio: "1.5", borderRadius: 10, border: `1px solid ${isSelected ? theme.color.goldMid : isDisabled ? "transparent" : theme.color.border2}`,
-                                    background: isDisabled ? theme.color.surface2 : isSelected ? theme.color.gold : theme.color.surface,
-                                    color: isDisabled ? theme.color.text4 : isSelected ? theme.color.charcoal900 : theme.color.text2,
-                                    fontWeight: isSelected ? 800 : 600,
+                                    aspectRatio: "1.5", borderRadius: 10, 
+                                    border: `1px solid ${isSelected || isInCart ? theme.color.goldMid : isBookedByOther || isPastMinute ? "transparent" : theme.color.border2}`,
+                                    background: isBookedByOther || isPastMinute ? theme.color.surface2 : isSelected || isInCart ? theme.color.gold : theme.color.surface,
+                                    color: isBookedByOther || isPastMinute ? theme.color.text4 : isSelected || isInCart ? theme.color.charcoal900 : theme.color.text2,
+                                    fontWeight: isSelected || isInCart ? 800 : 600,
                                     fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center",
-                                    cursor: isDisabled ? "not-allowed" : "pointer", opacity: isDisabled ? (isPastMinute ? 0.3 : 0.6) : 1, transition: "all 0.2s ease",
-                                    boxShadow: isSelected ? theme.shadow.gold : "0 1px 2px rgba(0,0,0,0.03)"
+                                    cursor: isDisabled ? "not-allowed" : "pointer", 
+                                    opacity: isBookedByOther || isPastMinute ? 0.3 : (isInCart ? 0.9 : 1), 
+                                    transition: "all 0.2s ease",
+                                    boxShadow: isSelected || isInCart ? theme.shadow.gold : "0 1px 2px rgba(0,0,0,0.03)"
                                   }}
                                   className="mono">
                                   :{String(m).padStart(2, '0')}
