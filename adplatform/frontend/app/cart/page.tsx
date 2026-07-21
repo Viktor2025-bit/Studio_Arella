@@ -124,8 +124,13 @@ export default function CartPage() {
     setReserving(true);
     try {
       const slots = cart.map(c => {
-         const d = new Date(c.date);
-         const startDt = new Date(d.getFullYear(), d.getMonth(), d.getDate(), Math.floor(c.startMin / 60), c.startMin % 60);
+         const dateStr = typeof c.date === 'string' ? c.date : `${c.date.getFullYear()}-${String(c.date.getMonth() + 1).padStart(2, '0')}-${String(c.date.getDate()).padStart(2, '0')}`;
+         const [year, month, day] = dateStr.split('-');
+         const startHour = Math.floor(c.startMin / 60);
+         const startMins = c.startMin % 60;
+         
+         // Construct Date strictly in UTC, treating the intended time as WAT (UTC+1). So we subtract 1 hour.
+         const startDt = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day), startHour - 1, startMins));
          const endDt = new Date(startDt.getTime() + c.durationSec * 1000);
          return { start: startDt.toISOString(), end: endDt.toISOString(), mins: c.durationSec / 60 };
       });

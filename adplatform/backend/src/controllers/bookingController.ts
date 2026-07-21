@@ -104,9 +104,10 @@ export const reserveSlots: RequestHandler = async (req, res) => {
          res.status(400).json({ message: 'Cannot book slots in the past' }); return;
       }
       
-      const startHour = startDt.getHours();
-      const endHour = endDt.getHours();
-      const endMins = endDt.getMinutes();
+      // Calculate hours in West Africa Time (UTC+1)
+      const startHour = new Date(startDt.getTime() + 3600000).getUTCHours();
+      const endHour = new Date(endDt.getTime() + 3600000).getUTCHours();
+      const endMins = endDt.getUTCMinutes();
       
       // Operating hours are exactly 6:00 AM to 7:00 PM (19:00)
       if (startHour < 6 || startHour >= 19 || (endHour > 19 || (endHour === 19 && endMins > 0))) {

@@ -238,8 +238,13 @@ function DoohScheduler() {
         .then(res => {
            const slots = res.data.slots || [];
            const formatted = slots.map((s: any) => {
-             const sd = new Date(s.start_time);
-             const ed = new Date(s.end_time);
+             const utcStart = new Date(s.start_time);
+             const watStart = new Date(utcStart.getTime() + 3600000);
+             const sd = new Date(watStart.getUTCFullYear(), watStart.getUTCMonth(), watStart.getUTCDate(), watStart.getUTCHours(), watStart.getUTCMinutes());
+
+             const utcEnd = new Date(s.end_time);
+             const watEnd = new Date(utcEnd.getTime() + 3600000);
+             const ed = new Date(watEnd.getUTCFullYear(), watEnd.getUTCMonth(), watEnd.getUTCDate(), watEnd.getUTCHours(), watEnd.getUTCMinutes());
              return {
                dateKey: localDateKey(sd),
                startMin: sd.getHours() * 60 + sd.getMinutes(),
