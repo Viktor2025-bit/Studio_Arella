@@ -169,8 +169,8 @@ function HeroBackgroundCarousel() {
           <img src={item.src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         </motion.div>
       ))}
-      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(255, 255, 255, 0.85)', zIndex: 1, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '150px', background: 'linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1))', zIndex: 2, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0, 0, 0, 0.75)', zIndex: 1, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '150px', background: 'linear-gradient(to bottom, rgba(0,0,0,0), #ffffff)', zIndex: 2, pointerEvents: 'none' }} />
     </div>
   );
 }
@@ -332,30 +332,30 @@ export default function LandingPage() {
         <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto', padding: 'var(--landing-py-sm, 80px) 24px', position: 'relative', zIndex: 1 }}>
           <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 64, alignItems: 'center' }}>
             <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 100, padding: '6px 16px', marginBottom: 28, boxShadow: '0 4px 12px rgba(0,0,0,0.2)', backdropFilter: 'blur(8px)' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 100, padding: '6px 16px', marginBottom: 28, boxShadow: '0 4px 12px rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)' }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#EAB308', boxShadow: '0 0 10px #EAB308' }} />
-                <span style={{ fontSize: 13, color: '#0f172a', fontWeight: 800 }}>Umuahia's Premier Media Destination</span>
+                <span style={{ fontSize: 13, color: '#f8fafc', fontWeight: 800 }}>Umuahia's Premier Media Destination</span>
               </div>
-              <h1 style={{ fontSize: 'clamp(42px,6vw,80px)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-2.5px', color: '#0f172a', margin: '0 0 16px' }}>
+              <h1 style={{ fontSize: 'clamp(42px,6vw,80px)', fontWeight: 900, lineHeight: 1.05, letterSpacing: '-2.5px', color: '#ffffff', margin: '0 0 16px' }}>
                 Studio Arella<br /><span style={{ color: '#D4AF37', textShadow: '0 0 30px rgba(212,175,55,0.4)' }}>Media Hub</span>
               </h1>
-              <div style={{ fontSize: 'clamp(22px,3vw,34px)', fontWeight: 800, letterSpacing: '-1px', color: '#475569', margin: '0 0 28px', minHeight: '1.3em', lineHeight: 1.25 }}>
+              <div style={{ fontSize: 'clamp(22px,3vw,34px)', fontWeight: 800, letterSpacing: '-1px', color: '#cbd5e1', margin: '0 0 28px', minHeight: '1.3em', lineHeight: 1.25 }}>
                 Now anyone can <span style={{ color: '#06B6D4', textShadow: '0 0 20px rgba(6,182,212,0.4)' }}>{typed}</span><span className="cursor" style={{ color: '#06B6D4' }}>|</span>
               </div>
-              <p style={{ fontSize: 17, lineHeight: 1.7, color: '#475569', maxWidth: 540, margin: '0 0 40px', fontWeight: 500 }}>
+              <p style={{ fontSize: 17, lineHeight: 1.7, color: '#e2e8f0', maxWidth: 540, margin: '0 0 40px', fontWeight: 500 }}>
                 Advertise your business on Umuahia's premier digital screen, or record professional audio and video in our premium podcast studio.
               </p>
               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 56 }}>
                 <Link href="/auth/register" className="cta-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#D4AF37', color: '#ffffff', padding: '16px 36px', borderRadius: 14, fontSize: 16, fontWeight: 800, textDecoration: 'none', boxShadow: '0 8px 24px rgba(212,175,55,0.3)' }}>
                   Book Your Ad Slot <FaArrowRight size={14} />
                 </Link>
-                <Link href="/auth/register" className="cta-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid rgba(139,92,246,0.3)', color: '#0f172a', padding: '16px 28px', borderRadius: 14, fontSize: 16, fontWeight: 700, textDecoration: 'none', background: 'rgba(139,92,246,0.1)', backdropFilter: 'blur(8px)', boxShadow: '0 8px 24px rgba(139,92,246,0.15)' }}>
-                  <FaMicrophone size={14} color="#A78BFA" /> Book Podcast Studio
+                <Link href="/auth/register" className="cta-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, border: '1px solid rgba(139,92,246,0.5)', color: '#ffffff', padding: '16px 28px', borderRadius: 14, fontSize: 16, fontWeight: 700, textDecoration: 'none', background: 'rgba(139,92,246,0.2)', backdropFilter: 'blur(8px)', boxShadow: '0 8px 24px rgba(139,92,246,0.2)' }}>
+                  <FaMicrophone size={14} color="#d8b4fe" /> Book Podcast Studio
                 </Link>
               </div>
               <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap' }}>
                 {[['10ft × 6ft', 'digital screen'], ['Studio', 'premium podcasting'], ['Instant', 'booking & delivery']].map(([v, l]) => (
-                  <div key={l}><p style={{ fontSize: 22, fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>{v}</p><p style={{ fontSize: 13, color: '#475569', margin: '2px 0 0', fontWeight: 600 }}>{l}</p></div>
+                  <div key={l}><p style={{ fontSize: 22, fontWeight: 900, color: '#ffffff', margin: 0, letterSpacing: '-0.5px' }}>{v}</p><p style={{ fontSize: 13, color: '#cbd5e1', margin: '2px 0 0', fontWeight: 600 }}>{l}</p></div>
                 ))}
               </div>
             </motion.div>
