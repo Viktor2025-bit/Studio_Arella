@@ -139,6 +139,42 @@ function StatCard({ value, suffix = '', label, start }: { value: number; suffix?
   );
 }
 
+function HeroBackgroundCarousel() {
+  const [idx, setIdx] = useState(0);
+  const items = [
+    { src: "/billboards/dennis-maliepaard-7b7wSvGn2W4-unsplash.jpg" },
+    { src: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=800&q=80" },
+    { src: "/billboards/lee-soo-hyun-Z5cyBi5CLPg-unsplash.jpg" },
+    { src: "https://images.unsplash.com/photo-1589903308904-1010c2294adc?w=800&q=80" },
+    { src: "/billboards/pawel-czerwinski-_9dSF0Hwitw-unsplash.jpg" }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIdx(i => (i + 1) % items.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden', zIndex: 0 }}>
+      {items.map((item, i) => (
+        <motion.div
+          key={item.src}
+          initial={false}
+          animate={{ opacity: i === idx ? 1 : 0, scale: i === idx ? 1 : 1.05 }}
+          transition={{ duration: 1.5, ease: "easeInOut" }}
+          style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
+        >
+          <img src={item.src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        </motion.div>
+      ))}
+      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(255, 255, 255, 0.85)', zIndex: 1, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '150px', background: 'linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1))', zIndex: 2, pointerEvents: 'none' }} />
+    </div>
+  );
+}
+
 function ImageCarousel() {
   const [idx, setIdx] = useState(0);
   const items = [
@@ -291,8 +327,9 @@ export default function LandingPage() {
       </AnimatePresence>
 
       {/* HERO */}
-      <section style={{ minHeight: '100vh', paddingTop: 68, display: 'flex', alignItems: 'center', position: 'relative', zIndex: 2 }}>
-        <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto', padding: 'var(--landing-py-sm, 80px) 24px' }}>
+      <section style={{ minHeight: '100vh', paddingTop: 68, display: 'flex', alignItems: 'center', position: 'relative', zIndex: 2, overflow: 'hidden' }}>
+        <HeroBackgroundCarousel />
+        <div style={{ width: '100%', maxWidth: 1200, margin: '0 auto', padding: 'var(--landing-py-sm, 80px) 24px', position: 'relative', zIndex: 1 }}>
           <div className="hero-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 64, alignItems: 'center' }}>
             <motion.div initial={{ opacity: 0, y: 32 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(0,0,0,0.05)', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 100, padding: '6px 16px', marginBottom: 28, boxShadow: '0 4px 12px rgba(0,0,0,0.2)', backdropFilter: 'blur(8px)' }}>
