@@ -484,19 +484,20 @@ function DoohScheduler() {
   }, [calCursor]);
 
   function dayStatus(d: Date) {
-    if (!d) return 'none';
+    if (!d) return { status: 'none', available: 0 };
     const key = localDateKey(d);
     const other = liveBookings.filter((b) => b.dateKey === key);
     const mine = cart.filter((c) => localDateKey(new Date(c.date)) === key);
-    
-    if (other.length === 0 && mine.length === 0) return 'green';
     
     let bookedMins = 0;
     other.forEach(b => bookedMins += b.durationMin);
     mine.forEach(m => bookedMins += Math.max(1, Math.round(m.durationSec / 60)));
     
-    if (bookedMins >= DAY_MIN) return 'red';
-    return 'amber';
+    const available = Math.max(0, DAY_MIN - bookedMins);
+
+    if (other.length === 0 && mine.length === 0) return { status: 'green', available };
+    if (bookedMins >= DAY_MIN) return { status: 'red', available };
+    return { status: 'amber', available };
   }
 
   const hours = [];
@@ -655,7 +656,7 @@ function DoohScheduler() {
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 8 }}>
                     {monthCells.map((d, i) => {
                       if (!d) return <div key={i} />;
-                      const status = dayStatus(d);
+                      const { status, available } = dayStatus(d);
                       const isViewing = isSameDate(d, viewDate);
                       const isToday = isSameDate(d, today);
                       const isPast = d.getTime() < today.getTime();
@@ -679,6 +680,7 @@ function DoohScheduler() {
                             autoSelectSlot(d, firstValidHour);
                             setShowSlotModal(true);
                           }} className="day-cell"
+                          title={isPast ? undefined : `${available} available slot${available === 1 ? '' : 's'}`}
                           style={{
                             aspectRatio: "1", borderRadius: 12, border: isToday && !isViewing ? `1px solid ${theme.color.gold}` : "1px solid transparent",
                             background: isViewing ? theme.color.surface2 : "transparent", color: isPast ? theme.color.text4 : theme.color.text1,
@@ -687,7 +689,7 @@ function DoohScheduler() {
                             opacity: isPast ? 0.4 : 1
                           }}>
                           <span className="mono" style={{ fontWeight: isViewing ? 800 : 600 }}>{d.getDate()}</span>
-                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: colorMap[status] }} title={status === 'green' ? 'Available' : status === 'amber' ? 'Partially full' : 'Full'} />
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: colorMap[status] }} />
                         </button>
                       );
                     })}
