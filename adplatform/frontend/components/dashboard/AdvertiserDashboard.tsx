@@ -128,6 +128,7 @@ export default function AdvertiserDashboard() {
             </div>
 
             {/* Chart */}
+            {/* 
             <div id="tour-chart">
               <FadeCard delay={0.16} style={{ ...card, padding: '22px 22px 14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
@@ -165,6 +166,7 @@ export default function AdvertiserDashboard() {
               )}
             </FadeCard>
             </div>
+            */}
 
             {/* Bookings table */}
             <FadeCard delay={0.24} style={{ ...card, padding: 22 }}>

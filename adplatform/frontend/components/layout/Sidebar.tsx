@@ -10,7 +10,7 @@ const F = theme.font.body;
 
 const advertiserNav = [
   { href: '/dashboard',  label: 'Dashboard',        icon: LayoutDashboard },
-  { href: '/analytics',  label: 'Analytics',        icon: BarChart2 },
+  // { href: '/analytics',  label: 'Analytics',        icon: BarChart2 },
   { href: '/ads',        label: 'My Ads',           icon: Film },
   { href: '/book',       label: 'Book Ad Slot',     icon: CalendarCheck, highlight: true },
   { href: '/podcast',    label: 'Book Podcast',     icon: Mic },
