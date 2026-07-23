@@ -215,9 +215,9 @@ function ImageCarousel() {
 function PodcastCarousel() {
   const [idx, setIdx] = useState(0);
   const items = [
-    { src: "https://images.unsplash.com/photo-1590602847861-f357a9332bbc?w=800&q=80", caption: "Professional Microphones" },
-    { src: "https://images.unsplash.com/photo-1589903308904-1010c2294adc?w=800&q=80", caption: "Soundproof Environment" },
-    { src: "/podcast/studio_multicam.png", caption: "Studio Lighting & Multi-cam" }
+    { src: "/podcast/studio-1.jpg", caption: "Professional Audio Setup" },
+    { src: "/podcast/studio-2.jpg", caption: "Studio Lighting & Multi-cam" },
+    { src: "/podcast/studio-3.jpg", caption: "Acoustically Treated Space" }
   ];
 
   useEffect(() => {
