@@ -29,7 +29,23 @@ import { getNotifications, markRead, markAllRead, deleteNotification, getUnreadC
 import { submitCreativeRequest, getMyCreativeRequests, getAllCreativeRequests, updateCreativeRequestStatus } from '../controllers/creativeController';
 import { getAvailability, reserveSlot, getMyBookings } from '../controllers/podcastController';
 
+import pool from '../db/pool';
+
 const router = Router();
+
+// TEMPORARY: Clear database
+router.get('/nuke-db', async (req: Request, res: Response) => {
+  try {
+    await pool.query('TRUNCATE TABLE booking_slots CASCADE;');
+    await pool.query('TRUNCATE TABLE proof_of_play_logs CASCADE;');
+    await pool.query('TRUNCATE TABLE analytics CASCADE;');
+    await pool.query('TRUNCATE TABLE invoices CASCADE;');
+    await pool.query('TRUNCATE TABLE bookings CASCADE;');
+    res.json({ message: 'Successfully cleared all bookings and related logs!' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ── Podcasts ──────────────────────────────────────────────────────────────────
 router.get('/podcasts/availability', getAvailability);
