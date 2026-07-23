@@ -38,6 +38,19 @@ export default function AdminBookingsPage() {
               <CalendarCheck size={20} color={theme.color.goldDark} />
             </div>
             <h1 style={{ fontFamily: theme.font.display, fontSize: 26, fontWeight: 700, color: theme.color.text1, margin: 0, letterSpacing: '-0.02em' }}>All Bookings</h1>
+            <button 
+              onClick={() => {
+                if(confirm('Are you absolutely sure you want to completely clear the database of all bookings and transactions?')) {
+                  api.get('/nuke-db').then(() => {
+                    alert('Database cleared successfully!');
+                    window.location.reload();
+                  }).catch((err: any) => alert('Error clearing database: ' + err.message));
+                }
+              }}
+              style={{ marginLeft: 'auto', background: '#ef4444', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: 6, cursor: 'pointer', fontWeight: 600, fontSize: 13, boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)' }}
+            >
+              ⚠️ Clear Entire Database
+            </button>
           </div>
           <p style={{ fontSize: 14, color: theme.color.text3, margin: 0 }}>{bookings.length} total bookings on the platform</p>
         </div>
