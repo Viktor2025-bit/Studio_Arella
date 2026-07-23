@@ -217,7 +217,8 @@ function PodcastCarousel() {
   const items = [
     { src: "/podcast/studio-1.jpg", caption: "Professional Audio Setup" },
     { src: "/podcast/studio-2.jpg", caption: "Studio Lighting & Multi-cam" },
-    { src: "/podcast/studio-3.jpg", caption: "Acoustically Treated Space" }
+    { src: "/podcast/studio-3.jpg", caption: "Acoustically Treated Space" },
+    { src: "/podcast/studio-4.jpg", caption: "Comfortable Seating" }
   ];
 
   useEffect(() => {
