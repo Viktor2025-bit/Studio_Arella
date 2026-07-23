@@ -129,13 +129,17 @@ export const reserveSlots: RequestHandler = async (req, res) => {
       const conflict = await client.query(`
         SELECT id FROM booking_slots
         WHERE screen_id = $1
-        AND status IN ('active', 'locked')
+        AND (
+          status = 'active'
+          OR (status = 'locked' AND locked_until > NOW())
+        )
         AND tstzrange(start_time, end_time) && tstzrange($2::timestamptz, $3::timestamptz)
       `, [screen_id, startDt.toISOString(), endDt.toISOString()]);
       
       if (conflict.rows.length > 0) {
         await client.query('ROLLBACK');
-        res.status(409).json({ message: `Time block starting at ${startDt.toLocaleString()} conflicts with an existing booking.` });
+        const watDisplay = new Date(startDt.getTime() + 3600000).toISOString().replace('T', ' ').substring(0, 16) + ' WAT';
+        res.status(409).json({ message: `Time block starting at ${watDisplay} conflicts with an existing booking.` });
         return;
       }
     }
