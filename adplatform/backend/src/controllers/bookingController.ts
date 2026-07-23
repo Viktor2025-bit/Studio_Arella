@@ -109,9 +109,9 @@ export const reserveSlots: RequestHandler = async (req, res) => {
       const endHour = new Date(endDt.getTime() + 3600000).getUTCHours();
       const endMins = endDt.getUTCMinutes();
       
-      // Operating hours are exactly 6:00 AM to 7:00 PM (19:00)
-      if (startHour < 6 || startHour >= 19 || (endHour > 19 || (endHour === 19 && endMins > 0))) {
-         res.status(400).json({ message: 'Bookings must strictly be between 6:00 AM and 7:00 PM' }); return;
+      // Operating hours are exactly 7:00 AM to 8:00 PM (20:00)
+      if (startHour < 7 || startHour >= 20 || (endHour > 20 || (endHour === 20 && endMins > 0))) {
+         res.status(400).json({ message: 'Bookings must strictly be between 7:00 AM and 8:00 PM' }); return;
       }
       
       const blockSecs = (endDt.getTime() - startDt.getTime()) / 1000;
