@@ -260,6 +260,11 @@ export default function LandingPage() {
   const navBorder = useTransform(scrollY, [0, 80], ['rgba(0,0,0,0)', 'rgba(0,0,0,0.08)']);
   const navShadow = useTransform(scrollY, [0, 80], ['none', '0 4px 30px rgba(0,0,0,0.5)']);
 
+  const [isScrolled, setIsScrolled] = useState(false);
+  useEffect(() => {
+    return scrollY.on('change', (latest) => setIsScrolled(latest > 10));
+  }, [scrollY]);
+
   return (
     <div style={{ background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)', minHeight: '100vh', color: '#0f172a', fontFamily: F, overflowX: 'hidden' }}>
       <style>{`
@@ -276,8 +281,8 @@ export default function LandingPage() {
         .plan-card:hover{transform:translateY(-4px);box-shadow:0 20px 48px rgba(212,175,55,0.15);border-color:#D4AF37 !important}
         .service-card{transition:transform 0.2s,box-shadow 0.2s; background: rgba(0,0,0,0.02); backdrop-filter: blur(12px)}
         .service-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,0.4)}
-        .nav-link-item{color:#475569;text-decoration:none;font-size:14px;font-weight:700;transition:color 0.15s}
-        .nav-link-item:hover{color:#D4AF37;text-decoration:underline;text-underline-offset:6px;text-decoration-thickness:2px}
+        .nav-link-item{color:#D4AF37;text-decoration:none;font-size:14px;font-weight:700;transition:transform 0.2s, color 0.15s; display:inline-block}
+        .nav-link-item:hover{transform:scale(1.15);text-decoration:underline;text-underline-offset:6px;text-decoration-thickness:2px}
         .cta-btn{transition:transform 0.15s,box-shadow 0.15s}
         .cta-btn:hover{transform:translateY(-2px);box-shadow:0 0 20px rgba(212,175,55,0.5) !important}
         .orb-1{position:fixed;top:-10%;left:-10%;width:50vw;height:50vw;background:radial-gradient(circle,rgba(212,175,55,0.15) 0%,rgba(255,255,255,0) 70%);border-radius:50%;filter:blur(60px);z-index:0;pointer-events:none}
@@ -292,7 +297,7 @@ export default function LandingPage() {
       {/* NAV */}
       <motion.nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100, background: navBg, borderBottom: '1px solid', borderBottomColor: navBorder, boxShadow: navShadow, padding: '0 24px', height: 80, display: 'flex', alignItems: 'center', justifyContent: 'space-between', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' } as any}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <img src="/logo.png" alt="Studio Arella Logo" style={{ height: 64, objectFit: 'contain' }} />
+          <img src={isScrolled ? "/logo.png" : "/logo-white.png"} alt="Studio Arella Logo" style={{ height: 64, objectFit: 'contain' }} />
         </Link>
         <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 32 }}>
           {[['#services', 'Services'], ['#how', 'How it works'], ['#pricing', 'Pricing'], ['#faq', 'FAQ'], ['#podcast-studio', 'Podcast Studio']].map(([h, l]) => <a key={h} href={h} className="nav-link-item">{l}</a>)}
