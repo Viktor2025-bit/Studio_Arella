@@ -48,9 +48,9 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
         <div style={{ position: 'relative' }}>
           <button onClick={() => setDropOpen(o => !o)}
-            style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'none', border: `1px solid ${theme.color.border}`, borderRadius: theme.radius.pill, padding: '5px 12px 5px 5px', cursor: 'pointer', fontFamily: F }}>
-            <div style={{ width: 30, height: 30, borderRadius: '50%', background: theme.color.surface2, border: `1px solid ${theme.color.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.color.text3 }}>
-              <FaUser size={13} />
+            style={{ display: 'flex', alignItems: 'center', gap: 10, background: dropOpen ? theme.color.surface2 : 'transparent', border: `1px solid ${theme.color.border}`, borderRadius: 40, padding: '4px 14px 4px 4px', cursor: 'pointer', fontFamily: F, transition: 'all 0.2s', boxShadow: dropOpen ? `0 0 0 2px ${theme.color.goldLight}` : 'none' }}>
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: `linear-gradient(135deg, ${theme.color.gold}, #e8a825)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.color.charcoal900, boxShadow: '0 2px 6px rgba(239, 184, 66, 0.3)' }}>
+              <FaUser size={14} />
             </div>
             <span style={{ fontSize: 13, fontWeight: 700, color: theme.color.text1, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name?.split(' ')[0]}</span>
           </button>
@@ -58,42 +58,53 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
             {dropOpen && (
               <>
                 <div style={{ position: 'fixed', inset: 0, zIndex: 9 }} onClick={() => setDropOpen(false)} />
-                <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }} transition={{ duration: 0.2, type: 'spring', stiffness: 400, damping: 25 }}
-                  style={{ position: 'absolute', top: '100%', right: 0, marginTop: 12, background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: 16, padding: '8px', minWidth: 240, boxShadow: '0 20px 40px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.02)', zIndex: 10 }}>
-                  <div style={{ padding: '14px 16px', borderBottom: `1px solid ${theme.color.border2}`, marginBottom: 8 }}>
-                    <p style={{ fontSize: 14, fontWeight: 800, color: theme.color.text1, margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name}</p>
-                    <p style={{ fontSize: 12, color: theme.color.text4, margin: 0, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.email}</p>
+                <motion.div initial={{ opacity: 0, y: 12, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }} transition={{ duration: 0.2, type: 'spring', stiffness: 500, damping: 30 }}
+                  style={{ position: 'absolute', top: '100%', right: 0, marginTop: 14, background: theme.color.surface, border: `1px solid ${theme.color.border2}`, borderRadius: 20, padding: 8, minWidth: 260, boxShadow: '0 24px 54px rgba(0,0,0,0.15), 0 4px 14px rgba(0,0,0,0.05)', zIndex: 10, overflow: 'hidden' }}>
+                  
+                  <div style={{ padding: '16px 18px', background: theme.color.surface2, borderRadius: 12, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <div style={{ width: 44, height: 44, borderRadius: '50%', background: `linear-gradient(135deg, ${theme.color.gold}, #e8a825)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.color.charcoal900, flexShrink: 0, boxShadow: '0 4px 10px rgba(239, 184, 66, 0.3)' }}>
+                      <FaUser size={18} />
+                    </div>
+                    <div style={{ overflow: 'hidden' }}>
+                      <p style={{ fontSize: 15, fontWeight: 800, color: theme.color.text1, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.2px' }}>{user?.name}</p>
+                      <p style={{ fontSize: 12, color: theme.color.text3, margin: 0, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
+                    </div>
                   </div>
+                  
                   <div className="show-on-mobile" style={{ borderBottom: `1px solid ${theme.color.border2}`, marginBottom: 8, paddingBottom: 8 }}>
                     {user?.role !== 'admin' && (
                       <Link href="/cart" onClick={() => setDropOpen(false)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, color: theme.color.goldDark, textDecoration: 'none', borderRadius: theme.radius.md, transition: 'background 0.15s' }}
-                        onMouseOver={e => (e.currentTarget.style.background = theme.color.goldLight)}
-                        onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
-                        <ShoppingCart size={14} strokeWidth={2.5} /> Cart
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', fontSize: 14, fontWeight: 700, color: theme.color.text1, textDecoration: 'none', borderRadius: 12, transition: 'all 0.2s' }}
+                        onMouseOver={e => { e.currentTarget.style.background = theme.color.goldLight; e.currentTarget.style.color = theme.color.goldDark; }}
+                        onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = theme.color.text1; }}>
+                        <ShoppingCart size={16} strokeWidth={2.5} /> Cart
                       </Link>
                     )}
                     <button onClick={() => { toggleTheme(); setDropOpen(false); }}
-                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, color: theme.color.text2, background: 'none', border: 'none', cursor: 'pointer', borderRadius: theme.radius.md, fontFamily: F, textAlign: 'left', transition: 'background 0.15s' }}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', fontSize: 14, fontWeight: 700, color: theme.color.text2, background: 'none', border: 'none', cursor: 'pointer', borderRadius: 12, fontFamily: F, textAlign: 'left', transition: 'all 0.2s' }}
                       onMouseOver={e => { e.currentTarget.style.background = theme.color.surface2; e.currentTarget.style.color = theme.color.text1; }}
                       onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = theme.color.text2; }}>
-                      {appTheme === 'dark' ? <FaSun size={14} /> : <FaMoon size={14} />} {appTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                      {appTheme === 'dark' ? <FaSun size={16} /> : <FaMoon size={16} />} {appTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}
                     </button>
                   </div>
-                  {[{ label: 'My Dashboard', href: '/dashboard', icon: FaChartPie }, { label: 'Settings', href: '/settings', icon: FaGear }, { label: 'Support', href: '/support', icon: FaHeadset }].map(({ label, href, icon: Icon }) => (
-                    <Link key={href} href={href} onClick={() => setDropOpen(false)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, color: theme.color.text2, textDecoration: 'none', borderRadius: theme.radius.md, transition: 'all 0.15s' }}
-                      onMouseOver={e => { e.currentTarget.style.background = theme.color.surface2; e.currentTarget.style.color = theme.color.text1; }}
-                      onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = theme.color.text2; }}>
-                      <Icon size={14} color={theme.color.text3} style={{ transition: 'color 0.15s' }} /> {label}
-                    </Link>
-                  ))}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    {[{ label: 'My Dashboard', href: '/dashboard', icon: FaChartPie }, { label: 'Settings', href: '/settings', icon: FaGear }, { label: 'Support', href: '/support', icon: FaHeadset }].map(({ label, href, icon: Icon }) => (
+                      <Link key={href} href={href} onClick={() => setDropOpen(false)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', fontSize: 14, fontWeight: 700, color: theme.color.text2, textDecoration: 'none', borderRadius: 12, transition: 'all 0.2s' }}
+                        onMouseOver={e => { e.currentTarget.style.background = theme.color.surface2; e.currentTarget.style.color = theme.color.text1; (e.currentTarget.firstChild as HTMLElement).style.color = theme.color.gold; }}
+                        onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = theme.color.text2; (e.currentTarget.firstChild as HTMLElement).style.color = theme.color.text3; }}>
+                        <Icon size={16} color={theme.color.text3} style={{ transition: 'color 0.2s' }} /> {label}
+                      </Link>
+                    ))}
+                  </div>
+
                   <div style={{ borderTop: `1px solid ${theme.color.border2}`, marginTop: 8, paddingTop: 8 }}>
                     <button onClick={handleLogout}
-                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', fontSize: 13, fontWeight: 700, color: theme.color.error, background: 'none', border: 'none', cursor: 'pointer', borderRadius: theme.radius.md, fontFamily: F, textAlign: 'left', transition: 'all 0.15s' }}
-                      onMouseOver={e => (e.currentTarget.style.background = theme.color.errorLight)}
-                      onMouseOut={e => (e.currentTarget.style.background = 'transparent')}>
-                      <FaArrowRightFromBracket size={14} /> Sign out
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', fontSize: 14, fontWeight: 700, color: theme.color.error, background: 'none', border: 'none', cursor: 'pointer', borderRadius: 12, fontFamily: F, textAlign: 'left', transition: 'all 0.2s' }}
+                      onMouseOver={e => { e.currentTarget.style.background = theme.color.errorLight; e.currentTarget.style.color = theme.color.error; }}
+                      onMouseOut={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = theme.color.error; }}>
+                      <FaArrowRightFromBracket size={16} /> Sign out
                     </button>
                   </div>
                 </motion.div>
