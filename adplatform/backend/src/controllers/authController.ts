@@ -260,6 +260,51 @@ export const updateProfile: RequestHandler = async (req, res) => {
   }
 };
 
+// ── Change Password ───────────────────────────────────────────────────────────
+export const changePassword: RequestHandler = async (req, res) => {
+  const authReq = req as AuthRequest;
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      res.status(400).json({ message: 'Current password and new password are required' });
+      return;
+    }
+    
+    if (newPassword.length < 6) {
+      res.status(400).json({ message: 'New password must be at least 6 characters long' });
+      return;
+    }
+    
+    const userResult = await pool.query('SELECT password FROM users WHERE id = $1', [authReq.user?.id]);
+    const user = userResult.rows[0];
+    
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+    
+    if (!user.password) {
+      res.status(400).json({ message: 'This account uses Google sign-in. You cannot change the password.' });
+      return;
+    }
+    
+    const match = await bcrypt.compare(currentPassword, user.password);
+    if (!match) {
+      res.status(401).json({ message: 'Incorrect current password' });
+      return;
+    }
+    
+    const hashed = await bcrypt.hash(newPassword, 12);
+    await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashed, authReq.user?.id]);
+    
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to change password' });
+  }
+};
+
+
 // ── Accept Terms ──────────────────────────────────────────────────────────────
 export const acceptTerms: RequestHandler = async (req, res) => {
   const authReq = req as AuthRequest;

@@ -27,6 +27,11 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('profile');
   const [form, setForm] = useState({ name: '', language: 'en' });
   const [saving, setSaving] = useState(false);
+  
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [pwdForm, setPwdForm] = useState({ currentPassword: '', newPassword: '' });
+  const [pwdLoading, setPwdLoading] = useState(false);
+  
   const { toast } = useToast();
 
   useEffect(() => {
@@ -42,6 +47,20 @@ export default function SettingsPage() {
       toast('Profile updated successfully!', 'success');
     } catch { toast('Failed to update profile', 'error'); }
     finally { setSaving(false); }
+  };
+  
+  const handlePasswordSubmit = async () => {
+    if (!pwdForm.currentPassword || !pwdForm.newPassword) { toast('Please fill in both password fields', 'error'); return; }
+    setPwdLoading(true);
+    try {
+      await api.put('/auth/password', pwdForm);
+      toast('Password changed successfully!', 'success');
+      setChangingPassword(false);
+      setPwdForm({ currentPassword: '', newPassword: '' });
+    } catch (err: any) { 
+      toast(err.response?.data?.message || 'Failed to change password', 'error'); 
+    }
+    finally { setPwdLoading(false); }
   };
 
   const roleColors: Record<string, { bg: string; text: string; border: string }> = {
@@ -141,14 +160,37 @@ export default function SettingsPage() {
                     </div>
                     <p style={{ fontSize: 14, color: theme.color.text3, margin: '0 0 32px' }}>Manage your password and secure your account with 2FA.</p>
                     
-                    <div style={{ background: theme.color.surface2, borderRadius: 16, border: `1px solid ${theme.color.border2}`, padding: '24px', marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <h3 style={{ fontSize: 16, fontWeight: 800, color: theme.color.text1, margin: '0 0 6px' }}>Password</h3>
-                        <p style={{ fontSize: 13, color: theme.color.text3, margin: 0 }}>Set a unique password to protect your account.</p>
+                    <div style={{ background: theme.color.surface2, borderRadius: 16, border: `1px solid ${theme.color.border2}`, padding: '24px', marginBottom: 24 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: changingPassword ? 20 : 0 }}>
+                        <div>
+                          <h3 style={{ fontSize: 16, fontWeight: 800, color: theme.color.text1, margin: '0 0 6px' }}>Password</h3>
+                          <p style={{ fontSize: 13, color: theme.color.text3, margin: 0 }}>Set a unique password to protect your account.</p>
+                        </div>
+                        {!changingPassword && (
+                          <Button onClick={() => setChangingPassword(true)} style={{ background: theme.color.surface, color: theme.color.text1, border: `1px solid ${theme.color.border}`, fontWeight: 700 }}>
+                            Change Password
+                          </Button>
+                        )}
                       </div>
-                      <Button style={{ background: theme.color.surface, color: theme.color.text1, border: `1px solid ${theme.color.border}`, fontWeight: 700 }}>
-                        Change Password
-                      </Button>
+                      
+                      <AnimatePresence>
+                        {changingPassword && (
+                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 16, borderTop: `1px solid ${theme.color.border2}` }}>
+                              <Input label="Current Password" type="password" placeholder="Enter current password" value={pwdForm.currentPassword} onChange={e => setPwdForm({ ...pwdForm, currentPassword: e.target.value })} />
+                              <Input label="New Password" type="password" placeholder="Enter new password (min 6 characters)" value={pwdForm.newPassword} onChange={e => setPwdForm({ ...pwdForm, newPassword: e.target.value })} />
+                              <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 8 }}>
+                                <Button onClick={() => setChangingPassword(false)} style={{ background: 'transparent', color: theme.color.text3, border: 'none' }}>
+                                  Cancel
+                                </Button>
+                                <Button loading={pwdLoading} loadingText="Updating..." onClick={handlePasswordSubmit} style={{ background: theme.color.charcoal900, color: '#fff', border: 'none' }}>
+                                  Update Password
+                                </Button>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
 
                     <div style={{ background: theme.color.surface2, borderRadius: 16, border: `1px solid ${theme.color.border2}`, padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
