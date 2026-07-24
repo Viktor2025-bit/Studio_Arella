@@ -569,20 +569,21 @@ function DoohScheduler() {
                   </AnimatedButton>
                 </div>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: 20 }}>
                   {approvedCreatives.map(c => {
                     const isSelected = selectedCreative?.id === c.id;
                     return (
                       <div key={c.id} onClick={() => setSelectedCreative(c)}
                         style={{
                           border: isSelected ? `2px solid ${theme.color.gold}` : `1px solid ${theme.color.border}`,
-                          borderRadius: 14, padding: 18, cursor: 'pointer',
+                          borderRadius: 20, cursor: 'pointer',
                           background: isSelected ? theme.color.goldLight : theme.color.surface,
-                          display: 'flex', gap: 16, alignItems: 'center',
-                          transition: 'all 0.2s',
-                          boxShadow: isSelected ? `0 4px 12px ${theme.color.goldLight}` : "none"
+                          display: 'flex', flexDirection: 'column', overflow: 'hidden',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          boxShadow: isSelected ? `0 12px 32px ${theme.color.goldLight}` : theme.shadow.md,
+                          transform: isSelected ? 'translateY(-4px)' : 'translateY(0)'
                         }}>
-                        <div style={{ width: 52, height: 52, flexShrink: 0, borderRadius: 12, background: theme.color.surface2, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: "hidden" }}>
+                        <div style={{ width: '100%', height: 180, background: theme.color.surface2, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', borderBottom: `1px solid ${theme.color.border2}` }}>
                           {c.file_url ? (
                             c.file_type === 'video' ? (
                               <video
@@ -598,14 +599,14 @@ function DoohScheduler() {
                               />
                             )
                           ) : (
-                            (c.file_type || c.media_type || '').includes('video') ? <FaFilm color={theme.color.text3} size={20} /> : <FaImage color={theme.color.text3} size={20} />
+                            (c.file_type || c.media_type || '').includes('video') ? <FaFilm color={theme.color.text3} size={32} /> : <FaImage color={theme.color.text3} size={32} />
                           )}
+                          <div style={{ position: 'absolute', top: 12, right: 12, width: 28, height: 28, borderRadius: '50%', background: isSelected ? theme.color.gold : 'rgba(255,255,255,0.9)', border: isSelected ? `8px solid ${theme.color.gold}` : '2px solid rgba(0,0,0,0.1)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', transition: 'all 0.2s', zIndex: 10 }} />
                         </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 700, color: theme.color.text1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</p>
-                          <p className="mono" style={{ margin: 0, fontSize: 12, color: theme.color.text3 }}>Duration: {c.duration_seconds || 60} sec</p>
+                        <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: theme.color.text1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</p>
+                          <p className="mono" style={{ margin: 0, fontSize: 13, color: theme.color.text3, fontWeight: 600 }}>Duration: {c.duration_seconds || 60} sec</p>
                         </div>
-                        <div style={{ width: 22, height: 22, flexShrink: 0, borderRadius: '50%', border: isSelected ? `6px solid ${theme.color.gold}` : `2px solid ${theme.color.border2}` }} />
                       </div>
                     );
                   })}
