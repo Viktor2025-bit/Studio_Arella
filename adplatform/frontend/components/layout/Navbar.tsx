@@ -89,7 +89,11 @@ export default function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    {[{ label: 'My Dashboard', href: '/dashboard', icon: FaChartPie }, { label: 'Settings', href: '/settings', icon: FaGear }, { label: 'Support', href: '/support', icon: FaHeadset }].map(({ label, href, icon: Icon }) => (
+                    {[
+                      { label: 'My Dashboard', href: user?.role === 'admin' ? '/admin' : '/dashboard', icon: FaChartPie }, 
+                      { label: 'Settings', href: '/settings', icon: FaGear }, 
+                      { label: 'Support', href: '/support', icon: FaHeadset }
+                    ].map(({ label, href, icon: Icon }) => (
                       <Link key={href} href={href} onClick={() => setDropOpen(false)}
                         style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', fontSize: 14, fontWeight: 700, color: theme.color.text2, textDecoration: 'none', borderRadius: 12, transition: 'all 0.2s' }}
                         onMouseOver={e => { e.currentTarget.style.background = theme.color.surface2; e.currentTarget.style.color = theme.color.text1; (e.currentTarget.firstChild as HTMLElement).style.color = theme.color.gold; }}
