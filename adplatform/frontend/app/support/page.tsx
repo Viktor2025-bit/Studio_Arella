@@ -76,13 +76,15 @@ export default function SupportPage() {
               { Icon: FaEnvelope,    color: '#fff',                  bg: `linear-gradient(135deg, #00C3FF 0%, #0052CC 100%)`,     label: 'Email Support',   value: 'Use the ticket form',    sub: 'Response within 24 hours' },
               { Icon: FaLocationDot, color: '#fff',                  bg: `linear-gradient(135deg, #10B981 0%, #047857 100%)`,     label: 'Our Location',    value: 'Bems Junction, Umuahia', sub: 'Finbars, Bende Road, Abia State' },
             ].map(({ Icon, color, bg, label, value, sub }) => (
-              <FadeCard key={label} style={{ background: theme.color.surface, borderRadius: 24, padding: '32px 24px', border: `1px solid ${theme.color.border2}`, boxShadow: '0 8px 24px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', transition: 'transform 0.2s' }} className="hover:-translate-y-1">
-                <div style={{ width: 56, height: 56, borderRadius: '50%', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, boxShadow: '0 8px 16px rgba(0,0,0,0.1)' }}>
-                  <Icon size={22} color={color} />
+              <FadeCard key={label}>
+                <div style={{ background: theme.color.surface, borderRadius: 24, padding: '32px 24px', border: `1px solid ${theme.color.border2}`, boxShadow: '0 8px 24px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', transition: 'transform 0.2s', height: '100%' }} className="hover:-translate-y-1">
+                  <div style={{ width: 56, height: 56, borderRadius: '50%', background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, boxShadow: '0 8px 16px rgba(0,0,0,0.1)' }}>
+                    <Icon size={22} color={color} />
+                  </div>
+                  <p style={{ fontSize: 12, fontWeight: 800, color: theme.color.text3, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>{label}</p>
+                  <p style={{ fontSize: 16, fontWeight: 800, color: theme.color.text1, margin: '0 0 4px', wordBreak: 'break-word' }}>{value}</p>
+                  <p style={{ fontSize: 13, color: theme.color.text4, margin: 0 }}>{sub}</p>
                 </div>
-                <p style={{ fontSize: 12, fontWeight: 800, color: theme.color.text3, textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 8px' }}>{label}</p>
-                <p style={{ fontSize: 16, fontWeight: 800, color: theme.color.text1, margin: '0 0 4px', wordBreak: 'break-word' }}>{value}</p>
-                <p style={{ fontSize: 13, color: theme.color.text4, margin: 0 }}>{sub}</p>
               </FadeCard>
             ))}
           </div>
