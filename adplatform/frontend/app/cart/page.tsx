@@ -193,14 +193,12 @@ export default function CartPage() {
               </AnimatedButton>
             </div>
           ) : (
-            <div style={{ background: theme.color.surface, borderRadius: 16, border: `1px solid ${theme.color.border}`, padding: "40px 32px", boxShadow: theme.shadow.sm }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 32 }}>
+            <div style={{ background: theme.color.surface, borderRadius: 24, border: `1px solid ${theme.color.border2}`, padding: "clamp(24px, 5vw, 40px) clamp(20px, 5vw, 36px)", boxShadow: theme.shadow.md }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 20, marginBottom: 40 }}>
                 {groupedCart.map((group) => {
                   const creativeId = group.creative?.id || 'unknown';
-                  // Always start closed, regardless of how many campaigns
                   const isExpanded = !!expandedGroups[creativeId];
                   
-                  // group by date inside
                   const itemsByDate: Record<string, CartItem[]> = {};
                   group.items.forEach(c => {
                     const dKey = new Date(c.date).toDateString();
@@ -208,66 +206,65 @@ export default function CartPage() {
                     itemsByDate[dKey].push(c);
                   });
 
-                  // Sort dates
                   const sortedDates = Object.keys(itemsByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
 
                   return (
-                    <div key={creativeId} style={{ background: theme.color.surface, borderRadius: 16, border: `1px solid ${theme.color.border}`, overflow: 'hidden' }}>
+                    <div key={creativeId} style={{ background: theme.color.surface, borderRadius: 20, border: isExpanded ? `2px solid ${theme.color.gold}` : `1px solid ${theme.color.border}`, overflow: 'hidden', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: isExpanded ? `0 12px 32px ${theme.color.goldLight}` : theme.shadow.sm }}>
                       {/* Campaign Header */}
-                      <div onClick={() => toggleGroup(creativeId)} style={{ padding: "clamp(16px, 4vw, 20px) clamp(16px, 5vw, 24px)", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12, cursor: "pointer", background: isExpanded ? theme.color.surface2 : 'transparent', transition: 'all 0.2s' }}>
+                      <div onClick={() => toggleGroup(creativeId)} style={{ padding: "clamp(16px, 4vw, 24px) clamp(20px, 5vw, 28px)", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12, cursor: "pointer", background: isExpanded ? theme.color.goldLight : 'transparent', transition: 'all 0.2s' }}>
                         <div style={{ flex: '1 1 min-content' }}>
-                           <div style={{ fontWeight: 800, fontSize: "clamp(16px, 4vw, 18px)", fontFamily: theme.font.display, color: theme.color.text1, marginBottom: 4 }}>
+                           <div style={{ fontWeight: 800, fontSize: "clamp(18px, 4.5vw, 20px)", fontFamily: theme.font.display, color: theme.color.text1, marginBottom: 6, letterSpacing: '-0.3px' }}>
                              {group.creative?.title || 'Unknown Ad'}
                            </div>
-                           <div style={{ color: theme.color.text3, fontSize: "clamp(12px, 3.5vw, 14px)", fontWeight: 500, display: "flex", gap: 8 }}>
+                           <div style={{ color: isExpanded ? theme.color.charcoal900 : theme.color.text3, fontSize: "clamp(13px, 3.5vw, 14px)", fontWeight: 600, display: "flex", gap: 10, opacity: isExpanded ? 0.8 : 1 }}>
                              <span>{group.dates.size} Day(s)</span>
                              <span>&bull;</span>
                              <span>{group.items.length} Block(s)</span>
                            </div>
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: "clamp(12px, 4vw, 20px)" }}>
-                           <span className="mono" style={{ color: theme.color.goldDark, fontWeight: 800, fontSize: "clamp(16px, 4.5vw, 18px)" }}>{naira(group.totalCost)}</span>
-                           <div style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, borderRadius: "50%", padding: 6, display: "flex", color: theme.color.text2 }}>
-                             {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                        <div style={{ display: "flex", alignItems: "center", gap: "clamp(16px, 4vw, 24px)" }}>
+                           <span className="mono" style={{ color: isExpanded ? theme.color.charcoal900 : theme.color.goldDark, fontWeight: 900, fontSize: "clamp(18px, 4.5vw, 22px)" }}>{naira(group.totalCost)}</span>
+                           <div style={{ background: isExpanded ? theme.color.gold : theme.color.surface, border: isExpanded ? 'none' : `1px solid ${theme.color.border}`, borderRadius: "50%", padding: 8, display: "flex", color: isExpanded ? theme.color.charcoal900 : theme.color.text2, boxShadow: isExpanded ? '0 4px 12px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}>
+                             {isExpanded ? <ChevronUp size={20} strokeWidth={2.5} /> : <ChevronDown size={20} strokeWidth={2.5} />}
                            </div>
                         </div>
                       </div>
 
                       {/* Expanded Content: Grouped by Date */}
                       {isExpanded && (
-                         <div style={{ padding: "0 24px 24px", borderTop: `1px solid ${theme.color.border}` }}>
-                            <div style={{ display: "flex", justifyContent: "flex-end", padding: "16px 0" }}>
-                               <button onClick={(e) => { e.stopPropagation(); removeCampaign(creativeId); }} style={{ display: "flex", alignItems: "center", gap: 6, color: theme.color.error, fontSize: 13, fontWeight: 700, background: "none", border: "none", cursor: "pointer", padding: "6px 12px", borderRadius: 8, transition: "background 0.2s" }} className="hover:bg-red-50">
-                                 <Trash2 size={14} /> Remove Entire Campaign
+                         <div style={{ padding: "12px 28px 28px", background: theme.color.surface }}>
+                            <div style={{ display: "flex", justifyContent: "flex-end", padding: "12px 0 20px" }}>
+                               <button onClick={(e) => { e.stopPropagation(); removeCampaign(creativeId); }} style={{ display: "flex", alignItems: "center", gap: 8, color: theme.color.error, fontSize: 13, fontWeight: 700, background: theme.color.errorLight, border: "none", cursor: "pointer", padding: "8px 16px", borderRadius: 10, transition: "all 0.2s" }} className="hover:opacity-80">
+                                 <Trash2 size={16} /> Remove Entire Campaign
                                </button>
                             </div>
 
-                            <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                            <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
                               {sortedDates.map(dateKey => (
                                 <div key={dateKey}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, color: theme.color.text2, fontWeight: 800, fontSize: 14, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                                    <Calendar size={16} color={theme.color.goldDark} />
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, color: theme.color.text2, fontWeight: 800, fontSize: 15, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                    <Calendar size={18} color={theme.color.goldDark} />
                                     {new Date(dateKey).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
                                   </div>
                                   
-                                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                                     {itemsByDate[dateKey].sort((a, b) => a.startMin - b.startMin).map(c => (
-                                      <div key={c.id} style={{ background: theme.color.surface2, borderRadius: 12, padding: "12px 16px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12, border: `1px solid ${theme.color.border}` }}>
-                                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, color: theme.color.text1, fontWeight: 600, fontSize: 14 }}>
-                                          <Clock size={14} color={theme.color.text3} style={{ marginTop: 2 }} />
-                                          <div style={{ display: "flex", flexDirection: "column" }}>
+                                      <div key={c.id} style={{ background: theme.color.surface, borderRadius: 16, padding: "16px 20px", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12, border: `1px solid ${theme.color.border2}`, boxShadow: '0 4px 16px rgba(0,0,0,0.03)', transition: 'transform 0.2s' }} className="hover:-translate-y-1">
+                                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, color: theme.color.text1, fontWeight: 700, fontSize: 15 }}>
+                                          <Clock size={16} color={theme.color.text3} style={{ marginTop: 2 }} />
+                                          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                                             <span>{formatMin(c.startMin)} – {formatMin(c.startMin + Math.max(1, Math.ceil(c.durationSec / 60)))}</span>
-                                            <span style={{ color: theme.color.text4, fontWeight: 500, fontSize: 12 }}>({Math.ceil(c.durationSec / 60)} min alloc)</span>
+                                            <span style={{ color: theme.color.text4, fontWeight: 600, fontSize: 13 }}>({Math.ceil(c.durationSec / 60)} min alloc)</span>
                                           </div>
                                         </div>
-                                        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                                          <span className="mono" style={{ color: theme.color.success, fontWeight: 700, fontSize: 15 }}>{naira(c.priceInfo.cost)}</span>
-                                          <div style={{ display: "flex", gap: 8 }}>
-                                            <button onClick={() => { setEditingItem(c); setInitialTab('time'); }} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: 6, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: theme.color.text2 }} title="Edit">
-                                              <Edit2 size={14} />
+                                        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                                          <span className="mono" style={{ color: theme.color.success, fontWeight: 800, fontSize: 16 }}>{naira(c.priceInfo.cost)}</span>
+                                          <div style={{ display: "flex", gap: 10 }}>
+                                            <button onClick={() => { setEditingItem(c); setInitialTab('time'); }} style={{ background: theme.color.surface2, border: 'none', cursor: "pointer", padding: 8, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: theme.color.text2, transition: 'all 0.2s' }} className="hover:bg-gray-200" title="Edit">
+                                              <Edit2 size={16} />
                                             </button>
-                                            <button onClick={() => removeFromCart(c.id)} style={{ background: theme.color.surface, border: `1px solid ${theme.color.border}`, cursor: "pointer", padding: 6, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }} title="Remove">
-                                              <Trash2 size={14} color={theme.color.error} />
+                                            <button onClick={() => removeFromCart(c.id)} style={{ background: theme.color.surface2, border: 'none', cursor: "pointer", padding: 8, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", transition: 'all 0.2s' }} className="hover:bg-red-50" title="Remove">
+                                              <Trash2 size={16} color={theme.color.error} />
                                             </button>
                                           </div>
                                         </div>
@@ -284,23 +281,24 @@ export default function CartPage() {
                 })}
               </div>
 
-              <div style={{ background: theme.color.charcoal900, borderRadius: 16, padding: "clamp(16px, 4vw, 24px) clamp(20px, 5vw, 32px)", marginBottom: 32, color: '#fff', boxShadow: theme.shadow.md }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-                  <span style={{ fontWeight: 700, fontSize: "clamp(14px, 3.5vw, 16px)", color: theme.color.text4 }}>Total Airtime</span>
-                  <span className="mono" style={{ fontWeight: 700, fontSize: "clamp(14px, 3.5vw, 16px)" }}>{cart.length} block(s)</span>
+              <div style={{ background: "linear-gradient(135deg, #1A1D24 0%, #13151A 100%)", borderRadius: 20, padding: "clamp(24px, 5vw, 32px) clamp(24px, 5vw, 40px)", marginBottom: 40, color: '#fff', boxShadow: "0 24px 48px rgba(0,0,0,0.15)", position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: "linear-gradient(90deg, #D4AF37, #F1B945, #D4AF37)" }} />
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                  <span style={{ fontWeight: 600, fontSize: "clamp(15px, 3.5vw, 17px)", color: "#A0AEC0", letterSpacing: '0.02em' }}>Total Airtime</span>
+                  <span className="mono" style={{ fontWeight: 800, fontSize: "clamp(15px, 3.5vw, 17px)", color: "#E2E8F0" }}>{cart.length} block(s)</span>
                 </div>
-                <div style={{ height: 1, background: "rgba(255,255,255,0.1)", marginBottom: 20 }} />
+                <div style={{ height: 1, background: "rgba(255,255,255,0.08)", marginBottom: 24 }} />
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontWeight: 800, fontSize: "clamp(16px, 4vw, 20px)" }}>Total Amount</span>
-                  <span className="mono" style={{ color: theme.color.gold, fontWeight: 900, fontSize: "clamp(20px, 6vw, 28px)" }}>{naira(cartTotal)}</span>
+                  <span style={{ fontWeight: 800, fontSize: "clamp(18px, 4vw, 22px)", color: "#FFFFFF", letterSpacing: '-0.3px' }}>Total Amount</span>
+                  <span className="mono" style={{ color: "#F1B945", fontWeight: 900, fontSize: "clamp(26px, 6vw, 34px)", textShadow: "0 0 32px rgba(212, 175, 55, 0.4)" }}>{naira(cartTotal)}</span>
                 </div>
               </div>
 
-              <div style={{ display: "flex", gap: 20, flexDirection: "column" }}>
-                <div style={{ background: theme.color.surface, borderRadius: 16, padding: 20, border: `1px solid ${theme.color.border}` }}>
+              <div style={{ display: "flex", gap: 24, flexDirection: "column" }}>
+                <div style={{ background: theme.color.surface2, borderRadius: 16, padding: 20, border: `1px dashed ${theme.color.border}` }}>
                   <CampaignPicker value={campaignId} onChange={setCampaignId} />
                 </div>
-                <AnimatedButton onClick={handleReserve} disabled={reserving} style={{ width: "100%", padding: "18px 0", borderRadius: 12, border: "none", background: theme.color.gold, color: theme.color.charcoal900, fontWeight: 800, fontSize: 18, cursor: reserving ? 'not-allowed' : 'pointer', opacity: reserving ? 0.7 : 1, display: "flex", gap: 10, alignItems: "center", justifyContent: "center", boxShadow: theme.shadow.gold }}>
+                <AnimatedButton onClick={handleReserve} disabled={reserving} style={{ width: "100%", padding: "20px 0", borderRadius: 16, border: "none", background: "linear-gradient(135deg, #F1B945 0%, #D4AF37 100%)", color: "#1A1A1A", fontWeight: 900, fontSize: 18, letterSpacing: '0.02em', cursor: reserving ? 'not-allowed' : 'pointer', opacity: reserving ? 0.7 : 1, display: "flex", gap: 12, alignItems: "center", justifyContent: "center", boxShadow: "0 16px 32px rgba(212, 175, 55, 0.3)", transition: "all 0.2s" }}>
                   {reserving ? 'Reserving Slots...' : <>Proceed to Checkout</>}
                 </AnimatedButton>
               </div>
