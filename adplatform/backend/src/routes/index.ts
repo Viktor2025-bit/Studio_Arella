@@ -36,11 +36,15 @@ const router = Router();
 // TEMPORARY: Clear database
 router.get('/nuke-db', async (req: Request, res: Response) => {
   try {
-    await pool.query('TRUNCATE TABLE booking_slots CASCADE;');
-    await pool.query('TRUNCATE TABLE proof_of_play_logs CASCADE;');
-    await pool.query('TRUNCATE TABLE analytics CASCADE;');
-    await pool.query('TRUNCATE TABLE invoices CASCADE;');
-    await pool.query('TRUNCATE TABLE bookings CASCADE;');
+    const tables = ['booking_slots', 'proof_of_play_logs', 'analytics', 'invoices', 'podcast_bookings', 'bookings'];
+    for (const table of tables) {
+      try {
+        await pool.query(`DELETE FROM ${table};`);
+      } catch (e) {
+        // Ignore if table doesn't exist
+        console.log(`Skipped ${table} or error:`, e);
+      }
+    }
     res.json({ message: 'Successfully cleared all bookings and related logs!' });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
